@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "mongodb": "docker run -d -p 27017:27017 --name local-mongo -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password -e MONGO_INITDB_DATABASE=staging custom-mongo",
+    "mongodb": "docker run -d -p 27017:27017 --name local-mongo -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password -e MONGO_INITDB_DATABASE=print-prank custom-mongo",
     "mongodb:stop": "docker stop local-mongo && docker rm local-mongo",
     "build": "npx tsc",
     "start": "node dist/index.js",
