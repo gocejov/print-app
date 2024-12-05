@@ -6,7 +6,8 @@ dotenv.config();
 const connectDB = async () => {
   try {
 
-    const uri = process.env.MONGO_URI || 'mongodb://root:password@localhost:27017/staging?authSource=admin';
+    // const uri = process.env.MONGO_URI || 'mongodb://root:password@localhost:27017/print-prank?authSource=admin';
+    const uri = process.env.MONGO_URI_PRINT || 'mongodb://root:password@localhost:27017/print-prank?authSource=admin'
 
     await mongoose.connect(uri);
     console.log('MongoDB connected successfully.');

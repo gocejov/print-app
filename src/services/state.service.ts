@@ -1,4 +1,4 @@
-import { IPlayer } from '@/models/player.model';
+import { IUser } from '@/models/user.model';
 import Redis from 'ioredis';
 
 const redis = new Redis();
@@ -21,12 +21,12 @@ const getState = async (key: string): Promise<any | null> => {
     return null;
 };
 
-const setPlayerOfTheDayState = async (key: string, value: IPlayer): Promise<void> => {
+const setPlayerOfTheDayState = async (key: string, value: IUser): Promise<void> => {
     await redis.set(key, JSON.stringify(value));
 };
 
-const getPlayerOfTheDayState = async (key: string): Promise<IPlayer | null> => {
-    return await getState(key) 
+const getPlayerOfTheDayState = async (key: string): Promise<IUser | null> => {
+    return await getState(key)
 };
 
 const setSearchPlayerState = async (key: string, value: any, time: number | null = null): Promise<void> => {

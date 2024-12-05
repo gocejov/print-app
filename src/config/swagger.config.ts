@@ -4,18 +4,18 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Who I\'m I Documentation', 
-      version: '1.0.0', 
-      description: 'This is the API documentation for the Who I\'m I application.',
+      title: 'Print parnk',
+      version: '1.0.0',
+      description: 'This is the API documentation for the Print prank.',
     },
     servers: [
       {
-        url: 'http://localhost:3000', 
+        url: 'http://localhost:3000',
         description: 'Local server',
       },
     ],
   },
-  apis: ['./src/routes/*.ts'], 
+  apis: ['./src/routes/*.ts'],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

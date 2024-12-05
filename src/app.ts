@@ -1,8 +1,7 @@
 import express, { Application } from 'express';
 import connectDB from './config/db.config';
-import teamRoutes from './routes/team.routes';
-import playerRoutes from './routes/player.routes';
-import gameRoutes from './routes/game.routes';
+import userRoutes from './routes/user.routes';
+import productsRoutes from './routes/product.routes';
 import sesionConfig from './config/sesion.config';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.config';
@@ -29,9 +28,8 @@ export const initApp = async (): Promise<Application> => {
 
 
         //Main Routes
-        app.use('/api/teams', teamRoutes);
-        app.use('/api/players', playerRoutes);
-        app.use('/api/game', gameRoutes);
+        app.use('/api/users', userRoutes);
+        app.use('/api/products', productsRoutes);
 
         //handling any unhandled internal errors
         app.use(internalErrorHandler)
