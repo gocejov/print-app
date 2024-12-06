@@ -90,8 +90,16 @@ export class ProductController extends BaseController<IProductDocument> implemen
       const qrCodeDataURL = await QRCode.toDataURL(url, options);
       res.send(`
         <html>
+          <head>
+            .qr-code {
+              max-width: 100%;  /* Scale to fit horizontally with some margin */
+              max-height: 100%; /* Scale to fit vertically with some margin */
+              border: 2px solid #333; /* Optional border for better visibility */
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
+            }
+          </head>
           <body>
-            <img src="${qrCodeDataURL}" alt="QR Code" style="max-width: 100%; height: auto;" />
+            <img class="qr-code" src="${qrCodeDataURL}" alt="QR Code" style="max-width: 100%; height: auto;" />
           </body>
         </html>
       `);
