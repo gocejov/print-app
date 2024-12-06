@@ -34,10 +34,39 @@ export class ProductController extends BaseController<IProductDocument> implemen
 
     // Check if the video file exists (optional)
     res.send(`
-      <video controls>
-        <source src="${videoPath}" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Video Stream</title>
+        <style>
+          body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0; /* Light background for better visibility */
+          }
+
+          video {
+            max-width: 90%;  /* Scale to fit horizontally with some margin */
+            max-height: 90%; /* Scale to fit vertically with some margin */
+            border: 2px solid #333; /* Optional border for better visibility */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Video Stream</h1>
+        <video controls>
+          <source src="${videoPath}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </body>
+      </html>
+
       `)
   }
 
