@@ -14,7 +14,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
   getVideo(req: Request, res: Response) {
     const { id } = req.params
     // Define the video file path
-    const videoPath = path.resolve('uploads', 'videos', id);
+    const videoPath = path.join(__dirname, 'uploads', 'videos', id);
 
     // Check if the video file exists (optional)
     res.sendFile(videoPath, (err: any) => {
