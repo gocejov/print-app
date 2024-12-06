@@ -7,6 +7,6 @@ const uploadController: IUploadController = new UploadController()
 
 const router = Router();
 
-router.post('/video', upload.single('video'), (req, res) => uploadController.videoUpload(req, res))
+router.post('/video/:uid', upload.single('video'), (req, res) => uploadController.videoUpload(req, res))
 
 export default router

@@ -10,6 +10,6 @@ router.get('/', (req, res) => fileController.getAll(req, res))
 router.get('/:id', (req, res) => fileController.findById(req, res))
 router.put('/:id', (req, res) => fileController.update(req, res))
 router.post('/', (req, res) => fileController.add(req, res))
-router.delete('/', (req, res) => fileController.remove(req, res))
+router.delete('/:id', (req, res) => fileController.remove(req, res))
 
 export default router;

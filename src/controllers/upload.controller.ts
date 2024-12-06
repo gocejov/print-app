@@ -1,28 +1,33 @@
-import { FileModel } from '../models/file.model';
-import { IUser, IUserDocument } from '@/models/user.model';
-import { FileService } from '../services/file.service';
-import { UserService } from '../services/user.service';
+import { FileModel, IFile } from '../models/file.model';
+import { IUser, IUserDocument } from '../models/user.model';
+import { FileService, IFileServie } from '../services/file.service';
+import { UserService, IUserService } from '../services/user.service';
 import { Request, Response } from 'express';
+
 export interface IUploadController extends UploadController { }
 
 export class UploadController implements IUploadController {
-  private fileService = new FileService()
-  private userService = new UserService()
-  constructor() {
 
+  private fileService: IFileServie;
+  private userService: IUserService;
+
+  constructor() {
+    this.fileService = new FileService()
+    this.userService = new UserService()
   }
 
-  async videoUpload(req: Request, res: Response) {
-    try {
+  async videoUpload(req: any, res: Response) {
+    const { uid } = req.params
 
-      const user: IUserDocument | null = await this.userService.findById('6752ff1013e6d6af145f7765')
+    try {
+      const user: IUserDocument | null = await this.userService.findById(uid)
 
       if (!user) {
         res.status(404).json({ error: "User does not exist" });
         return
       }
 
-      const fileData = {
+      const fileData: IFile = {
         url: req.file?.filename,
         mimetype: req.file?.mimetype,
         file: JSON.stringify(req.file),

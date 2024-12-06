@@ -28,7 +28,11 @@ export class BaseController<T extends Document> implements IBaseController {
 
   async findById(req: Request, res: Response): Promise<void> {
     try {
-      const item = await this.service.findById(req.params.id);
+      const item = await this.service.findById(req.params.id,
+        [{ path: 'file' },
+        { path: 'createdBy' },
+        { path: 'owner' }]
+      );
       if (!item) {
         res.status(404).json({ error: 'Item not found' });
         return;
