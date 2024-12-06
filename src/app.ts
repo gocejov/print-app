@@ -2,18 +2,23 @@ import express, { Application } from 'express';
 import connectDB from './config/db.config';
 import userRoutes from './routes/user.routes';
 import productsRoutes from './routes/product.routes';
+import uploadRoutes from './routes/upload.routes';
 import sesionConfig from './config/sesion.config';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.config';
 import { internalErrorHandler } from './middlewares/error.handler';
 import cors from 'cors'
+import { uploadErrorHandler } from './middlewares/upload.error.middlewares';
+
 const app: Application = express();
 
 export const initApp = async (): Promise<Application> => {
     try {
         await connectDB();
+
         //session configuration
         app.use(sesionConfig);
+
         // swagger configuration
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -30,6 +35,10 @@ export const initApp = async (): Promise<Application> => {
         //Main Routes
         app.use('/api/users', userRoutes);
         app.use('/api/products', productsRoutes);
+        app.use('/api/upload', uploadRoutes);
+
+        // Error handling middleware
+        app.use(uploadErrorHandler);
 
         //handling any unhandled internal errors
         app.use(internalErrorHandler)
