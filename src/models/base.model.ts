@@ -1,19 +1,12 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, Document } from 'mongoose';
 
 export interface IModel extends Document {
-  name: number;
-  lastName: string | null;
-  email: string;
-  password: number;
-  firstName: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
-const UserSchema: Schema = new Schema({
-  name: { type: Number, required: true },
-  lastName: { type: Number, required: true },
-  email: { type: Number, required: true },
-  password: { type: Number, required: true },
-  firstName: { type: Number, required: true },
+export const BaseSchema: Schema = new Schema({
+  updated_at: { type: Date, required: true },
+  created_at: { type: Date, required: true },
 });
 
-export const Model = mongoose.model<IModel>('users', UserSchema);

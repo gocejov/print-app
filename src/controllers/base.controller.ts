@@ -11,7 +11,7 @@ interface IBaseController {
 }
 
 export class BaseController<T extends Document> implements IBaseController {
-  private service: IBaseService<T>
+  public service: IBaseService<T>
 
   constructor(service: IBaseService<T>) {
     this.service = service;

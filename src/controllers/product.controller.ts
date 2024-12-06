@@ -1,5 +1,5 @@
 import { BaseController } from './base.controller';
-import { IProductDocument } from '../models/product.model';
+import { IProduct, IProductDocument } from '../models/product.model';
 import { ProductService } from '../services/product.service';
 import path from 'path';
 import { Request, Response } from 'express';
@@ -15,11 +15,16 @@ export class ProductController extends BaseController<IProductDocument> implemen
     super(new ProductService());
   }
 
-  getVideo(req: Request, res: Response) {
+  async getVideo(req: Request, res: Response) {
     const { id } = req.params
     // Define the video file path
-    const videoPath = path.resolve('uploads', 'videos', id);
 
+    const product: IProduct | null = await this.service.findById(id)
+    if (!product) {
+      res.status(404).send('Product not found');
+      return
+    }
+    const videoPath: string = product.url
     // Check if the video file exists (optional)
     res.sendFile(videoPath, (err: any) => {
       if (err) {
@@ -33,7 +38,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
   playVideo(req: Request, res: Response) {
     const { id } = req.params
     // Define the video file path
-    const videoPath = `https://turl.world/api/products/videos/${id}`;
+    const videoPath = `https://turl.world/p/v/${id}`;
 
     // Check if the video file exists (optional)
     res.send(`
@@ -94,7 +99,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
       const qrCodeDataURL = await QRCode.toDataURL(url, options);
       const qrCodeDataBuffer: any = await QRCode.toBuffer(url, options);
 
-      const logoPath = './uploads/images/qr2share-logo-no-slogan.png'; // Replace with your logo file path
+      const logoPath = './uploads/images/qr2share-logo-no-slogan-border.png'; // Replace with your logo file path
       const logoBuffer = await fs.readFile(logoPath);
 
       const resizedLogoBuffer = await sharp(logoBuffer)

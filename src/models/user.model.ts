@@ -7,6 +7,8 @@ export interface IUser {
   lastName: string;
   email: string;
   password: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // Extend Mongoose's Document interface for the User schema
@@ -29,6 +31,13 @@ UserSchema.methods.generateHash = function (password: String) {
 UserSchema.methods.validPassword = function (password: String) {
   return bcrypt.compareSync(password, this.password);
 };
+
+UserSchema.pre('save', async function (next) { // this line
+  const user = this;
+  user.created_at = new Date();
+  user.updated_at = new Date();
+  next();
+});
 
 // Define the model
 export const UserModel: Model<IUserDocument> = mongoose.model<IUserDocument>('users', UserSchema);
