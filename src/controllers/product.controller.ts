@@ -3,7 +3,7 @@ import { IProductDocument } from '../models/product.model';
 import { ProductService } from '../services/product.service';
 import path from 'path';
 import { Request, Response } from 'express';
-import QRCode from 'qrcode';
+import QRCode, { QRCodeToDataURLOptions } from 'qrcode';
 
 export interface IProductController extends ProductController { }
 
@@ -80,13 +80,18 @@ export class ProductController extends BaseController<IProductDocument> implemen
 
     const url = `https://turl.world/api/products/play-video/${id}`
 
+    const options: QRCodeToDataURLOptions = {
+      errorCorrectionLevel: 'H', // High error correction level (L, M, Q, H)
+      width: 500,               // Size in pixels
+    };
+
     // Generate the QR code as a data URL (image)
     try {
-      const qrCodeDataURL = await QRCode.toDataURL(url);
+      const qrCodeDataURL = await QRCode.toDataURL(url, options);
       res.send(`
         <html>
           <body>
-            <img src="${qrCodeDataURL}" alt="QR Code" />
+            <img src="${qrCodeDataURL}" alt="QR Code" style="max-width: 100%; height: auto;" />
           </body>
         </html>
       `);
