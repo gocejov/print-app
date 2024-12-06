@@ -18,9 +18,24 @@ export class ProductController extends BaseController<IProductDocument> implemen
     const videoPath = path.resolve('uploads', 'videos', id);
 
     // Check if the video file exists (optional)
+    res.sendFile(videoPath, (err: any) => {
+      if (err) {
+        console.error('Error sending video:', err);
+        res.status(404).send('Video not found');
+      }
+    })
+  }
+
+
+  playVideo(req: Request, res: Response) {
+    const { id } = req.params
+    // Define the video file path
+    const videoPath = `https://turl.world/api/products/videos/${id}`;
+
+    // Check if the video file exists (optional)
     res.send(`
       <video controls>
-        <source src="https://turl.world/api/products/videos/${id}" type="video/mp4">
+        <source src="${videoPath}" type="video/mp4">
         Your browser does not support the video tag.
       </video>
       `)
@@ -35,7 +50,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
       return
     }
 
-    const url = `https://turl.world/api/products/videos/${id}`
+    const url = `https://turl.world/api/products/play-video/${id}`
 
     // Generate the QR code as a data URL (image)
     try {
