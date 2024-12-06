@@ -4,6 +4,9 @@ import { ProductService } from '../services/product.service';
 import path from 'path';
 import { Request, Response } from 'express';
 import QRCode, { QRCodeToDataURLOptions } from 'qrcode';
+import sharp from 'sharp';
+import fs from 'fs/promises';
+
 
 export interface IProductController extends ProductController { }
 
@@ -80,14 +83,42 @@ export class ProductController extends BaseController<IProductDocument> implemen
 
     const url = `https://turl.world/api/products/play-video/${id}`
 
-    const options: QRCodeToDataURLOptions = {
-      errorCorrectionLevel: 'H', // High error correction level (L, M, Q, H)
+    const options: any = {
+      errorCorrectionLevel: 'L', // High error correction level (L, M, Q, H)
       width: 500,               // Size in pixels
     };
 
     // Generate the QR code as a data URL (image)
+
     try {
       const qrCodeDataURL = await QRCode.toDataURL(url, options);
+      const qrCodeDataBuffer: any = await QRCode.toBuffer(url, options);
+
+      const logoPath = './uploads/images/qr2share-logo-no-slogan.png'; // Replace with your logo file path
+      const logoBuffer = await fs.readFile(logoPath);
+
+      const resizedLogoBuffer = await sharp(logoBuffer)
+        .resize({
+          width: 100,  // Adjust as needed (20% of QR size)
+          height: 100, // Adjust to maintain aspect ratio
+          fit: sharp.fit.inside,
+        })
+        .toBuffer();
+
+      const qrWithLogoBuffer: Buffer = await sharp(qrCodeDataBuffer)
+        .composite([
+          {
+            input: resizedLogoBuffer,
+            gravity: 'center', // Center the logo on the QR code
+          },
+        ])
+        .png()
+        .toBuffer();
+
+      // Step 4: Convert the Final QR Code to Base64
+      const qrBase64Url = `data:image/png;base64,${qrWithLogoBuffer.toString('base64')}`;
+
+
       res.send(`
         <html>
           <head>
@@ -103,13 +134,13 @@ export class ProductController extends BaseController<IProductDocument> implemen
             .qr-code {
               max-width: 100%;  /* Scale to fit horizontally with some margin */
               max-height: 100%; /* Scale to fit vertically with some margin */
-              border: 2px solid #333; /* Optional border for better visibility */
+              //border: 2px solid #333; /* Optional border for better visibility */
               box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
             }
           </style>
           </head>
           <body>
-            <img class="qr-code" src="${qrCodeDataURL}" alt="QR Code" style="max-width: 100%; height: auto;" />
+            <img class="qr-code" src="${qrBase64Url}" alt="QR Code" style="max-width: 100%; height: auto;" />
           </body>
         </html>
       `);

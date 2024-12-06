@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
+var bcrypt = require('bcrypt-nodejs');
 
 // Define the interface for a User document
 export interface IUser {
   name: string;
+  lastName: string;
   email: string;
   password: string;
 }
@@ -13,9 +15,20 @@ export interface IUserDocument extends IUser, Document { }
 // Create the User schema
 const UserSchema: Schema<IUserDocument> = new Schema({
   name: { type: String, required: true },
+  lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
 });
+
+// hash the password
+UserSchema.methods.generateHash = function (password: String) {
+  return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
+};
+
+// checking if password is valid
+UserSchema.methods.validPassword = function (password: String) {
+  return bcrypt.compareSync(password, this.password);
+};
 
 // Define the model
 export const UserModel: Model<IUserDocument> = mongoose.model<IUserDocument>('users', UserSchema);
