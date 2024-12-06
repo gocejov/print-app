@@ -20,7 +20,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
     // Check if the video file exists (optional)
     res.send(`
       <video controls>
-        <source src="${videoPath}" type="video/mp4">
+        <source src="https://turl.world/api/products/videos/${id}" type="video/mp4">
         Your browser does not support the video tag.
       </video>
       `)
