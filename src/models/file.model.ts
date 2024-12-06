@@ -14,6 +14,7 @@ export interface IFile {
   filename: String,
   path: String,
   size: Number,
+  baseUrl: String,
   createdBy: IUserDocument['_id'];
   date: Date;
   created_at: Date;
@@ -32,6 +33,7 @@ const FileSchema: Schema<IFileDocument> = new Schema({
   mimeptype: { type: String, required: true },
   destination: { type: String, required: true },
   filename: { type: String, required: true },
+  baseUrl: { type: String, required: true },
   path: { type: String, required: true },
   size: { type: Number, required: true },
   file: { type: String, required: true },

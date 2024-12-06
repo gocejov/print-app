@@ -35,6 +35,7 @@ export class UploadController implements IUploadController {
         path: req.file?.path,
         size: req.file?.size,
         createdBy: user.id,
+        baseUrl: `${req.protocol}://${req.get('host')}`
       }
 
       const file = await this.fileService.add(new FileModel(fileData))
