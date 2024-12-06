@@ -51,15 +51,14 @@ export class ProductController extends BaseController<IProductDocument> implemen
           }
 
           video {
-            max-width: 90%;  /* Scale to fit horizontally with some margin */
-            max-height: 90%; /* Scale to fit vertically with some margin */
+            max-width: 95%;  /* Scale to fit horizontally with some margin */
+            max-height: 95%; /* Scale to fit vertically with some margin */
             border: 2px solid #333; /* Optional border for better visibility */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
           }
         </style>
       </head>
       <body>
-        <h1>Video Stream</h1>
         <video controls>
           <source src="${videoPath}" type="video/mp4">
           Your browser does not support the video tag.
