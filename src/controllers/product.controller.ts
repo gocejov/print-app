@@ -51,8 +51,8 @@ export class ProductController extends BaseController<IProductDocument> implemen
           }
 
           video {
-            max-width: 95%;  /* Scale to fit horizontally with some margin */
-            max-height: 95%; /* Scale to fit vertically with some margin */
+            max-width: 100%;  /* Scale to fit horizontally with some margin */
+            max-height: 100%; /* Scale to fit vertically with some margin */
             border: 2px solid #333; /* Optional border for better visibility */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
           }
