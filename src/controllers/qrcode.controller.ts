@@ -170,6 +170,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const qrcode = await this.service.findById(qid, populate)
     const product = qrcode?.product as IProductDocument | null
 
+    console.error("qrcode", qrcode)
+
     const file = product?.file
 
     if (!isIFile(file) || !product) {
