@@ -13,6 +13,7 @@ import cors from 'cors'
 import { uploadErrorHandler } from './middlewares/upload.error.middlewares';
 import { IQrCodeController, QrCodeController } from './controllers/qrcode.controller';
 import { IProductController, ProductController } from './controllers/product.controller';
+import fetch from 'node-fetch';
 
 const app: Application = express();
 
@@ -37,9 +38,13 @@ export const initApp = async (): Promise<Application> => {
             credentials: true,
         }));
 
-        app.get('/', (req, res) => {
+        app.get('/', async (req, res) => {
             // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
             const userIp = req.headers['x-forwarded-for'] || req.ip;
+
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+
             res.send(`Your IP address is: ${userIp}`);
         });
 
