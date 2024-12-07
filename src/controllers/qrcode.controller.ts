@@ -65,7 +65,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
         url: url
       }
 
-      const qrUpdateCode = await this.service.update(qrCode.id, new QrCodeModel(updateCodeData));
+      const qrUpdateCode = await this.service.update(qrCode.id, updateCodeData);
 
       res.status(201).json(qrUpdateCode);
     } catch (err: any) {
