@@ -23,6 +23,8 @@ export const initApp = async (): Promise<Application> => {
         //session configuration
         app.use(sesionConfig);
 
+        app.set('trust proxy', true);
+
         // swagger configuration
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -34,6 +36,12 @@ export const initApp = async (): Promise<Application> => {
             methods: 'GET,POST,PUT,DELETE',
             credentials: true,
         }));
+
+        app.get('/', (req, res) => {
+            // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
+            const userIp = req.headers['x-forwarded-for'] || req.ip;
+            res.send(`Your IP address is: ${userIp}`);
+        });
 
 
         //Main Routes
