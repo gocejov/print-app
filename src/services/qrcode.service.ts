@@ -30,7 +30,7 @@ export class QrCodeService extends BaseService<IQrCodeDocument> implements IQrCo
     try {
       const qrCodeDataBuffer: any = await QRCode.toBuffer(url, options);
 
-      const logoPath = './uploads/images/qr2share-logo-no-slogan-border.png';
+      const logoPath = './uploads/images/qr2share-logo-circle.png';
       const logoBuffer = await fs.readFile(logoPath);
 
       const resizedLogoBuffer = await sharp(logoBuffer)
