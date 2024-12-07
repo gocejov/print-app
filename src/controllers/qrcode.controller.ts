@@ -82,13 +82,14 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     const queryOptions: IExtendedQueryOptions = {
       populate: ['owner', 'createdBy', 'file', 'product'],
-      $or: [{ _id: "67538f63afb346ed2db7fdc4" }, { alias: "c" }],
+      $or: [
+        { alias: 'qr-goce-code' },
+        { _id: 'id' }
+      ],
       pagination: {
-        limit: 2,
-        skip: 0,
+        limit: 1,
+        skip: 0
       },
-      select: { password: 0, createdAt: 0 }
-
     }
 
     const qrcodes = await this.service.getAll(queryOptions)

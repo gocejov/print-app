@@ -92,11 +92,11 @@ export class BaseService<T extends Document> implements IBaseService<T> {
 
     let query: any = doc.save();
 
-    if (select) {
-      query = query.select(select);
-    }
+    // if (select) {
+    //   query = query.select(select);
+    // }
 
-    if (populate) query = query.populate(populate)
+    // if (populate) query = query.populate(populate)
 
     return query
 
@@ -112,11 +112,11 @@ export class BaseService<T extends Document> implements IBaseService<T> {
 
     let query: any = this.model.findByIdAndUpdate(id, data, { new: true });
 
-    if (select) {
-      query = query.select(select);
-    }
+    // if (select) {
+    //   query = query.select(select);
+    // }
 
-    if (populate) query = query.populate(populate)
+    // if (populate) query = query.populate(populate)
 
     return query
   }
@@ -131,11 +131,11 @@ export class BaseService<T extends Document> implements IBaseService<T> {
 
     let query: any = this.model.findByIdAndDelete(id);
 
-    if (select) {
-      query = query.select(select);
-    }
+    // if (select) {
+    //   query = query.select(select);
+    // }
 
-    if (populate) query = query.populate(populate)
+    // if (populate) query = query.populate(populate)
 
     return query
   }
