@@ -137,9 +137,16 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const qrcode = await this.service.findById(qid, populate)
     const product = qrcode?.product as IProductDocument | null
 
-    const file = product?.file
+    if (!product) {
+      res.status(406).json({ error: "Incorrect url" });
+      return
+    }
 
-    if (!isIFile(file) || !product) {
+    const f = product?.file
+
+    const file = await this.fileService.findById(f as string)
+
+    if (!file) {
       res.status(406).json({ error: "Incorrect url" });
       return
     }
@@ -179,8 +186,6 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     }
 
     const f = product?.file
-
-    console.error("qrcode", qrcode)
 
     const file = await this.fileService.findById(f as string)
 
