@@ -84,18 +84,23 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     try {
 
+      const id = '6753972793a2442b1fa32'
 
-      const queryOptions: IExtendedQueryOptions = {
-        populate: ['owner', 'createdBy', 'file', 'product'],
-        $or: [
-          { alias: 'qr-goce-code' },
-          { _id: '6753972793a2442b1fa32288' }
-        ],
-        pagination: {
-          limit: 1,
-          skip: 0
-        },
+      const $or = [
+        { alias: 'qr-goce-code' },
+        { _id: id }
+      ]
+      const pagination = {
+        limit: 1,
+        skip: 0
       }
+
+      const options: IExtendedQueryOptions = {
+        populate: ['owner', 'createdBy', 'file', 'product'],
+        pagination
+      }
+      const alias = 'c'
+      const queryOptions = mongoose.Types.ObjectId.isValid(id) ? { $or, ...options } : { alias, ...options }
 
       const qrcodes = await this.service.getAll(queryOptions)
       res.json(qrcodes)
@@ -116,27 +121,21 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
         return
       }
 
-      let search = mongoose.Types.ObjectId.isValid(id)
-        ? {
-          $or: [
-            { alias: id },
-            { _id: id }
-          ]
-        }
-        : { alias: id };
-
+      const $or = [
+        { alias: 'qr-goce-code' },
+        { _id: id }
+      ]
       const pagination = {
         limit: 1,
         skip: 0
-      };
+      }
 
-      const populate = 'product';
-
-      const queryOptions: IExtendedQueryOptions = {
-        search, // Pass directly without wrapping
-        pagination, // Make sure pagination is correctly passed
-        populate
-      };
+      const options: IExtendedQueryOptions = {
+        populate: ['owner', 'createdBy', 'file', 'product'],
+        pagination
+      }
+      const alias = id
+      const queryOptions = mongoose.Types.ObjectId.isValid(id) ? { $or, ...options } : { alias, ...options }
 
       const qrCodes = await this.service.getAll(queryOptions)
       const qrCode = qrCodes[0]
@@ -182,32 +181,26 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   }
 
   async getVideo(req: Request, res: Response) {
-    const { alias, type, qid } = req.params
+    const { type, qid } = req.params
     // Define the video file path
 
     ///:alias/:type/:pid
 
-    let search = mongoose.Types.ObjectId.isValid(qid)
-      ? {
-        $or: [
-          { alias: qid },
-          { _id: qid }
-        ]
-      }
-      : { alias: qid };
-
+    const $or = [
+      { alias: 'qr-goce-code' },
+      { _id: qid }
+    ]
     const pagination = {
       limit: 1,
       skip: 0
-    };
+    }
 
-    const populate = 'product';
-
-    const queryOptions: IExtendedQueryOptions = {
-      search, // Pass directly without wrapping
-      pagination, // Make sure pagination is correctly passed
-      populate
-    };
+    const options: IExtendedQueryOptions = {
+      populate: ['owner', 'createdBy', 'file', 'product'],
+      pagination
+    }
+    const alias = qid
+    const queryOptions = mongoose.Types.ObjectId.isValid(qid) ? { $or, ...options } : { alias, ...options }
 
     const qrCodes = await this.service.getAll(queryOptions)
 
@@ -250,30 +243,23 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   }
 
   async playVideo(req: Request, res: Response) {
-    const { alias, qid } = req.params
+    const { qid } = req.params
 
-
-    let search = mongoose.Types.ObjectId.isValid(qid)
-      ? {
-        $or: [
-          { alias: qid },
-          { _id: qid }
-        ]
-      }
-      : { alias: qid };
-
+    const $or = [
+      { alias: 'qr-goce-code' },
+      { _id: qid }
+    ]
     const pagination = {
       limit: 1,
       skip: 0
-    };
+    }
 
-    const populate = 'product';
-
-    const queryOptions: IExtendedQueryOptions = {
-      search, // Pass directly without wrapping
-      pagination, // Make sure pagination is correctly passed
-      populate
-    };
+    const options: IExtendedQueryOptions = {
+      populate: ['owner', 'createdBy', 'file', 'product'],
+      pagination
+    }
+    const alias = qid
+    const queryOptions = mongoose.Types.ObjectId.isValid(qid) ? { $or, ...options } : { alias, ...options }
 
     const qrCodes = await this.service.getAll(queryOptions)
 
