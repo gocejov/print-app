@@ -21,10 +21,10 @@ export interface IQrCodeDocument extends IQrCode, Document { }
 
 // Create the QrCode schema
 const QrCodeSchema: Schema<IQrCodeDocument> = new Schema({
-  qrCode: { type: String, required: true, unique: true },
+  qrCode: { type: String, required: false },
   file: { type: String, required: true },
   alias: { type: String, required: true, default: 'c' },
-  url: { type: String, required: true },
+  url: { type: String, required: false },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'products', required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
