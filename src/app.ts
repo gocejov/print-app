@@ -40,12 +40,9 @@ export const initApp = async (): Promise<Application> => {
 
         app.get('/', async (req, res) => {
             // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
-            const userIp = req.headers['x-forwarded-for'] || req.ip;
+            const userIp = req.headers['x-forwarded-for'] || req.ip
 
-            const response = await axios.get('https://api.ipify.org?format=json');
-            const data = await response.data;
-
-            res.json(data);
+            res.send(`Your IP address is: ${userIp}`);
         });
 
 
