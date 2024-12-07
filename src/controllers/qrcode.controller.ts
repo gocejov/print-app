@@ -13,6 +13,8 @@ import QRCode, { QRCodeToDataURLOptions } from 'qrcode';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import { IExtendedQueryOptions } from '../services/base.service';
+import { error } from 'console';
+import mongoose from 'mongoose';
 
 export interface IQrCodeController extends QrCodeController {
   getAllWithOptions(req: Request, res: Response): Promise<void>
@@ -80,77 +82,96 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
   async getAllWithOptions(req: Request, res: Response): Promise<void> {
 
-    const queryOptions: IExtendedQueryOptions = {
-      populate: ['owner', 'createdBy', 'file', 'product'],
-      $or: [
-        { alias: 'qr-goce-code' },
-        { _id: 'id' }
-      ],
-      pagination: {
-        limit: 1,
-        skip: 0
-      },
-    }
+    try {
 
-    const qrcodes = await this.service.getAll(queryOptions)
-    res.json(qrcodes)
+
+      const queryOptions: IExtendedQueryOptions = {
+        populate: ['owner', 'createdBy', 'file', 'product'],
+        $or: [
+          { alias: 'qr-goce-code' },
+          { _id: '6753972793a2442b1fa32288' }
+        ],
+        pagination: {
+          limit: 1,
+          skip: 0
+        },
+      }
+
+      const qrcodes = await this.service.getAll(queryOptions)
+      res.json(qrcodes)
+    } catch (err) {
+      res.status(500).json({ error: err })
+    }
   }
 
   // Route to generate the QR code
   async getQrCode(req: Request, res: Response) {
     const { id } = req.params;
 
-    if (!id) {
-      res.status(400).send('URL query parameter is required');
-      return
-    }
+    try {
 
-    const queryOptions: IExtendedQueryOptions = {
-      $or: [
-        { alias: id },
-        { _id: id }
-      ],
-      pagination: {
+
+      if (!id) {
+        res.status(400).send('URL query parameter is required');
+        return
+      }
+
+      let search = mongoose.Types.ObjectId.isValid(id) ? {
+        $or: [
+          { alias: id },
+          { _id: id }
+        ]
+      } : { alias: id }
+
+      const pagination = {
         limit: 1,
         skip: 0
-      },
-    }
+      }
 
-    const qrCodes = await this.service.getAll(queryOptions)
-    const qrCode = qrCodes[0]
-    if (!qrCode?.qrCode) {
-      res.status(400).send('QrCode not found');
-      return
-    }
-    const qrBase64Url = qrCode?.qrCode
-    // Generate the QR code as a data URL (image)
+      const populate = { path: 'product' }
 
-    try {
+      const queryOptions: IExtendedQueryOptions = {
+        search,
+        pagination,
+        populate
+      }
+
+      const qrCodes = await this.service.getAll(queryOptions)
+      const qrCode = qrCodes[0]
+      if (!qrCode?.qrCode) {
+        res.status(400).send('QrCode not found');
+        return
+      }
+      const qrBase64Url = qrCode?.qrCode
+      // Generate the QR code as a data URL (image)
+
+
       res.send(`
-          <html>
-            <head>
-            <style>
-              body {
-                margin: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                background-color: #f0f0f0; /* Light background for better visibility */
-              }
-              .qr-code {
-                max-width: 100%;  /* Scale to fit horizontally with some margin */
-                max-height: 100%; /* Scale to fit vertically with some margin */
-                //border: 2px solid #333; /* Optional border for better visibility */
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
-              }
-            </style>
-            </head>
-            <body>
-              <img class="qr-code" src="${qrBase64Url}" alt="QR Code" style="max-width: 100%; height: auto;" />
-            </body>
-          </html>
-        `);
+            <html>
+              <head>
+              <style>
+                body {
+                  margin: 0;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  background-color: #f0f0f0; /* Light background for better visibility */
+                }
+                .qr-code {
+                  max-width: 100%;  /* Scale to fit horizontally with some margin */
+                  max-height: 100%; /* Scale to fit vertically with some margin */
+                  //border: 2px solid #333; /* Optional border for better visibility */
+                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
+                }
+              </style>
+              </head>
+              <body>
+                <img class="qr-code" src="${qrBase64Url}" alt="QR Code" style="max-width: 100%; height: auto;" />
+              </body>
+            </html>
+          `);
+
     }
     catch (err) {
       console.error('Error generating QR code:', err);
@@ -164,17 +185,26 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     ///:alias/:type/:pid
 
-    const queryOptions: IExtendedQueryOptions = {
+    let search = mongoose.Types.ObjectId.isValid(qid) ? {
       $or: [
         { alias: qid },
         { _id: qid }
-      ],
-      pagination: {
-        limit: 1,
-        skip: 0
-      },
-      populate: { path: 'product' }
+      ]
+    } : { alias: qid }
+
+    const pagination = {
+      limit: 1,
+      skip: 0
     }
+
+    const populate = { path: 'product' }
+
+    const queryOptions: IExtendedQueryOptions = {
+      search,
+      pagination,
+      populate
+    }
+
     const qrCodes = await this.service.getAll(queryOptions)
 
     const qrCode = qrCodes[0]
@@ -206,8 +236,6 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     const fullVideoPath = path.resolve(videoPath);
 
-    console.error("fullVideoPath", fullVideoPath)
-
     // Check if the video file exists (optional)
     res.sendFile(fullVideoPath, (err: any) => {
       if (err) {
@@ -220,17 +248,26 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   async playVideo(req: Request, res: Response) {
     const { alias, qid } = req.params
 
-    const queryOptions: IExtendedQueryOptions = {
+    let search = mongoose.Types.ObjectId.isValid(qid) ? {
       $or: [
         { alias: qid },
         { _id: qid }
-      ],
-      pagination: {
-        limit: 1,
-        skip: 0
-      },
-      populate: { path: 'product' }
+      ]
+    } : { alias: qid }
+
+    const pagination = {
+      limit: 1,
+      skip: 0
     }
+
+    const populate = { path: 'product' }
+
+    const queryOptions: IExtendedQueryOptions = {
+      search,
+      pagination,
+      populate
+    }
+
     const qrCodes = await this.service.getAll(queryOptions)
 
     const qrCode = qrCodes[0]
