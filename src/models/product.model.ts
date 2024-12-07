@@ -4,7 +4,7 @@ import { IFile, IFileDocument } from './file.model';
 
 // Define the interface for a Product document
 export interface IProduct {
-  qrcode: String;
+  qrcode?: String;
   file: IFileDocument['_id'];
   alias?: String;
   url: String;
@@ -23,7 +23,7 @@ export interface IProductDocument extends IProduct, Document {
 
 // Create the Product schema
 const ProductSchema: Schema<IProductDocument> = new Schema({
-  qrcode: { type: String, required: true, unique: true },
+  qrcode: { type: String },
   file: { type: mongoose.Schema.Types.ObjectId, ref: 'files', required: true },
   alias: { type: String, required: true, default: 'c' },
   url: { type: String, required: true },

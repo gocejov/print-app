@@ -38,7 +38,6 @@ export class ProductController extends BaseController<IProductDocument> implemen
       }
 
       const productData: IProduct = {
-        qrcode: 'qrcode',
         file: file.id,
         url: file.path,
         owner: userId,
