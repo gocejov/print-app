@@ -116,25 +116,27 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
         return
       }
 
-      let search = mongoose.Types.ObjectId.isValid(id) ? {
-        $or: [
-          { alias: id },
-          { _id: id }
-        ]
-      } : { alias: id }
+      let search = mongoose.Types.ObjectId.isValid(id)
+        ? {
+          $or: [
+            { alias: id },
+            { _id: id }
+          ]
+        }
+        : { alias: id };
 
       const pagination = {
         limit: 1,
         skip: 0
-      }
+      };
 
-      const populate = { path: 'product' }
+      const populate = 'product';
 
       const queryOptions: IExtendedQueryOptions = {
-        search,
-        pagination,
+        search, // Pass directly without wrapping
+        pagination, // Make sure pagination is correctly passed
         populate
-      }
+      };
 
       const qrCodes = await this.service.getAll(queryOptions)
       const qrCode = qrCodes[0]
@@ -185,25 +187,27 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     ///:alias/:type/:pid
 
-    let search = mongoose.Types.ObjectId.isValid(qid) ? {
-      $or: [
-        { alias: qid },
-        { _id: qid }
-      ]
-    } : { alias: qid }
+    let search = mongoose.Types.ObjectId.isValid(qid)
+      ? {
+        $or: [
+          { alias: qid },
+          { _id: qid }
+        ]
+      }
+      : { alias: qid };
 
     const pagination = {
       limit: 1,
       skip: 0
-    }
+    };
 
-    const populate = { path: 'product' }
+    const populate = 'product';
 
     const queryOptions: IExtendedQueryOptions = {
-      search,
-      pagination,
+      search, // Pass directly without wrapping
+      pagination, // Make sure pagination is correctly passed
       populate
-    }
+    };
 
     const qrCodes = await this.service.getAll(queryOptions)
 
@@ -248,25 +252,28 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   async playVideo(req: Request, res: Response) {
     const { alias, qid } = req.params
 
-    let search = mongoose.Types.ObjectId.isValid(qid) ? {
-      $or: [
-        { alias: qid },
-        { _id: qid }
-      ]
-    } : { alias: qid }
+
+    let search = mongoose.Types.ObjectId.isValid(qid)
+      ? {
+        $or: [
+          { alias: qid },
+          { _id: qid }
+        ]
+      }
+      : { alias: qid };
 
     const pagination = {
       limit: 1,
       skip: 0
-    }
+    };
 
-    const populate = { path: 'product' }
+    const populate = 'product';
 
     const queryOptions: IExtendedQueryOptions = {
-      search,
-      pagination,
+      search, // Pass directly without wrapping
+      pagination, // Make sure pagination is correctly passed
       populate
-    }
+    };
 
     const qrCodes = await this.service.getAll(queryOptions)
 
