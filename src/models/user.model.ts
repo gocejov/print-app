@@ -4,11 +4,14 @@ var bcrypt = require('bcrypt-nodejs');
 // Define the interface for a User document
 export interface IUser {
   name: string;
+  alias?: string;
+  useAlias?: boolean;
+  active?: boolean;
   lastName: string;
   email: string;
   password: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 // Extend Mongoose's Document interface for the User schema
@@ -20,6 +23,11 @@ const UserSchema: Schema<IUserDocument> = new Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  alias: { type: String, default: 'q' },
+  useAlias: { type: Boolean, default: false },
+  active: { type: Boolean, default: false },
+  created_at: { type: Date, required: true, default: new Date() },
+  updated_at: { type: Date, required: true, default: new Date() }
 });
 
 // hash the password

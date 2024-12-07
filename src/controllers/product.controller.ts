@@ -73,7 +73,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
 
     const typeKey = TypeAlias[file.type as string];
 
-    if (!type || type !== typeKey || alias !== product.alias) {
+    if (!type || type !== typeKey) {
       res.status(406).json({ error: "Incorrect url" });
       return
     }
@@ -94,11 +94,7 @@ export class ProductController extends BaseController<IProductDocument> implemen
   }
 
   async playVideo(req: Request, res: Response) {
-    const { alias, type, pid } = req.params
-    // Define the video file path
-
-    ///:alias/:type/:pid
-
+    const { alias, pid } = req.params
 
     const populate = { path: 'file' }
     const product = await this.service.findById(pid, populate)
@@ -110,15 +106,9 @@ export class ProductController extends BaseController<IProductDocument> implemen
       return
     }
 
-    const typeKey = TypeAlias[file.type as string];
+    const type = TypeAlias[file.type as string];
 
-    if (!type || type !== typeKey || alias !== product.alias) {
-      res.status(406).json({ error: "Incorrect url" });
-      return
-    }
-
-    const videoPath = `${req.protocol}://${req.get('host')}/l/${product.alias}/${type}/${pid}`
-
+    const videoPath = `${req.protocol}://${req.get('host')}/l/${alias}/${type}/${pid}`
 
     // Check if the video file exists (optional)
     res.send(`

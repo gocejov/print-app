@@ -6,6 +6,7 @@ import { IProductService, ProductService } from '../services/product.service';
 import { IProduct } from '../models/product.model';
 import { TypeAlias } from '../constants/alias.constant';
 import { IFile, IFileDocument, isIFile } from '../models/file.model';
+import { IUserDocument } from '@/models/user.model';
 
 export interface IQrCodeController extends QrCodeController {
   getQrCode(req: Request, res: Response): any
@@ -24,24 +25,20 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const { productId, userId } = req.body
     try {
 
-      const populate = { path: 'file' }
+      const populate = [{ path: 'file' }, { path: 'owner' }]
       const product = await this.productService.findById(productId, populate)
 
       const file = product?.file
+      const user = product?.owner as IUserDocument
 
-      if (!isIFile(file) || !product) {
+      if (!isIFile(file) || !product || !user) {
         res.status(406).json({ error: "Incorrect input file" });
         return
       }
 
-      const type = TypeAlias[file.type as string];
+      const alias = user.useAlias ? user.alias : 'q'
 
-      if (!type) {
-        res.status(406).json({ error: "Incorrect input type" });
-        return
-      }
-
-      const url = `${req.protocol}://${req.get('host')}/${product.alias}/${type}/${productId}`
+      const url = `${req.protocol}://${req.get('host')}/${alias}/${productId}`
 
       const qrCodeBase64Url: String | null = await this.qrCodeService.generateQrCodeBase64Url(url)
 
@@ -54,7 +51,6 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
         qrCode: qrCodeBase64Url,
         file: file.id,
         url: url,
-        alias: product.alias,
         owner: userId,
         product: productId,
         createdBy: userId

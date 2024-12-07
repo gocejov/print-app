@@ -5,7 +5,7 @@ import { IProductDocument } from './product.model';
 
 // Define the interface for a QrCode document
 export interface IQrCode {
-  qrCode: String;
+  qrCode?: String;
   file: IFileDocument['_id'];
   alias?: String;
   url: String;

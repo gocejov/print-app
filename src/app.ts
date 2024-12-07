@@ -44,7 +44,7 @@ export const initApp = async (): Promise<Application> => {
         app.use('/api/qrcodes', qrCodeRoutes);
 
         const productController: IProductController = new ProductController()
-        app.get('/:alias/:type/:pid', (req, res) => productController.playVideo(req, res));
+        app.get('/:alias/:pid', (req, res) => productController.playVideo(req, res));
         app.get('/l/:alias/:type/:pid', (req, res) => productController.getVideo(req, res));
 
         // Error handling middleware
