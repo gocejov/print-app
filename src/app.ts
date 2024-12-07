@@ -45,7 +45,7 @@ export const initApp = async (): Promise<Application> => {
             const response = await axios.get('https://api.ipify.org?format=json');
             const data = await response.data;
 
-            res.send(`Your IP address is: ${userIp}, ${data}`);
+            res.json(`Your IP address is: ${userIp}, ${data}`);
         });
 
 
