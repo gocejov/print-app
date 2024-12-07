@@ -1,14 +1,19 @@
 import { query } from 'express';
 import mongoose, { Model, Document } from 'mongoose';
+import { QueryOptions as MongooseQueryOptions } from "mongoose";
 
 
 export interface IBaseService<T> {
   model: Model<T>;
-  getAll(populate?: any | null): Promise<T[]>
+  getAll(options?: ExtendedQueryOptions): Promise<T[]>
   findById(id: string, populate?: any | null): Promise<T | null>
   add(data: Partial<T>): Promise<T>
   update(id: string, data: Partial<T>, populate?: any | null): Promise<T | null>
   remove(id: string, populate?: any | null): Promise<T | null>
+}
+
+export interface ExtendedQueryOptions extends MongooseQueryOptions {
+  populate?: any
 }
 
 export class BaseService<T extends Document> implements IBaseService<T> {
@@ -18,18 +23,23 @@ export class BaseService<T extends Document> implements IBaseService<T> {
     this.model = model;
   }
 
-  async getAll(populate = null): Promise<T[]> {
-    let query = this.model.find();
+  async getAll(options?: ExtendedQueryOptions): Promise<T[]> {
+
+    const { searchQuery = {}, populate } = options || {}
+
+    let query = this.model.find(searchQuery)
     if (populate)
       query = query.populate(populate)
     return query
   }
 
-  async findById(id: string, populate = null): Promise<T | null> {
+  async findById(id: string, options?: ExtendedQueryOptions): Promise<T | null> {
+
+    const { populate } = options || {};
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return null;
     }
-    console.error("populate", populate)
     let query = this.model.findById(id);;
     if (populate)
       query = query.populate(populate)
@@ -41,7 +51,10 @@ export class BaseService<T extends Document> implements IBaseService<T> {
     return doc.save();
   }
 
-  async update(id: string, data: Partial<T>, populate = null): Promise<T | null> {
+  async update(id: string, data: Partial<T>, options?: ExtendedQueryOptions): Promise<T | null> {
+
+    const { populate } = options || {}
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return null;
     }
@@ -50,7 +63,10 @@ export class BaseService<T extends Document> implements IBaseService<T> {
     return query
   }
 
-  async remove(id: string, populate = null): Promise<T | null> {
+  async remove(id: string, options?: ExtendedQueryOptions): Promise<T | null> {
+
+    const { populate } = options || {}
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return null;
     }

@@ -12,6 +12,7 @@ import path from 'path';
 import QRCode, { QRCodeToDataURLOptions } from 'qrcode';
 import sharp from 'sharp';
 import fs from 'fs/promises';
+import { ExtendedQueryOptions } from '../services/base.service';
 
 export interface IQrCodeController extends QrCodeController {
   getQrCode(req: Request, res: Response): any
@@ -34,8 +35,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const { productId, userId } = req.body
     try {
 
-      const populate = [{ path: 'file' }, { path: 'owner' }]
-      const product = await this.productService.findById(productId, populate)
+      const queryOptions: ExtendedQueryOptions = { populate: [{ path: 'file' }, { path: 'owner' }] }
+      const product = await this.productService.findById(productId, queryOptions)
 
       const file = product?.file
       const user = product?.owner as IUserDocument
@@ -132,9 +133,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     ///:alias/:type/:pid
 
-
-    const populate = { path: 'product' }
-    const qrcode = await this.service.findById(qid, populate)
+    const queryOptions: ExtendedQueryOptions = { populate: { path: 'product' } }
+    const qrcode = await this.service.findById(qid, queryOptions)
     const product = qrcode?.product as IProductDocument | null
 
     if (!product) {
@@ -176,8 +176,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   async playVideo(req: Request, res: Response) {
     const { alias, qid } = req.params
 
-    const populate = { path: 'product' }
-    const qrcode = await this.service.findById(qid, populate)
+    const queryOptions: ExtendedQueryOptions = { populate: { path: 'product' } }
+    const qrcode = await this.service.findById(qid, queryOptions)
     const product = qrcode?.product as IProductDocument | null
 
     if (!product) {
