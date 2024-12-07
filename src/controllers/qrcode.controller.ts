@@ -177,7 +177,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     }
     catch (err) {
       console.error('Error generating QR code:', err);
-      res.status(500).send('Error generating QR code');
+      res.status(500).json({ mesage: 'Error generating QR code', err });
     }
   }
 
