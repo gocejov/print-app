@@ -7,7 +7,9 @@ import { IProduct } from '../models/product.model';
 import { TypeAlias } from '../constants/alias.constant';
 import { IFile, IFileDocument, isIFile } from '../models/file.model';
 
-export interface IQrCodeController extends QrCodeController { }
+export interface IQrCodeController extends QrCodeController {
+  getQrCode(req: Request, res: Response): any
+}
 
 export class QrCodeController extends BaseController<IQrCodeDocument> implements IQrCodeController {
   private productService: IProductService
@@ -62,6 +64,56 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       res.status(201).json(qrCode);
     } catch (err: any) {
       res.status(500).json({ error: err.message });
+    }
+  }
+
+  // Route to generate the QR code
+  async getQrCode(req: Request, res: Response) {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).send('URL query parameter is required');
+      return
+    }
+
+    const qrCode = await this.service.findById(id)
+    if (!qrCode?.qrCode) {
+      res.status(400).send('QrCode not found');
+      return
+    }
+    const qrBase64Url = qrCode?.qrCode
+    // Generate the QR code as a data URL (image)
+
+    try {
+      res.send(`
+          <html>
+            <head>
+            <style>
+              body {
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #f0f0f0; /* Light background for better visibility */
+              }
+              .qr-code {
+                max-width: 100%;  /* Scale to fit horizontally with some margin */
+                max-height: 100%; /* Scale to fit vertically with some margin */
+                //border: 2px solid #333; /* Optional border for better visibility */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
+              }
+            </style>
+            </head>
+            <body>
+              <img class="qr-code" src="${qrBase64Url}" alt="QR Code" style="max-width: 100%; height: auto;" />
+            </body>
+          </html>
+        `);
+    }
+    catch (err) {
+      console.error('Error generating QR code:', err);
+      res.status(500).send('Error generating QR code');
     }
   }
 }

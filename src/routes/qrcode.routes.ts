@@ -7,6 +7,7 @@ const qrCodeController: IQrCodeController = new QrCodeController()
 const router = Router();
 
 router.get('/', (req, res) => qrCodeController.getAll(req, res))
+router.get('/qr-code/:id', (req, res) => qrCodeController.getQrCode(req, res))
 router.get('/:id', (req, res) => qrCodeController.findById(req, res))
 router.put('/:id', (req, res) => qrCodeController.update(req, res))
 router.post('/', (req, res) => qrCodeController.add(req, res))
