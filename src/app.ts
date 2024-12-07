@@ -43,9 +43,9 @@ export const initApp = async (): Promise<Application> => {
         app.use('/api/files', fileRoutes);
         app.use('/api/qrcodes', qrCodeRoutes);
 
-        const productController: IProductController = new ProductController()
-        app.get('/:alias/:pid', (req, res) => productController.playVideo(req, res));
-        app.get('/l/:alias/:type/:pid', (req, res) => productController.getVideo(req, res));
+        const qrCodeController: IQrCodeController = new QrCodeController()
+        app.get('/:alias/:qid', (req, res) => qrCodeController.playVideo(req, res));
+        app.get('/l/:alias/:type/:qid', (req, res) => qrCodeController.getVideo(req, res));
 
         // Error handling middleware
         app.use(uploadErrorHandler);

@@ -8,7 +8,7 @@ export interface IQrCode {
   qrCode?: String;
   file: IFileDocument['_id'];
   alias?: String;
-  url: String;
+  url?: String;
   owner: IUserDocument['_id'];
   product: IProductDocument['_id'];
   createdBy: IUserDocument['_id'];

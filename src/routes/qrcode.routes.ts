@@ -12,5 +12,8 @@ router.get('/:id', (req, res) => qrCodeController.findById(req, res))
 router.put('/:id', (req, res) => qrCodeController.update(req, res))
 router.post('/', (req, res) => qrCodeController.add(req, res))
 router.delete('/:id', (req, res) => qrCodeController.remove(req, res))
+router.get('/videos/:id', (req, res) => qrCodeController.getVideo(req, res))
+router.get('/play-video/:id', (req, res) => qrCodeController.playVideo(req, res))
+
 
 export default router;
