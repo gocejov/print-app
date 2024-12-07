@@ -16,7 +16,6 @@ export interface IProduct {
 
 // Extend Mongoose's Document interface for the Product schema
 export interface IProductDocument extends IProduct, Document {
-  file: IFile;
   createdBy: IUser;
   owner: IUser;
 }

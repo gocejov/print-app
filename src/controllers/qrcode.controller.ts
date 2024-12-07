@@ -3,6 +3,7 @@ import { IQrCode, IQrCodeDocument, QrCodeModel } from '../models/qrcode.model';
 import { QrCodeService } from '../services/qrcode.service';
 import { Request, Response } from 'express';
 import { IProductService, ProductService } from '../services/product.service';
+import { IFileService, FileService } from '../services/file.service';
 import { IProduct, IProductDocument } from '../models/product.model';
 import { TypeAlias } from '../constants/alias.constant';
 import { IFile, IFileDocument, isIFile } from '../models/file.model';
@@ -20,10 +21,12 @@ export interface IQrCodeController extends QrCodeController {
 
 export class QrCodeController extends BaseController<IQrCodeDocument> implements IQrCodeController {
   private productService: IProductService
+  private fileService: IFileService
   private qrCodeService: QrCodeService
   constructor() {
     super(new QrCodeService());
     this.productService = new ProductService()
+    this.fileService = new FileService()
     this.qrCodeService = this.service as QrCodeService
   }
 
@@ -170,11 +173,18 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const qrcode = await this.service.findById(qid, populate)
     const product = qrcode?.product as IProductDocument | null
 
+    if (!product) {
+      res.status(406).json({ error: "Incorrect url" });
+      return
+    }
+
+    const f = product?.file
+
     console.error("qrcode", qrcode)
 
-    const file = product?.file
+    const file = await this.fileService.findById(f as string)
 
-    if (!isIFile(file) || !product) {
+    if (!file) {
       res.status(406).json({ error: "Incorrect url" });
       return
     }
