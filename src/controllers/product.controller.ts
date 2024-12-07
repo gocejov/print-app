@@ -6,7 +6,7 @@ import { Request, Response } from 'express';
 import QRCode, { QRCodeToDataURLOptions } from 'qrcode';
 import sharp from 'sharp';
 import fs from 'fs/promises';
-import { FileService, IFileServie } from '../services/file.service';
+import { FileService, IFileService } from '../services/file.service';
 import { IFileDocument, isIFile } from '../models/file.model';
 import { TypeAlias } from '../constants/alias.constant';
 
@@ -17,7 +17,7 @@ export interface IProductController extends BaseController<IProductDocument> {
 
 export class ProductController extends BaseController<IProductDocument> implements IProductController {
 
-  private fileService: IFileServie
+  private fileService: IFileService
 
   constructor() {
     super(new ProductService());

@@ -1,6 +1,6 @@
 import { FileModel, IFile } from '../models/file.model';
 import { IUser, IUserDocument } from '../models/user.model';
-import { FileService, IFileServie } from '../services/file.service';
+import { FileService, IFileService } from '../services/file.service';
 import { UserService, IUserService } from '../services/user.service';
 import { Request, Response } from 'express';
 
@@ -8,7 +8,7 @@ export interface IUploadController extends UploadController { }
 
 export class UploadController implements IUploadController {
 
-  private fileService: IFileServie;
+  private fileService: IFileService;
   private userService: IUserService;
 
   constructor() {
