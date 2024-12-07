@@ -87,14 +87,13 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
         limit: 2,
         skip: 0,
       },
-      select:{ password: 0, createdAt: 0 }
-      
+      select: { password: 0, createdAt: 0 }
+
     }
 
     const qrcodes = await this.service.getAll(queryOptions)
     res.json(qrcodes)
   }
-
 
   // Route to generate the QR code
   async getQrCode(req: Request, res: Response) {
@@ -105,8 +104,19 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
 
-    const queryOptions: IExtendedQueryOptions = {}
-    const qrCode = await this.service.findById(id, queryOptions)
+    const queryOptions: IExtendedQueryOptions = {
+      $or: [
+        { alias: id },
+        { _id: id }
+      ],
+      pagination: {
+        limit: 1,
+        skip: 0
+      },
+    }
+
+    const qrCodes = await this.service.getAll(queryOptions)
+    const qrCode = qrCodes[0]
     if (!qrCode?.qrCode) {
       res.status(400).send('QrCode not found');
       return
@@ -153,9 +163,22 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     ///:alias/:type/:pid
 
-    const queryOptions: IExtendedQueryOptions = { populate: { path: 'product' } }
-    const qrcode = await this.service.findById(qid, queryOptions)
-    const product = qrcode?.product as IProductDocument | null
+    const queryOptions: IExtendedQueryOptions = {
+      $or: [
+        { alias: qid },
+        { _id: qid }
+      ],
+      pagination: {
+        limit: 1,
+        skip: 0
+      },
+      populate: { path: 'product' }
+    }
+    const qrCodes = await this.service.getAll(queryOptions)
+
+    const qrCode = qrCodes[0]
+
+    const product = qrCode?.product as IProductDocument | null
 
     if (!product) {
       res.status(406).json({ error: "Incorrect url" });
@@ -196,9 +219,22 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   async playVideo(req: Request, res: Response) {
     const { alias, qid } = req.params
 
-    const queryOptions: IExtendedQueryOptions = { populate: { path: 'product' } }
-    const qrcode = await this.service.findById(qid, queryOptions)
-    const product = qrcode?.product as IProductDocument | null
+    const queryOptions: IExtendedQueryOptions = {
+      $or: [
+        { alias: qid },
+        { _id: qid }
+      ],
+      pagination: {
+        limit: 1,
+        skip: 0
+      },
+      populate: { path: 'product' }
+    }
+    const qrCodes = await this.service.getAll(queryOptions)
+
+    const qrCode = qrCodes[0]
+
+    const product = qrCode?.product as IProductDocument | null
 
     if (!product) {
       res.status(406).json({ error: "Incorrect url" });
@@ -206,7 +242,6 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     }
 
     const f = product?.file
-
     const file = await this.fileService.findById(f as string)
 
     if (!file) {
