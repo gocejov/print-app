@@ -9,9 +9,12 @@ import fs from 'fs/promises';
 import { FileService, IFileService } from '../services/file.service';
 import { IFileDocument, isIFile } from '../models/file.model';
 import { TypeAlias } from '../constants/alias.constant';
+import { IExtendedQueryOptions } from '../services/base.service';
+import { ParsedQs } from 'qs';
 
 
 export interface IProductController extends BaseController<IProductDocument> {
+  getAllWithOptions(req: Request, res: Response): Promise<void>
   createProduct(req: Request, res: Response): any
 }
 
@@ -22,6 +25,15 @@ export class ProductController extends BaseController<IProductDocument> implemen
   constructor() {
     super(new ProductService());
     this.fileService = new FileService()
+  }
+
+  async getAllWithOptions(req: Request, res: Response): Promise<void> {
+    const queryOptions: IExtendedQueryOptions = {
+      populate: ['owner', 'createdBy', 'file'],
+      // $or: [{ id: "desired_id" }, { alias: "desired_alias" }]
+    }
+    const products = await this.service.getAll(queryOptions)
+    res.json(products);
   }
 
   async createProduct(req: Request, res: Response) {

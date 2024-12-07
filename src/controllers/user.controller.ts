@@ -1,6 +1,8 @@
 import { BaseController } from './base.controller';
-import { IUserDocument } from '../models/user.model';
+import { IUser, IUserDocument } from '../models/user.model';
 import { UserService } from '../services/user.service';
+import { QueryOptions } from 'mongoose';
+import { Request, Response } from 'express';
 
 export interface IUserController extends UserController {
   login(): any

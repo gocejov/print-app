@@ -12,9 +12,10 @@ import path from 'path';
 import QRCode, { QRCodeToDataURLOptions } from 'qrcode';
 import sharp from 'sharp';
 import fs from 'fs/promises';
-import { ExtendedQueryOptions } from '../services/base.service';
+import { IExtendedQueryOptions } from '../services/base.service';
 
 export interface IQrCodeController extends QrCodeController {
+  getAllWithOptions(req: Request, res: Response): Promise<void>
   getQrCode(req: Request, res: Response): any
   getVideo(req: Request, res: Response): any
   playVideo(req: Request, res: Response): any
@@ -35,7 +36,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const { productId, userId } = req.body
     try {
 
-      const queryOptions: ExtendedQueryOptions = { populate: [{ path: 'file' }, { path: 'owner' }] }
+      const queryOptions: IExtendedQueryOptions = { populate: [{ path: 'file' }, { path: 'owner' }] }
       const product = await this.productService.findById(productId, queryOptions)
 
       const file = product?.file
@@ -77,6 +78,24 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     }
   }
 
+  async getAllWithOptions(req: Request, res: Response): Promise<void> {
+
+    const queryOptions: IExtendedQueryOptions = {
+      populate: ['owner', 'createdBy', 'file', 'product'],
+      $or: [{ _id: "67538f63afb346ed2db7fdc4" }, { alias: "c" }],
+      pagination: {
+        limit: 2,
+        skip: 0,
+      },
+      select:{ password: 0, createdAt: 0 }
+      
+    }
+
+    const qrcodes = await this.service.getAll(queryOptions)
+    res.json(qrcodes)
+  }
+
+
   // Route to generate the QR code
   async getQrCode(req: Request, res: Response) {
     const { id } = req.params;
@@ -86,8 +105,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
 
-    const queryOptions:ExtendedQueryOptions = {}
-    const qrCode = await this.service.findById(id,queryOptions)
+    const queryOptions: IExtendedQueryOptions = {}
+    const qrCode = await this.service.findById(id, queryOptions)
     if (!qrCode?.qrCode) {
       res.status(400).send('QrCode not found');
       return
@@ -134,7 +153,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
     ///:alias/:type/:pid
 
-    const queryOptions: ExtendedQueryOptions = { populate: { path: 'product' } }
+    const queryOptions: IExtendedQueryOptions = { populate: { path: 'product' } }
     const qrcode = await this.service.findById(qid, queryOptions)
     const product = qrcode?.product as IProductDocument | null
 
@@ -177,7 +196,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   async playVideo(req: Request, res: Response) {
     const { alias, qid } = req.params
 
-    const queryOptions: ExtendedQueryOptions = { populate: { path: 'product' } }
+    const queryOptions: IExtendedQueryOptions = { populate: { path: 'product' } }
     const qrcode = await this.service.findById(qid, queryOptions)
     const product = qrcode?.product as IProductDocument | null
 
