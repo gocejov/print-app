@@ -86,7 +86,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
 
-    const qrCode = await this.service.findById(id)
+    const queryOptions:ExtendedQueryOptions = {}
+    const qrCode = await this.service.findById(id,queryOptions)
     if (!qrCode?.qrCode) {
       res.status(400).send('QrCode not found');
       return

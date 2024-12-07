@@ -6,10 +6,10 @@ import { QueryOptions as MongooseQueryOptions } from "mongoose";
 export interface IBaseService<T> {
   model: Model<T>;
   getAll(options?: ExtendedQueryOptions): Promise<T[]>
-  findById(id: string, populate?: any | null): Promise<T | null>
+  findById(id: string, options?: ExtendedQueryOptions): Promise<T | null>
   add(data: Partial<T>): Promise<T>
-  update(id: string, data: Partial<T>, populate?: any | null): Promise<T | null>
-  remove(id: string, populate?: any | null): Promise<T | null>
+  update(id: string, data: Partial<T>, options?: ExtendedQueryOptions): Promise<T | null>
+  remove(id: string, options?: ExtendedQueryOptions): Promise<T | null>
 }
 
 export interface ExtendedQueryOptions extends MongooseQueryOptions {
@@ -25,9 +25,9 @@ export class BaseService<T extends Document> implements IBaseService<T> {
 
   async getAll(options?: ExtendedQueryOptions): Promise<T[]> {
 
-    const { searchQuery = {}, populate } = options || {}
+    const { populate, ...queryOptions } = options || {};
 
-    let query = this.model.find(searchQuery)
+    let query = this.model.find(queryOptions)
     if (populate)
       query = query.populate(populate)
     return query
