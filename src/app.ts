@@ -13,7 +13,7 @@ import cors from 'cors'
 import { uploadErrorHandler } from './middlewares/upload.error.middlewares';
 import { IQrCodeController, QrCodeController } from './controllers/qrcode.controller';
 import { IProductController, ProductController } from './controllers/product.controller';
-import fetch from 'node-fetch';
+import axios from 'axios';
 
 const app: Application = express();
 
@@ -42,10 +42,10 @@ export const initApp = async (): Promise<Application> => {
             // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
             const userIp = req.headers['x-forwarded-for'] || req.ip;
 
-            const response = await fetch('https://api.ipify.org?format=json');
-            const data = await response.json();
+            const response = await axios.get('https://api.ipify.org?format=json');
+            const data = await response.data;
 
-            res.send(`Your IP address is: ${userIp}`);
+            res.send(`Your IP address is: ${userIp}, ${data}`);
         });
 
 
