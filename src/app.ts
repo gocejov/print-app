@@ -14,6 +14,8 @@ import { uploadErrorHandler } from './middlewares/upload.error.middlewares';
 import { IQrCodeController, QrCodeController } from './controllers/qrcode.controller';
 import { IProductController, ProductController } from './controllers/product.controller';
 import axios from 'axios';
+import geoip from 'geoip-lite';
+// import { DeviceFingerprint } from 'device-fingerprint';
 
 const app: Application = express();
 
@@ -40,10 +42,24 @@ export const initApp = async (): Promise<Application> => {
 
         app.get('/', async (req, res) => {
             // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
-            const userIp = req.headers['x-forwarded-for'] || req.ip
+            const userIp: string | undefined | string[] = req.headers['x-forwarded-for'] || req.ip
+            const userAgent = req.headers['user-agent']; // User-Agent for fingerprinting
+            const screenResolution = req.query.screenResolution || 'unknown';
+            let geo = null
+            if (userIp) {
+                geo = geoip.lookup(userIp.toString()); // Geolocation info based on IP
+                // const fingerprint = DeviceFingerprint.get(userAgent);
+            }
 
-            res.send(`Your IP address is: ${userIp}`);
+
+            // Generate fingerprint (browser characteristics + device info)
+
+            res.json({ userIp, screenResolution, userAgent, geo });
         });
+
+
+
+
 
 
         //Main Routes
