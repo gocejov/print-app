@@ -14,6 +14,6 @@ export const DeviceFingerprint = {
 
     // Hash the fingerprint to get a unique identifier
     // return hash('sha256').update(fingerprintString).digest('hex');
-    return crypto.createHash('sha256').update(fingerprintString).digest('hex');
+    return ""// crypto.createHash('sha256').update(fingerprintString).digest('hex');
   }
 };
