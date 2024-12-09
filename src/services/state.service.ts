@@ -1,7 +1,5 @@
 import { IUser } from '@/models/user.model';
-import Redis from 'ioredis';
-
-const redis = new Redis();
+import { redisClient as redis } from '../config/redis.config';
 
 export interface State {
     [key: string]: string;
@@ -21,21 +19,6 @@ const getState = async (key: string): Promise<any | null> => {
     return null;
 };
 
-const setPlayerOfTheDayState = async (key: string, value: IUser): Promise<void> => {
-    await redis.set(key, JSON.stringify(value));
-};
-
-const getPlayerOfTheDayState = async (key: string): Promise<IUser | null> => {
-    return await getState(key)
-};
-
-const setSearchPlayerState = async (key: string, value: any, time: number | null = null): Promise<void> => {
-    await setState(key, JSON.stringify(value), time);
-};
-
-const getSearchPlayerState = async (key: string): Promise<any | null> => {
-    return getState(key);
-};
 
 export const getAllStates = async (): Promise<Record<string, string>> => {
     const keys = await redis.keys('*');
@@ -55,4 +38,4 @@ export const cleaAllStates = async (): Promise<string> => {
     return redis.flushall();
 };
 
-export default { setState, getState, setPlayerOfTheDayState, getPlayerOfTheDayState, setSearchPlayerState, getSearchPlayerState, getAllStates, cleaAllStates }
+export default { setState, getState, getAllStates, cleaAllStates, redis }

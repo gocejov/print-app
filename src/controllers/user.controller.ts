@@ -13,6 +13,10 @@ export class UserController extends BaseController<IUserDocument> implements IUs
     super(new UserService());
   }
 
+
+  
+
+
   login() {
     throw new Error('Method not implemented.');
   }

@@ -15,7 +15,9 @@ import { IQrCodeController, QrCodeController } from './controllers/qrcode.contro
 import { IProductController, ProductController } from './controllers/product.controller';
 import axios from 'axios';
 import geoip from 'geoip-lite';
+import { userIdentificationMiddleware } from './middlewares/userIdentification.middleware';
 // import { DeviceFingerprint } from 'device-fingerprint';
+
 
 const app: Application = express();
 
@@ -25,6 +27,9 @@ export const initApp = async (): Promise<Application> => {
 
         //session configuration
         app.use(sesionConfig);
+
+        // Middleware for user identification
+        app.use(userIdentificationMiddleware);
 
         app.set('trust proxy', true);
 
@@ -44,12 +49,13 @@ export const initApp = async (): Promise<Application> => {
             // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
             const userIp: string | undefined | string[] = req.headers['x-forwarded-for'] || req.ip
             const userAgent = req.headers['user-agent']; // User-Agent for fingerprinting
-            const screenResolution = req.query.screenResolution || 'unknown';
+            // const screenResolution = req.query.screenResolution || 'unknown';
             let geo = null
             if (userIp) {
                 geo = geoip.lookup(userIp.toString()); // Geolocation info based on IP
                 // const fingerprint = DeviceFingerprint.get(userAgent);
             }
+            const screenResolution = `${req.headers['x-screen-width']}x${req.headers['x-screen-height']}`;
 
 
             // Generate fingerprint (browser characteristics + device info)

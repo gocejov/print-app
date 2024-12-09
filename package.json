@@ -34,6 +34,7 @@
     "@types/mongoose": "^5.11.96",
     "axios": "^1.7.7",
     "bcrypt-nodejs": "^0.0.3",
+    "connect-redis": "^8.0.1",
     "cors": "^2.8.5",
     "device-fingerprint": "^1.2.3",
     "dotenv": "^16.4.5",
