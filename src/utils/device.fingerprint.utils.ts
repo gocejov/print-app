@@ -1,5 +1,6 @@
 import { hash } from 'crypto';
 import { Request } from 'express';
+import crypto from 'crypto';
 
 export const DeviceFingerprint = {
   get: (userAgent: any, req: Request) => {
@@ -13,6 +14,6 @@ export const DeviceFingerprint = {
 
     // Hash the fingerprint to get a unique identifier
     // return hash('sha256').update(fingerprintString).digest('hex');
-    return hash("sha256", fingerprintString, "hex")
+    return crypto.createHash('sha256').update(fingerprintString).digest('hex');
   }
 };
