@@ -63,11 +63,6 @@ export const initApp = async (): Promise<Application> => {
             res.json({ userIp, screenResolution, userAgent, geo });
         });
 
-
-
-
-
-
         //Main Routes
         app.use('/api/users', userRoutes);
         app.use('/api/products', productsRoutes);
