@@ -1,6 +1,8 @@
 import session from 'express-session';
-import connectRedis, { RedisStore } from 'connect-redis';
+import { RedisStore } from 'connect-redis';
 import { redisClient as redis } from '../config/redis.config';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default session({
     store: new RedisStore({ client: redis }),
@@ -8,8 +10,9 @@ export default session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: true
-        //httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        httpOnly: true,
         //maxAge: 1000 * 60 * 60 * 24, // Session duration 1 day
     },
 })

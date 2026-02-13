@@ -12,18 +12,21 @@ import { internalErrorHandler } from './middlewares/error.handler';
 import cors from 'cors'
 import { uploadErrorHandler } from './middlewares/upload.error.middlewares';
 import { IQrCodeController, QrCodeController } from './controllers/qrcode.controller';
-import { IProductController, ProductController } from './controllers/product.controller';
-import axios from 'axios';
 import geoip from 'geoip-lite';
 import { userIdentificationMiddleware } from './middlewares/userIdentification.middleware';
+import path from 'path';
 // import { DeviceFingerprint } from 'device-fingerprint';
 
 
 const app: Application = express();
+const reservedAliases = new Set(['api', 'api-docs', 'l']);
 
 export const initApp = async (): Promise<Application> => {
     try {
         await connectDB();
+
+        // Needed before session middleware when running behind a proxy.
+        app.set('trust proxy', true);
 
         //session configuration
         app.use(sesionConfig);
@@ -31,12 +34,11 @@ export const initApp = async (): Promise<Application> => {
         // Middleware for user identification
         app.use(userIdentificationMiddleware);
 
-        app.set('trust proxy', true);
-
         // swagger configuration
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
         app.use(express.json());
+        app.use(express.static(path.resolve('public')));
 
         // Allow requests from a specific origin
         app.use(cors({
@@ -71,8 +73,14 @@ export const initApp = async (): Promise<Application> => {
         app.use('/api/qrcodes', qrCodeRoutes);
 
         const qrCodeController: IQrCodeController = new QrCodeController()
-        app.get('/:alias/:qid', (req, res) => qrCodeController.playVideo(req, res));
         app.get('/l/:alias/:type/:qid', (req, res) => qrCodeController.getVideo(req, res));
+        app.get('/:alias/:qid', (req, res, next) => {
+            if (reservedAliases.has(req.params.alias)) {
+                next();
+                return;
+            }
+            qrCodeController.playVideo(req, res);
+        });
 
         // Error handling middleware
         app.use(uploadErrorHandler);
@@ -86,4 +94,3 @@ export const initApp = async (): Promise<Application> => {
         process.exit(1);
     }
 }
-

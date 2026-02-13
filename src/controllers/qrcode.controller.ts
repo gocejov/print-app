@@ -117,8 +117,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
 
 
       if (!id) {
-        res.status(400).send('URL query parameter is required');
-        return
+        return res.status(400).send('URL query parameter is required');
       }
 
       const $or = [
@@ -140,14 +139,13 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       const qrCodes = await this.service.getAll(queryOptions)
       const qrCode = qrCodes[0]
       if (!qrCode?.qrCode) {
-        res.status(400).send('QrCode not found');
-        return
+        return res.status(400).send('QrCode not found');
       }
       const qrBase64Url = qrCode?.qrCode
       // Generate the QR code as a data URL (image)
 
 
-      res.send(`
+      return res.send(`
             <html>
               <head>
               <style>
@@ -176,7 +174,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     }
     catch (err) {
       console.error('Error generating QR code:', err);
-      res.status(500).json({ mesage: 'Error generating QR code', err });
+      return res.status(500).json({ mesage: 'Error generating QR code', err });
     }
   }
 
@@ -229,6 +227,11 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
 
+    if (file.type === 'web-url') {
+      res.redirect(product.url as string);
+      return;
+    }
+
     const videoPath: string = product.url as string
 
     const fullVideoPath = path.resolve(videoPath);
@@ -278,6 +281,11 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     if (!file) {
       res.status(406).json({ error: "Incorrect url" });
       return
+    }
+
+    if (file.type === 'web-url') {
+      res.redirect(product.url as string);
+      return;
     }
 
     const type = TypeAlias[file.type as string];

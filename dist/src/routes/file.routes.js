@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+// import { cacheMiddleware } from '../middlewares/cache.middleware';
+const file_controller_1 = require("../controllers/file.controller");
+const fileController = new file_controller_1.FileController();
+const router = (0, express_1.Router)();
+router.get('/', (req, res) => fileController.getAll(req, res));
+router.get('/:id', (req, res) => fileController.findById(req, res));
+router.put('/:id', (req, res) => fileController.update(req, res));
+router.post('/', (req, res) => fileController.add(req, res));
+router.delete('/:id', (req, res) => fileController.remove(req, res));
+exports.default = router;

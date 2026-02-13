@@ -2,7 +2,7 @@ import { initApp } from './app';
 import { Application } from 'express';
 import dotenv from 'dotenv';
 
-const startSrever = async () => {
+const startServer = async () => {
   dotenv.config();
   const port = process.env.PORT || 3000
   const app: Application = await initApp()
@@ -11,4 +11,4 @@ const startSrever = async () => {
   });
 }
 
-startSrever()
+startServer()

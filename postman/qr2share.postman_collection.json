@@ -1,0 +1,801 @@
+{
+  "info": {
+    "_postman_id": "9c1605f7-4ec8-40fa-bab4-0205db3075bc",
+    "name": "qr2share API",
+    "description": "Postman collection for qr2share backend endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "GET /api/users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/users/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-user-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/users/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-user-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/users/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-user-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET /api/products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/products/with-options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/with-options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "with-options"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/products/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-product-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/products/create/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample Product\",\n  \"owner\": \"replace-user-id\",\n  \"file\": \"replace-file-id\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/create/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "create",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/products/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Product\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-product-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/products/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-product-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "item": [
+        {
+          "name": "POST /api/upload/video/:uid",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload/video/:uid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "upload",
+                "video",
+                ":uid"
+              ],
+              "variable": [
+                {
+                  "key": "uid",
+                  "value": "replace-user-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "GET /api/files",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "files"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/files/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/files/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-file-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/files",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"web-url\",\n  \"url\": \"https://example.com\",\n  \"createdBy\": \"replace-user-id\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "files"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/files/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated File\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/files/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-file-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/files/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/files/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-file-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "QrCodes",
+      "item": [
+        {
+          "name": "GET /api/qrcodes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/qrcodes/with-options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/with-options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                "with-options"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/qrcodes/qr-code/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/qr-code/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                "qr-code",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/qrcodes/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /api/qrcodes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"replace-product-id\",\n  \"userId\": \"replace-user-id\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/qrcodes/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alias\": \"sample-alias\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/qrcodes/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/qrcodes/videos/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/videos/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                "videos",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/qrcodes/play-video/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qrcodes/play-video/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "qrcodes",
+                "play-video",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public Video Routes",
+      "item": [
+        {
+          "name": "GET /:alias/:qid",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/:alias/:qid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ":alias",
+                ":qid"
+              ],
+              "variable": [
+                {
+                  "key": "alias",
+                  "value": "q"
+                },
+                {
+                  "key": "qid",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /l/:alias/:type/:qid",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/l/:alias/:type/:qid",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "l",
+                ":alias",
+                ":type",
+                ":qid"
+              ],
+              "variable": [
+                {
+                  "key": "alias",
+                  "value": "q"
+                },
+                {
+                  "key": "type",
+                  "value": "v"
+                },
+                {
+                  "key": "qid",
+                  "value": "replace-qrcode-id"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
