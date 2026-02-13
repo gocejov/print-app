@@ -1,5 +1,5 @@
 {
-  "name": "who-are-you",
+  "name": "print-prank",
   "version": "1.0.0",
   "description": "A game about trying to guess who a football player is.",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "mongodb": "docker run -d -p 27017:27017 --name local-mongo -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password -e MONGO_INITDB_DATABASE=print-prank custom-mongo",
     "mongodb:stop": "docker stop local-mongo && docker rm local-mongo",
-    "build": "npx tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts"
   },
@@ -15,7 +15,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
+    "@types/express": "^4.17.21",
     "@types/express-session": "^1.18.0",
     "@types/geoip-lite": "^1.4.4",
     "@types/lodash": "^4.17.13",

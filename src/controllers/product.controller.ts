@@ -47,9 +47,11 @@ export class ProductController extends BaseController<IProductDocument> implemen
         return
       }
 
+      const productUrl = file.type === 'web-url' ? file.url : file.path;
+
       const productData: IProduct = {
         file: file.id,
-        url: file.path,
+        url: productUrl as string,
         owner: userId,
         createdBy: userId,
         created_at: new Date(),

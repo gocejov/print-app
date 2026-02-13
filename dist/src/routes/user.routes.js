@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+// import userControler from '../controllers/user.controller';
+// import { cacheMiddleware } from '../middlewares/cache.middleware';
+const user_controller_1 = require("../controllers/user.controller");
+const userController = new user_controller_1.UserController();
+const router = (0, express_1.Router)();
+router.get('/', (req, res) => userController.getAll(req, res));
+router.get('/:id', (req, res) => userController.findById(req, res));
+router.put('/:id', (req, res) => userController.update(req, res));
+router.post('/', (req, res) => userController.add(req, res));
+router.delete('/:id', (req, res) => userController.remove(req, res));
+exports.default = router;

@@ -25,7 +25,7 @@ export class QrCodeService extends BaseService<IQrCodeDocument> implements IQrCo
     // errorCorrectionLevel: 'L', // High error correction level (L, M, Q, H)
     // width: 500,               // Size in pixels
 
-    const options: Object = qrCodeOptions ? qrCodeOptions : { errorCorrectionLevel: 'Q', width: 500, };
+    const options: Object = qrCodeOptions ? qrCodeOptions : { errorCorrectionLevel: 'Q', width: 2024, };
 
     try {
       const qrCodeDataBuffer: any = await QRCode.toBuffer(url, options);

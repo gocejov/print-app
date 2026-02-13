@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+// import { cacheMiddleware } from '../middlewares/cache.middleware';
+const upload_controller_1 = require("../controllers/upload.controller");
+const upload_service_1 = require("../services/upload.service");
+const uploadController = new upload_controller_1.UploadController();
+const router = (0, express_1.Router)();
+router.post('/video/:uid', upload_service_1.upload.single('video'), (req, res) => uploadController.videoUpload(req, res));
+exports.default = router;

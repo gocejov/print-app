@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>qr2share CRUD</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #17212b;
+      --muted: #5d6b79;
+      --line: #d9e1ea;
+      --accent: #0f766e;
+      --accent-dark: #0a5c56;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #edf4ff 0%, #f6fbf8 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(19, 35, 52, 0.05);
+    }
+    h1 { margin: 0 0 4px; font-size: 26px; }
+    p { margin: 0; color: var(--muted); }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 12px;
+      align-items: end;
+    }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 12px; color: var(--muted); }
+    .col-3 { grid-column: span 3; }
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+    input, select, textarea, button {
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    button {
+      background: #fff;
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button.primary:hover { background: var(--accent-dark); }
+    button.danger { color: var(--danger); border-color: #f3c5c2; }
+    .table {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th { color: var(--muted); font-weight: 600; }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: #334455;
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 20px;
+    }
+    .status.error { color: var(--danger); }
+    pre {
+      margin: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+      max-height: 320px;
+      font-size: 12px;
+    }
+    @media (max-width: 860px) {
+      .col-3, .col-4, .col-6 { grid-column: span 12; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>qr2share CRUD</h1>
+      <p>Compatible with your API endpoints. Open this at <span class="mono">/crud/</span>.</p>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="field col-6">
+          <label for="baseUrl">Base URL</label>
+          <input id="baseUrl" type="text" />
+        </div>
+        <div class="field col-3">
+          <label for="resource">Resource</label>
+          <select id="resource">
+            <option value="users">Users</option>
+            <option value="products">Products</option>
+            <option value="files">Files</option>
+            <option value="qrcodes">QrCodes</option>
+          </select>
+        </div>
+        <div class="field col-3">
+          <label for="entityId">Entity ID</label>
+          <input id="entityId" type="text" placeholder="Mongo ObjectId" />
+        </div>
+      </div>
+      <div class="actions" style="margin-top: 12px;">
+        <button class="primary" id="listBtn">List</button>
+        <button id="getBtn">Get by ID</button>
+        <button class="primary" id="createBtn">Create</button>
+        <button id="updateBtn">Update</button>
+        <button class="danger" id="deleteBtn">Delete</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="payload">Payload JSON (used for create/update)</label>
+        <textarea id="payload"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 240px;">ID</th>
+              <th>Preview</th>
+              <th style="width: 180px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label>Response</label>
+        <pre id="responseBox">{}</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const endpoints = {
+      users: { base: "/api/users", create: "/api/users" },
+      products: { base: "/api/products", create: "/api/products/create/" },
+      files: { base: "/api/files", create: "/api/files" },
+      qrcodes: { base: "/api/qrcodes", create: "/api/qrcodes" }
+    };
+
+    const samplePayloads = {
+      users: { name: "Sample User" },
+      products: { name: "Sample Product", owner: "replace-user-id", file: "replace-file-id" },
+      files: { type: "web-url", url: "https://example.com", createdBy: "replace-user-id" },
+      qrcodes: { productId: "replace-product-id", userId: "replace-user-id" }
+    };
+
+    const baseUrlInput = document.getElementById("baseUrl");
+    const resourceInput = document.getElementById("resource");
+    const idInput = document.getElementById("entityId");
+    const payloadInput = document.getElementById("payload");
+    const listBody = document.getElementById("listBody");
+    const responseBox = document.getElementById("responseBox");
+    const statusEl = document.getElementById("status");
+
+    baseUrlInput.value = window.location.origin;
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.className = isError ? "status error" : "status";
+    }
+
+    function selectedBasePath() {
+      return endpoints[resourceInput.value].base;
+    }
+
+    function selectedCreatePath() {
+      return endpoints[resourceInput.value].create;
+    }
+
+    function setPayloadForResource() {
+      const sample = samplePayloads[resourceInput.value];
+      payloadInput.value = JSON.stringify(sample, null, 2);
+    }
+
+    function renderResponse(data) {
+      responseBox.textContent = JSON.stringify(data, null, 2);
+    }
+
+    function getRecordId(item) {
+      return item?._id || item?.id || "";
+    }
+
+    function preview(item) {
+      const copy = { ...item };
+      if (copy.qrCode && String(copy.qrCode).length > 60) {
+        copy.qrCode = String(copy.qrCode).slice(0, 60) + "...";
+      }
+      return JSON.stringify(copy);
+    }
+
+    function renderList(items) {
+      listBody.innerHTML = "";
+      const safe = Array.isArray(items) ? items : [];
+      for (const item of safe) {
+        const id = getRecordId(item);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="mono">${id || "-"}</td>
+          <td class="mono">${preview(item)}</td>
+          <td>
+            <div class="actions">
+              <button data-id="${id}" data-action="load">Load</button>
+              <button data-id="${id}" data-action="delete" class="danger">Delete</button>
+            </div>
+          </td>
+        `;
+        listBody.appendChild(tr);
+      }
+    }
+
+    async function request(method, path, body) {
+      const url = baseUrlInput.value.replace(/\/$/, "") + path;
+      const options = {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      };
+      if (body) options.body = JSON.stringify(body);
+      const res = await fetch(url, options);
+      let data;
+      const text = await res.text();
+      try { data = text ? JSON.parse(text) : {}; } catch (_) { data = { raw: text }; }
+      if (!res.ok) {
+        const msg = data?.error || data?.message || res.statusText;
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function listItems() {
+      setStatus("Loading...");
+      try {
+        const data = await request("GET", selectedBasePath());
+        renderResponse(data);
+        renderList(Array.isArray(data) ? data : data?.data || []);
+        setStatus("List loaded.");
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    }
+
+    async function getById() {
+      const id = idInput.value.trim();
+      if (!id) return setStatus("Entity ID is required.", true);
+      setStatus("Loading...");
+      try {
+        const data = await request("GET", `${selectedBasePath()}/${id}`);
+        renderResponse(data);
+        setStatus("Item loaded.");
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    }
+
+    async function createItem() {
+      setStatus("Creating...");
+      try {
+        const body = JSON.parse(payloadInput.value || "{}");
+        const data = await request("POST", selectedCreatePath(), body);
+        renderResponse(data);
+        setStatus("Created.");
+        await listItems();
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    }
+
+    async function updateItem() {
+      const id = idInput.value.trim();
+      if (!id) return setStatus("Entity ID is required for update.", true);
+      setStatus("Updating...");
+      try {
+        const body = JSON.parse(payloadInput.value || "{}");
+        const data = await request("PUT", `${selectedBasePath()}/${id}`, body);
+        renderResponse(data);
+        setStatus("Updated.");
+        await listItems();
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    }
+
+    async function deleteItem(forceId) {
+      const id = (forceId || idInput.value).trim();
+      if (!id) return setStatus("Entity ID is required for delete.", true);
+      setStatus("Deleting...");
+      try {
+        const data = await request("DELETE", `${selectedBasePath()}/${id}`);
+        renderResponse(data);
+        setStatus("Deleted.");
+        await listItems();
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    }
+
+    document.getElementById("listBtn").addEventListener("click", listItems);
+    document.getElementById("getBtn").addEventListener("click", getById);
+    document.getElementById("createBtn").addEventListener("click", createItem);
+    document.getElementById("updateBtn").addEventListener("click", updateItem);
+    document.getElementById("deleteBtn").addEventListener("click", () => deleteItem());
+
+    resourceInput.addEventListener("change", () => {
+      setPayloadForResource();
+      listBody.innerHTML = "";
+    });
+
+    listBody.addEventListener("click", async (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLButtonElement)) return;
+      const id = target.dataset.id || "";
+      const action = target.dataset.action;
+      idInput.value = id;
+      if (action === "load") await getById();
+      if (action === "delete") await deleteItem(id);
+    });
+
+    setPayloadForResource();
+  </script>
+</body>
+</html>
