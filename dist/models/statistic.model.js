@@ -32,21 +32,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QrCodeModel = void 0;
+exports.StatisticModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 // Create the QrCode schema
-const QrCodeSchema = new mongoose_1.Schema({
-    qrCode: { type: String, required: false },
-    file: { type: String, required: true },
-    alias: { type: String, required: true, default: 'c' },
-    url: { type: String, required: false },
-    owner: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
-    product: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'products', required: true },
-    createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
-    created_at: { type: Date, required: true, default: new Date() },
-    updated_at: { type: Date, required: true, default: new Date() },
+const statisticSchema = new mongoose_1.Schema({
+    qrCode: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'qrcodes', required: true },
+    data: { type: mongoose_1.Schema.Types.Mixed, required: true },
+    created_at: { type: Date, required: true, default: Date.now },
+    updated_at: { type: Date, required: true, default: Date.now },
 });
-QrCodeSchema.pre('save', function (next) {
+statisticSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!this.created_at)
             this.created_at = new Date();
@@ -55,4 +50,4 @@ QrCodeSchema.pre('save', function (next) {
     });
 });
 // Define the model
-exports.QrCodeModel = mongoose_1.default.model('qrcodes', QrCodeSchema);
+exports.StatisticModel = mongoose_1.default.model('statistics', statisticSchema);

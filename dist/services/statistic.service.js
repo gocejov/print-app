@@ -8,19 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const app_1 = require("./app");
-const dotenv_1 = __importDefault(require("dotenv"));
-const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
-    dotenv_1.default.config();
-    const port = parseInt(process.env.PORT || "3000", 10);
-    const hostname = process.env.HOSTNAME || "127.0.0.1";
-    const app = yield (0, app_1.initApp)();
-    app.listen(port, hostname, () => {
-        console.log(`Server running on http://localhost:${port}`);
-    });
-});
-startServer();
+exports.StatisticService = void 0;
+const base_service_1 = require("./base.service");
+const statistic_model_1 = require("@/models/statistic.model");
+class StatisticService extends base_service_1.BaseService {
+    constructor() {
+        super(statistic_model_1.StatisticModel);
+    }
+    findStatisticByQrCode(qrCodeId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.model.find({
+                qrCode: qrCodeId
+            });
+        });
+    }
+}
+exports.StatisticService = StatisticService;

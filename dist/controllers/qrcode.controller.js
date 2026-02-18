@@ -22,10 +22,12 @@ const alias_constant_1 = require("../constants/alias.constant");
 const file_model_1 = require("../models/file.model");
 const path_1 = __importDefault(require("path"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const statistic_service_1 = require("@/services/statistic.service");
 class QrCodeController extends base_controller_1.BaseController {
     constructor() {
         super(new qrcode_service_1.QrCodeService());
         this.productService = new product_service_1.ProductService();
+        this.statisticService = new statistic_service_1.StatisticService();
         this.fileService = new file_service_1.FileService();
         this.qrCodeService = this.service;
     }
@@ -236,6 +238,14 @@ class QrCodeController extends base_controller_1.BaseController {
                 res.status(406).json({ error: "Incorrect url" });
                 return;
             }
+            const { fingerprint, fingerprintData } = res.locals;
+            const statistic = {
+                qrCode: qrCode._id,
+                data: { fingerprintData, fingerprint }
+            };
+            this.statisticService.add(statistic).catch((err) => {
+                console.error("Error saving statistic:", err);
+            });
             if (file.type === 'web-url') {
                 res.redirect(product.url);
                 return;

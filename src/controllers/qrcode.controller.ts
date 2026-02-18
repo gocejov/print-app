@@ -15,6 +15,8 @@ import fs from 'fs/promises';
 import { IExtendedQueryOptions } from '../services/base.service';
 import { error } from 'console';
 import mongoose from 'mongoose';
+import { StatisticService } from '../services/statistic.service';
+import { IStatistic, StatisticModel } from '../models/statistic.model';
 
 export interface IQrCodeController extends QrCodeController {
   getAllWithOptions(req: Request, res: Response): Promise<void>
@@ -27,9 +29,11 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   private productService: IProductService
   private fileService: IFileService
   private qrCodeService: QrCodeService
+  private statisticService: StatisticService
   constructor() {
     super(new QrCodeService());
     this.productService = new ProductService()
+    this.statisticService = new StatisticService()
     this.fileService = new FileService()
     this.qrCodeService = this.service as QrCodeService
   }
@@ -282,6 +286,16 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       res.status(406).json({ error: "Incorrect url" });
       return
     }
+    const { fingerprint, fingerprintData } = res.locals;
+
+    const statistic: IStatistic = {
+      qrCode: qrCode._id,
+      data: { fingerprintData, fingerprint }
+    }
+
+    this.statisticService.add(statistic).catch((err) => {
+      console.error("Error saving statistic:", err);
+    });
 
     if (file.type === 'web-url') {
       res.redirect(product.url as string);
