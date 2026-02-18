@@ -34,7 +34,7 @@ export class StatisticController extends BaseController<IStatisticDocument> impl
 
   async findStatisticByQrCode(req: Request, res: Response): Promise<void> {
     const { qid } = req.params
-    const statistic = await this.statisticService.findStatisticByQrCode(qid)
-    res.json({ count: statistic.keys.length, statistic });
+    const statistics: IStatisticDocument[] = await this.statisticService.findStatisticByQrCode(qid)
+    res.json({ count: statistics.length, statistics: statistics });
   }
 }
