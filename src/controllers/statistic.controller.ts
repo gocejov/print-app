@@ -18,6 +18,7 @@ import { StatisticService, IStatisticService } from '../services/statistic.servi
 export interface IStatisticController extends BaseController<IStatisticDocument> {
   getAllWithOptions(req: Request, res: Response): Promise<void>
   findStatisticByQrCode(req: Request, res: Response): Promise<void>
+  findTotalStatisticByQrCode(req: Request, res: Response): Promise<void>
 }
 
 export class StatisticController extends BaseController<IStatisticDocument> implements IStatisticController {
@@ -36,5 +37,11 @@ export class StatisticController extends BaseController<IStatisticDocument> impl
     const { qid } = req.params
     const statistics: IStatisticDocument[] = await this.statisticService.findStatisticByQrCode(qid)
     res.json({ count: statistics.length, statistics: statistics });
+  }
+
+  async findTotalStatisticByQrCode(req: Request, res: Response): Promise<void> {
+    const { qid } = req.params
+    const statistics: IStatisticDocument[] = await this.statisticService.findStatisticByQrCode(qid)
+    res.json({ count: statistics.length });
   }
 }
