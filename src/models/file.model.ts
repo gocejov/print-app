@@ -53,10 +53,9 @@ const FileSchema: Schema<IFileDocument> = new Schema({
 });
 
 FileSchema.pre('save', async function (next) { // this line
-  const file = this;
-  file.created_at = new Date()
-  file.updated_at = new Date()
-  file.date = new Date()
+  if (!this.created_at) this.created_at = new Date();
+  if (!this.date) this.date = new Date()
+  this.updated_at = new Date();
   next();
 });
 

@@ -27,7 +27,6 @@ const error_handler_1 = require("./middlewares/error.handler");
 const cors_1 = __importDefault(require("cors"));
 const upload_error_middlewares_1 = require("./middlewares/upload.error.middlewares");
 const qrcode_controller_1 = require("./controllers/qrcode.controller");
-const geoip_lite_1 = __importDefault(require("geoip-lite"));
 const userIdentification_middleware_1 = require("./middlewares/userIdentification.middleware");
 const path_1 = __importDefault(require("path"));
 // import { DeviceFingerprint } from 'device-fingerprint';
@@ -53,18 +52,7 @@ const initApp = () => __awaiter(void 0, void 0, void 0, function* () {
             credentials: true,
         }));
         app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-            // Check for the IP in 'X-Forwarded-For' header, fall back to 'req.ip'
-            const userIp = req.headers['x-forwarded-for'] || req.ip;
-            const userAgent = req.headers['user-agent']; // User-Agent for fingerprinting
-            // const screenResolution = req.query.screenResolution || 'unknown';
-            let geo = null;
-            if (userIp) {
-                geo = geoip_lite_1.default.lookup(userIp.toString()); // Geolocation info based on IP
-                // const fingerprint = DeviceFingerprint.get(userAgent);
-            }
-            const screenResolution = `${req.headers['x-screen-width']}x${req.headers['x-screen-height']}`;
-            // Generate fingerprint (browser characteristics + device info)
-            res.json({ userIp, screenResolution, userAgent, geo });
+            res.json(req.fingerprintData);
         }));
         //Main Routes
         app.use('/api/users', user_routes_1.default);

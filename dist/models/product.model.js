@@ -47,9 +47,9 @@ const ProductSchema = new mongoose_1.Schema({
 });
 ProductSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = this;
-        user.created_at = new Date();
-        user.updated_at = new Date();
+        if (!this.created_at)
+            this.created_at = new Date();
+        this.updated_at = new Date();
         next();
     });
 });
