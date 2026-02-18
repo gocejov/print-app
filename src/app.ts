@@ -5,6 +5,7 @@ import productsRoutes from './routes/product.routes';
 import uploadRoutes from './routes/upload.routes';
 import fileRoutes from './routes/file.routes';
 import qrCodeRoutes from './routes/qrcode.routes';
+import statisticRoutes from './routes/statistic.routes';
 import sesionConfig from './config/sesion.config';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.config';
@@ -57,6 +58,7 @@ export const initApp = async (): Promise<Application> => {
         app.use('/api/upload', uploadRoutes);
         app.use('/api/files', fileRoutes);
         app.use('/api/qrcodes', qrCodeRoutes);
+        app.use('/api/statistics', statisticRoutes);
 
         const qrCodeController: IQrCodeController = new QrCodeController()
         app.get('/l/:alias/:type/:qid', (req, res) => qrCodeController.getVideo(req, res));
