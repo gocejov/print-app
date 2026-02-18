@@ -3,6 +3,7 @@ import { IStatisticDocument, StatisticModel } from '../models/statistic.model';
 
 export interface IStatisticService extends IBaseService<IStatisticDocument> {
   findStatisticByQrCode(qrCodeId: string): Promise<IStatisticDocument[]>
+  countByQrCode(qrCodeId: string): Promise<number>
 }
 
 export class StatisticService extends BaseService<IStatisticDocument> implements IStatisticService {
@@ -13,6 +14,12 @@ export class StatisticService extends BaseService<IStatisticDocument> implements
   async findStatisticByQrCode(qrCodeId: string): Promise<IStatisticDocument[]> {
     return this.model.find({
       qrCode: qrCodeId
+    });
+  }
+
+  async countByQrCode(qrCodeId: string): Promise<number> {
+    return this.model.countDocuments({
+      qrCode: qrCodeId,
     });
   }
 
