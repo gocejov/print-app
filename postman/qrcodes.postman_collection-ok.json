@@ -1,0 +1,249 @@
+{
+  "info": {
+    "_postman_id": "4dfc610f-973e-4df4-9440-38c09699eeb8",
+    "name": "qrcodes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "408887"
+  },
+  "item": [
+    {
+      "name": "qrcodes",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\":\"Goce\",\r\n    \"lastName\":\"Jovanceski\",\r\n    \"email\":\"jovancevski.g@gmail.com\",\r\n    \"password\":\"janko1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "qrcodes/:id",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\":\"Goce\",\r\n    \"lastName\":\"Jovanceski\",\r\n    \"email\":\"jovancevski.g@gmail.com\",\r\n    \"password\":\"janko1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}/67535749cd8fd6f1345ba281",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}",
+            "67535749cd8fd6f1345ba281"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "qrcodes/qr-code/:id",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\":\"Goce\",\r\n    \"lastName\":\"Jovanceski\",\r\n    \"email\":\"jovancevski.g@gmail.com\",\r\n    \"password\":\"janko1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}/qr-code/67538f63afb346ed2db7fdc4",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}",
+            "qr-code",
+            "67538f63afb346ed2db7fdc4"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "qrcodes",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"productId\": \"67535749cd8fd6f1345ba281\",\r\n    \"userId\":\"67533c604ab717c2dceaa089\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "qrcodes/create/",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"fileId\":\"67533e0360ba6b10afe94080\",\r\n    \"userId\":\"67533c604ab717c2dceaa089\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}/create",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}",
+            "create"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "qrcodes",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"product\":\"6753e35668b5aad41d287f50\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}/6753d3636dbc285bb6bf087f",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}",
+            "6753d3636dbc285bb6bf087f"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "qrcodes",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\":\"Goce\",\r\n    \"lastName\":\"Jovanceski\",\r\n    \"email\":\"jovancevski.g@gmail.com\",\r\n    \"password\":\"janko1234\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/{{main_path}}/67538875a77cedc822b5a9ab",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "{{main_path}}",
+            "67538875a77cedc822b5a9ab"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url_prod",
+      "value": "https://turl.world/api/"
+    },
+    {
+      "key": "base_url_localhost",
+      "value": "localhost:3000/api"
+    },
+    {
+      "key": "base_url",
+      "value": "https://turl.world/api"
+    },
+    {
+      "key": "main_path",
+      "value": "qrcodes"
+    }
+  ]
+}

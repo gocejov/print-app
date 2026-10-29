@@ -29,7 +29,7 @@ export class StatisticController extends BaseController<IStatisticDocument> impl
   }
 
   async getAllWithOptions(req: Request, res: Response): Promise<void> {
-    const statistic = await this.service.getAll()
+    const statistic = await this.service.getAll(res.locals.scope)
     res.json(statistic);
   }
 

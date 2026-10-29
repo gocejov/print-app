@@ -37,12 +37,15 @@ const mongoose_1 = __importStar(require("mongoose"));
 // Create the QrCode schema
 const statisticSchema = new mongoose_1.Schema({
     qrCode: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'qrcodes', required: true },
+    campaign: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'campaigns' },
+    product: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'products' },
     data: { type: mongoose_1.Schema.Types.Mixed, required: true },
     created_at: { type: Date, required: true, default: Date.now },
     updated_at: { type: Date, required: true, default: Date.now },
 });
 statisticSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
+        // this line
         if (!this.created_at)
             this.created_at = new Date();
         this.updated_at = new Date();

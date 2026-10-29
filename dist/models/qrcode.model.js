@@ -36,18 +36,29 @@ exports.QrCodeModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 // Create the QrCode schema
 const QrCodeSchema = new mongoose_1.Schema({
+    name: { type: String, maxlength: 120, trim: true },
+    status: { type: String, enum: ['active', 'paused'], default: 'active' },
+    destinationUrl: { type: String },
     qrCode: { type: String, required: false },
-    file: { type: String, required: true },
+    file: { type: String },
     alias: { type: String, required: true, default: 'c' },
     url: { type: String, required: false },
     owner: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
-    product: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'products', required: true },
+    product: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'products' },
+    campaign: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'campaigns' },
     createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
-    created_at: { type: Date, required: true, default: new Date() },
-    updated_at: { type: Date, required: true, default: new Date() },
+    created_at: { type: Date, required: true, default: Date.now },
+    updated_at: { type: Date, required: true, default: Date.now },
+});
+QrCodeSchema.pre('validate', function () {
+    if (!!this.product === !!this.campaign)
+        this.invalidate('product', 'Choose exactly one product or campaign');
+    if (this.product && !this.file)
+        this.invalidate('file', 'A product QR requires a file');
 });
 QrCodeSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
+        // this line
         if (!this.created_at)
             this.created_at = new Date();
         this.updated_at = new Date();

@@ -20,7 +20,7 @@ const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
     const hostname = process.env.HOSTNAME || "127.0.0.1";
     const app = yield (0, app_1.initApp)();
     app.listen(port, hostname, () => {
-        console.log(`Server running on http://localhost:${port}`);
+        console.log(`Server running on http://${hostname}:${port}`);
     });
 });
 startServer();

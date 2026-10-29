@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const http_utils_1 = require("../utils/http.utils");
+const express_1 = require("express");
+// import { cacheMiddleware } from '../middlewares/cache.middleware';
+const statistic_controller_1 = require("../controllers/statistic.controller");
+const statisticController = new statistic_controller_1.StatisticController();
+const router = (0, express_1.Router)();
+router.get('/', (0, http_utils_1.asyncHandler)((req, res) => statisticController.getAll(req, res)));
+router.get('/:id', (0, http_utils_1.asyncHandler)((req, res) => statisticController.findById(req, res)));
+router.get('/by-codes/:qid', (0, http_utils_1.asyncHandler)((req, res) => statisticController.findStatisticByQrCode(req, res)));
+router.get('/total-by-codes/:qid', (0, http_utils_1.asyncHandler)((req, res) => statisticController.findTotalStatisticByQrCode(req, res)));
+exports.default = router;

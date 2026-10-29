@@ -1,0 +1,35 @@
+import { test, expect } from '@playwright/test'
+
+test('campaign weights default equally, persist category-product overrides and reset', async ({ page }) => {
+  const response = await page.request.post('/api/users', { data: { name: 'Weights', lastName: 'Tester', email: `weights-${Date.now()}@example.test`, password: 'browser test password' } })
+  expect(response.ok()).toBeTruthy()
+  const products = []
+  for (const name of ['Alpha', 'Beta']) {
+    const file = await (await page.request.post('/api/files', { data: { name, type: 'web-url', url: `https://example.com/${name}` } })).json()
+    products.push((await (await page.request.post('/api/products/create/', { data: { name, fileId: file._id } })).json()).product)
+  }
+  const category = await (await page.request.post('/api/categories', { data: { name: 'Menu', products: products.map(item => item._id) } })).json()
+  const campaign = await (await page.request.post('/api/campaigns', { data: { name: 'Weighted menu', entries: [{ kind: 'category', target: category._id }] } })).json()
+  await page.goto('/admin/campaigns')
+  await page.getByRole('button', { name: 'Edit Weighted menu' }).click()
+  await expect(page.getByLabel('Weight for Alpha')).toHaveValue('1')
+  await expect(page.getByLabel('Weight for Beta')).toHaveValue('1')
+  await expect(page.getByText('50.0% chance')).toHaveCount(2)
+  await page.getByLabel('Weight for Beta').fill('3')
+  await expect(page.getByText('75.0% chance')).toBeVisible()
+  await expect(page.getByText('25.0% chance')).toBeVisible()
+  await page.getByRole('button', { name: 'Save campaign', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const saved = await (await page.request.get(`/api/campaigns/${campaign._id}`)).json()
+  expect(saved.productWeights).toEqual([{ product: products[1]._id, weight: 3 }])
+  await page.getByRole('button', { name: 'Edit Weighted menu' }).click()
+  await expect(page.getByLabel('Weight for Beta')).toHaveValue('3')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.getByLabel('Weight for Beta')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy()
+  await page.getByRole('button', { name: 'Reset to equal weights' }).click()
+  await expect(page.getByLabel('Weight for Beta')).toHaveValue('1')
+  await page.getByRole('button', { name: 'Save campaign', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect((await (await page.request.get(`/api/campaigns/${campaign._id}`)).json()).productWeights).toEqual([])
+})

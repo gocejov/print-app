@@ -34,33 +34,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-var bcrypt = require('bcrypt-nodejs');
+const password_utils_1 = require("../utils/password.utils");
 // Create the User schema
 const UserSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true, select: false },
+    authVersion: { type: Number, default: 0, select: true },
     alias: { type: String, default: 'q' },
     useAlias: { type: Boolean, default: false },
     active: { type: Boolean, default: false },
-    created_at: { type: Date, required: true, default: new Date() },
-    updated_at: { type: Date, required: true, default: new Date() }
+    created_at: { type: Date, required: true, default: Date.now },
+    updated_at: { type: Date, required: true, default: Date.now }
 });
-// hash the password
-UserSchema.methods.generateHash = function (password) {
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null);
-};
-// checking if password is valid
-UserSchema.methods.validPassword = function (password) {
-    return bcrypt.compareSync(password, this.password);
-};
-UserSchema.pre('save', function (next) {
+// Defense in depth: exclude password hashes even on freshly saved documents.
+UserSchema.set('toJSON', { transform: (_doc, ret) => { delete ret.password; return ret; } });
+UserSchema.pre('save', function () {
     return __awaiter(this, void 0, void 0, function* () {
+        if (this.isModified('password'))
+            this.password = yield (0, password_utils_1.hashPassword)(this.password);
         if (!this.created_at)
             this.created_at = new Date();
         this.updated_at = new Date();
-        next();
     });
 });
 // Define the model
