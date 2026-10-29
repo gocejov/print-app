@@ -43,6 +43,7 @@ const requiredForUploadType = function () {
 };
 // Create the File schema
 const FileSchema = new mongoose_1.Schema({
+    name: { type: String, maxlength: 120, trim: true },
     type: { type: String, required: true },
     fieldname: { type: String, required: requiredForUploadType },
     originalname: { type: String, required: requiredForUploadType },
@@ -56,9 +57,9 @@ const FileSchema = new mongoose_1.Schema({
     file: { type: String, required: requiredForUploadType },
     url: { type: String, required: true },
     createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
-    date: { type: Date, required: true, default: new Date() },
-    created_at: { type: Date, required: true, default: new Date() },
-    updated_at: { type: Date, required: true, default: new Date() },
+    date: { type: Date, required: true, default: Date.now },
+    created_at: { type: Date, required: true, default: Date.now },
+    updated_at: { type: Date, required: true, default: Date.now },
 });
 FileSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {

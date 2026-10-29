@@ -4,10 +4,12 @@ import { IFile, IFileDocument } from './file.model';
 
 // Define the interface for a Product document
 export interface IProduct {
-  qrcode?: String;
+  name?: string;
+  description?: string;
+  qrcode?: string;
   file: IFileDocument['_id'];
-  alias?: String;
-  url: String;
+  alias?: string;
+  url: string;
   owner: IUserDocument['_id'];
   createdBy: IUserDocument['_id'];
   created_at?: Date;
@@ -22,14 +24,16 @@ export interface IProductDocument extends IProduct, Document {
 
 // Create the Product schema
 const ProductSchema: Schema<IProductDocument> = new Schema({
+  name: { type: String, maxlength: 120, trim: true },
+  description: { type: String, maxlength: 1000, default: "" },
   qrcode: { type: String },
   file: { type: mongoose.Schema.Types.ObjectId, ref: 'files', required: true },
   alias: { type: String, required: true, default: 'c' },
   url: { type: String, required: true },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
-  created_at: { type: Date, required: true, default: new Date() },
-  updated_at: { type: Date, required: true, default: new Date() },
+  created_at: { type: Date, required: true, default: Date.now },
+  updated_at: { type: Date, required: true, default: Date.now },
 });
 
 

@@ -1,0 +1,20 @@
+[Unit]
+Description=QR2Share production stack
+Requires=docker.service
+Wants=network-online.target
+After=docker.service network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/var/www/html/qr2share.com
+ExecStart=/usr/bin/docker compose -p qr2share-live -f docker-compose.yml -f deploy/compose.live.yml up -d --no-build --wait --wait-timeout 180
+ExecStop=/usr/bin/docker compose -p qr2share-live -f docker-compose.yml -f deploy/compose.live.yml stop --timeout 60
+TimeoutStartSec=240
+TimeoutStopSec=180
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

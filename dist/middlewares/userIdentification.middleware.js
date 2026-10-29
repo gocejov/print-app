@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.userIdentificationMiddleware = void 0;
 // import { identifyUser } from '../controllers/userController';
 const device_fingerprint_utils_1 = require("../utils/device.fingerprint.utils");
-require("express-serve-static-core");
 const userIdentificationMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // Generate device fingerprint (browser characteristics + device info)
     const { fingerprint, data } = device_fingerprint_utils_1.DeviceFingerprint.get(req);

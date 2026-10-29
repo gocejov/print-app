@@ -14,71 +14,44 @@ class BaseController {
     constructor(service) {
         this.service = service;
     }
-    getAll(req, res) {
+    getAll(_req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const items = yield this.service.getAll();
-                res.json(items);
-            }
-            catch (err) {
-                res.status(500).json({ error: err.message });
-            }
+            res.json(yield this.service.getAll(res.locals.scope));
         });
     }
     findById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const item = yield this.service.findById(req.params.id);
-                if (!item) {
-                    res.status(404).json({ error: 'Item not found' });
-                    return;
-                }
-                res.json(item);
+            const item = yield this.service.findById(req.params.id, res.locals.scope);
+            if (!item) {
+                res.status(404).json({ error: 'Item not found' });
+                return;
             }
-            catch (err) {
-                res.status(500).json({ error: err.message });
-            }
+            res.json(item);
         });
     }
     add(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const newItem = yield this.service.add(req.body);
-                res.status(201).json(newItem);
-            }
-            catch (err) {
-                res.status(500).json({ error: err.message });
-            }
+            res.status(201).json(yield this.service.add(req.body));
         });
     }
     update(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const updatedItem = yield this.service.update(req.params.id, req.body);
-                if (!updatedItem) {
-                    res.status(404).json({ error: 'Item not found' });
-                    return;
-                }
-                res.json(updatedItem);
+            const item = yield this.service.update(req.params.id, req.body, res.locals.scope);
+            if (!item) {
+                res.status(404).json({ error: 'Item not found' });
+                return;
             }
-            catch (err) {
-                res.status(500).json({ error: err.message });
-            }
+            res.json(item);
         });
     }
     remove(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const deletedItem = yield this.service.remove(req.params.id);
-                if (!deletedItem) {
-                    res.status(404).json({ error: 'Item not found' });
-                    return;
-                }
-                res.json(deletedItem);
+            const item = yield this.service.remove(req.params.id, res.locals.scope);
+            if (!item) {
+                res.status(404).json({ error: 'Item not found' });
+                return;
             }
-            catch (err) {
-                res.status(500).json({ error: err.message });
-            }
+            res.json(item);
         });
     }
 }

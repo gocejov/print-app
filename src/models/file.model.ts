@@ -3,18 +3,19 @@ import { IUserDocument } from './user.model';
 
 // Define the interface for a File document
 export interface IFile {
-  type: String,
-  file?: String;
-  url: String;
-  fieldname?: String,
-  originalname?: String,
-  encoding?: String,
-  mimetype?: String,
-  destination?: String,
-  filename?: String,
-  path?: String,
-  size?: Number,
-  baseUrl?: String,
+  name?: string,
+  type: string,
+  file?: string;
+  url: string;
+  fieldname?: string,
+  originalname?: string,
+  encoding?: string,
+  mimetype?: string,
+  destination?: string,
+  filename?: string,
+  path?: string,
+  size?: number,
+  baseUrl?: string,
   createdBy: IUserDocument['_id'];
   date?: Date;
   created_at?: Date;
@@ -34,6 +35,7 @@ const requiredForUploadType = function (this: IFileDocument): boolean {
 
 // Create the File schema
 const FileSchema: Schema<IFileDocument> = new Schema({
+  name: { type: String, maxlength: 120, trim: true },
   type: { type: String, required: true },
   fieldname: { type: String, required: requiredForUploadType },
   originalname: { type: String, required: requiredForUploadType },
@@ -47,9 +49,9 @@ const FileSchema: Schema<IFileDocument> = new Schema({
   file: { type: String, required: requiredForUploadType },
   url: { type: String, required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
-  date: { type: Date, required: true, default: new Date() },
-  created_at: { type: Date, required: true, default: new Date() },
-  updated_at: { type: Date, required: true, default: new Date() },
+  date: { type: Date, required: true, default: Date.now },
+  created_at: { type: Date, required: true, default: Date.now },
+  updated_at: { type: Date, required: true, default: Date.now },
 });
 
 FileSchema.pre('save', async function (next) { // this line

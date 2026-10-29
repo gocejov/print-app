@@ -1,0 +1,11 @@
+[Unit]
+Description=Check QR2Share stack every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=5s
+Unit=qr2share-recover.service
+
+[Install]
+WantedBy=timers.target

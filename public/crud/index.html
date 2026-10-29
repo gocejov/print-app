@@ -127,7 +127,18 @@
   <div class="container">
     <div class="card">
       <h1>qr2share CRUD</h1>
-      <p>Compatible with your API endpoints. Open this at <span class="mono">/crud/</span>.</p>
+      <p>Sign in to manage your own records. Open this at <span class="mono">/crud/</span>.</p>
+    </div>
+
+    <div class="card">
+      <h2>Account</h2>
+      <form id="loginForm" class="row">
+        <div class="field col-6"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" required /></div>
+        <div class="field col-6"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required /></div>
+        <div class="actions"><button class="primary" type="submit">Sign in</button><button id="logoutBtn" type="button">Sign out</button><button id="meBtn" type="button">Current account</button></div>
+      </form>
+      <p>To register, choose Users and Create with name, lastName, email and a password of 12–128 characters. Registration signs you in.</p>
+      <div id="accountStatus" class="status" role="status"></div>
     </div>
 
     <div class="card">
@@ -199,10 +210,10 @@
     };
 
     const samplePayloads = {
-      users: { name: "Sample User" },
-      products: { name: "Sample Product", owner: "replace-user-id", file: "replace-file-id" },
-      files: { type: "web-url", url: "https://example.com", createdBy: "replace-user-id" },
-      qrcodes: { productId: "replace-product-id", userId: "replace-user-id" }
+      users: { name: "Sample", lastName: "User", email: "sample@example.com", password: "replace-with-a-long-password" },
+      products: { fileId: "replace-file-id" },
+      files: { type: "web-url", url: "https://example.com" },
+      qrcodes: { productId: "replace-product-id" }
     };
 
     const baseUrlInput = document.getElementById("baseUrl");
@@ -255,16 +266,22 @@
       for (const item of safe) {
         const id = getRecordId(item);
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="mono">${id || "-"}</td>
-          <td class="mono">${preview(item)}</td>
-          <td>
-            <div class="actions">
-              <button data-id="${id}" data-action="load">Load</button>
-              <button data-id="${id}" data-action="delete" class="danger">Delete</button>
-            </div>
-          </td>
-        `;
+        for (const value of [id || "-", preview(item)]) {
+          const td = document.createElement("td");
+          td.className = "mono";
+          td.textContent = value;
+          tr.appendChild(td);
+        }
+        const actions = document.createElement("td");
+        for (const [action, label] of [["load", "Load"], ["delete", "Delete"]]) {
+          const button = document.createElement("button");
+          button.dataset.id = id;
+          button.dataset.action = action;
+          button.textContent = label;
+          if (action === "delete") button.className = "danger";
+          actions.appendChild(button);
+        }
+        tr.appendChild(actions);
         listBody.appendChild(tr);
       }
     }
@@ -354,6 +371,36 @@
         setStatus(err.message, true);
       }
     }
+
+    const accountStatus = document.getElementById("accountStatus");
+    document.getElementById("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      try {
+        const user = await request("POST", "/api/users/login", {
+          email: document.getElementById("loginEmail").value,
+          password: document.getElementById("loginPassword").value
+        });
+        accountStatus.textContent = `Signed in as ${user.email}`;
+        document.getElementById("loginPassword").value = "";
+        listBody.replaceChildren();
+        renderResponse(user);
+      } catch (err) { accountStatus.textContent = err.message; }
+    });
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await request("POST", "/api/users/logout", {});
+        accountStatus.textContent = "Signed out";
+        listBody.replaceChildren();
+        renderResponse({});
+      } catch (err) { accountStatus.textContent = err.message; }
+    });
+    document.getElementById("meBtn").addEventListener("click", async () => {
+      try {
+        const user = await request("GET", "/api/users/me");
+        accountStatus.textContent = `Signed in as ${user.email}`;
+        renderResponse(user);
+      } catch (err) { accountStatus.textContent = err.message; }
+    });
 
     document.getElementById("listBtn").addEventListener("click", listItems);
     document.getElementById("getBtn").addEventListener("click", getById);

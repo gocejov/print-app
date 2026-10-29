@@ -1,0 +1,8 @@
+[Unit]
+Description=Recover stopped or unhealthy QR2Share containers
+After=docker.service qr2share.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/qr2share-recover
+TimeoutStartSec=360

@@ -44,3 +44,10 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 uploads/videos/
+
+# React admin build and browser reports
+public/admin/
+client/test-results/
+client/playwright-report/
+
+uploads/media-images/

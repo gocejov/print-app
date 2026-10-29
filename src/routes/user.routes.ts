@@ -1,16 +1,21 @@
 import { Router } from 'express';
-// import userControler from '../controllers/user.controller';
-// import { cacheMiddleware } from '../middlewares/cache.middleware';
-import { IUserController, UserController } from '../controllers/user.controller';
+import { UserController } from '../controllers/user.controller';
+import { limitAuthAttempts, requireAuth } from '../middlewares/auth.middleware';
+import { managementAccess } from '../middlewares/management.middleware';
+import { asyncHandler } from '../utils/http.utils';
 
-const userController: IUserController = new UserController()
-
+const controller = new UserController();
 const router = Router();
 
-router.get('/', (req, res) => userController.getAll(req, res))
-router.get('/:id', (req, res) => userController.findById(req, res))
-router.put('/:id', (req, res) => userController.update(req, res))
-router.post('/', (req, res) => userController.add(req, res))
-router.delete('/:id', (req, res) => userController.remove(req, res))
+router.post('/', limitAuthAttempts, asyncHandler((req, res) => controller.add(req, res)));
+router.post('/login', limitAuthAttempts, asyncHandler((req, res) => controller.login(req, res)));
+router.post('/logout', asyncHandler((req, res) => controller.logout(req, res)));
+router.use(requireAuth);
+router.get('/me', (req, res) => { res.json(res.locals.user); });
+router.use(managementAccess('users'));
+router.get('/', asyncHandler((req, res) => controller.getAll(req, res)));
+router.get('/:id', asyncHandler((req, res) => controller.findById(req, res)));
+router.put('/:id', asyncHandler((req, res) => controller.update(req, res)));
+router.delete('/:id', asyncHandler((req, res) => controller.remove(req, res)));
 
 export default router;
