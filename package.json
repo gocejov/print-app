@@ -4,14 +4,19 @@
   "description": "A game about trying to guess who a football player is.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "mongodb": "docker run -d -p 27017:27017 --name local-mongo -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password -e MONGO_INITDB_DATABASE=print-prank custom-mongo",
+    "test": "node --require ts-node/register --test tests/*.test.js",
+    "mongodb": "docker run -d -p 27017:27017 --name local-mongo -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=G0407 -e MONGO_INITDB_DATABASE=print-prank custom-mongo",
     "mongodb:stop": "docker stop local-mongo && docker rm local-mongo",
-    "build": "tsc",
+    "build": "npm run build:server && npm run build:client",
     "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon src/index.ts",
+    "dev:client": "npm --prefix client run dev",
+    "dev:all": "concurrently -k \"npm run dev\" \"npm run dev:client\"",
+    "build:server": "tsc",
+    "build:client": "npm --prefix client run build",
+    "test:ui": "npm --prefix client test"
   },
-  "author": "Inplay",
+  "author": "Goce Jovancevski",
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/cors": "^2.8.17",

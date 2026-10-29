@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatisticService = void 0;
 const base_service_1 = require("./base.service");
-const statistic_model_1 = require("@/models/statistic.model");
+const statistic_model_1 = require("../models/statistic.model");
 class StatisticService extends base_service_1.BaseService {
     constructor() {
         super(statistic_model_1.StatisticModel);
@@ -20,6 +20,13 @@ class StatisticService extends base_service_1.BaseService {
         return __awaiter(this, void 0, void 0, function* () {
             return this.model.find({
                 qrCode: qrCodeId
+            });
+        });
+    }
+    countByQrCode(qrCodeId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.model.countDocuments({
+                qrCode: qrCodeId,
             });
         });
     }

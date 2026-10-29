@@ -1,53 +1,61 @@
-import { FileModel, IFile } from '../models/file.model';
-import { IUser, IUserDocument } from '../models/user.model';
-import { FileService, IFileService } from '../services/file.service';
-import { UserService, IUserService } from '../services/user.service';
-import { Request, Response } from 'express';
+import { Request, Response } from 'express'
+import fs from 'fs/promises'
+import sharp from 'sharp'
+import { FileModel } from '../models/file.model'
+import { HttpError, text } from '../utils/http.utils'
 
-export interface IUploadController extends UploadController { }
+export interface IUploadController extends UploadController {}
 
-export class UploadController implements IUploadController {
-
-  private fileService: IFileService;
-  private userService: IUserService;
-
-  constructor() {
-    this.fileService = new FileService()
-    this.userService = new UserService()
+export class UploadController {
+  videoUpload(req: Request, res: Response) {
+    return this.save(req, res, 'video')
+  }
+  imageUpload(req: Request, res: Response) {
+    return this.save(req, res, 'image')
   }
 
-  async videoUpload(req: any, res: Response) {
-    const { uid } = req.params
-
+  private async save(req: Request, res: Response, type: 'video' | 'image') {
+    if (!req.file) throw new HttpError(400, `An uploaded ${type} file is required`)
     try {
-      const user: IUserDocument | null = await this.userService.findById(uid)
-
-      if (!user) {
-        res.status(404).json({ error: "User does not exist" });
-        return
+      if (type === 'image') {
+        const metadata = await sharp(req.file.path, { limitInputPixels: 40_000_000 })
+          .metadata()
+          .catch(() => null)
+        const expected: Record<string, string> = {
+          'image/jpeg': 'jpeg',
+          'image/png': 'png',
+          'image/webp': 'webp',
+          'image/gif': 'gif',
+        }
+        if (!metadata || metadata.format !== expected[req.file.mimetype])
+          throw new HttpError(400, 'Image contents do not match a supported image format')
       }
-
-      const fileData: IFile = {
-        url: req.file?.filename,
-        mimetype: req.file?.mimetype,
+      const name =
+        req.body?.name === undefined
+          ? req.file.originalname.slice(0, 120)
+          : text(req.body.name, 'name', 1, 120)
+      const file = await FileModel.create({
+        name,
+        type,
+        url: req.file.filename,
         file: JSON.stringify(req.file),
-        type: 'video',
-        fieldname: req.file?.fieldname,
-        originalname: req.file?.originalname,
-        encoding: req.file?.encoding,
-        destination: req.file?.destination,
-        filename: req.file?.filename,
-        path: req.file?.path,
-        size: req.file?.size,
-        createdBy: user.id,
-        baseUrl: `${req.protocol}://${req.get('host')}`
-      }
-
-      const file = await this.fileService.add(new FileModel(fileData))
-
-      res.status(200).json({ message: 'Video uploaded successfully', file: file });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+        fieldname: req.file.fieldname,
+        originalname: req.file.originalname,
+        encoding: req.file.encoding,
+        mimetype: req.file.mimetype,
+        destination: req.file.destination,
+        filename: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        createdBy: res.locals.user._id,
+        baseUrl: `${req.protocol}://${req.get('host')}`,
+      })
+      res
+        .status(200)
+        .json({ message: `${type === 'image' ? 'Image' : 'Video'} uploaded successfully`, file })
+    } catch (error) {
+      await fs.unlink(req.file.path).catch(() => {})
+      throw error
     }
   }
 }

@@ -14,8 +14,8 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:3000',
-                description: 'Local server',
+                url: process.env.PUBLIC_URL || 'http://localhost:3000',
+                description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Local server',
             },
         ],
     },

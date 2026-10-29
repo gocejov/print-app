@@ -8,46 +8,67 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadController = void 0;
+const promises_1 = __importDefault(require("fs/promises"));
+const sharp_1 = __importDefault(require("sharp"));
 const file_model_1 = require("../models/file.model");
-const file_service_1 = require("../services/file.service");
-const user_service_1 = require("../services/user.service");
+const http_utils_1 = require("../utils/http.utils");
 class UploadController {
-    constructor() {
-        this.fileService = new file_service_1.FileService();
-        this.userService = new user_service_1.UserService();
-    }
     videoUpload(req, res) {
+        return this.save(req, res, 'video');
+    }
+    imageUpload(req, res) {
+        return this.save(req, res, 'image');
+    }
+    save(req, res, type) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-            const { uid } = req.params;
+            var _a;
+            if (!req.file)
+                throw new http_utils_1.HttpError(400, `An uploaded ${type} file is required`);
             try {
-                const user = yield this.userService.findById(uid);
-                if (!user) {
-                    res.status(404).json({ error: "User does not exist" });
-                    return;
+                if (type === 'image') {
+                    const metadata = yield (0, sharp_1.default)(req.file.path, { limitInputPixels: 40000000 })
+                        .metadata()
+                        .catch(() => null);
+                    const expected = {
+                        'image/jpeg': 'jpeg',
+                        'image/png': 'png',
+                        'image/webp': 'webp',
+                        'image/gif': 'gif',
+                    };
+                    if (!metadata || metadata.format !== expected[req.file.mimetype])
+                        throw new http_utils_1.HttpError(400, 'Image contents do not match a supported image format');
                 }
-                const fileData = {
-                    url: (_a = req.file) === null || _a === void 0 ? void 0 : _a.filename,
-                    mimetype: (_b = req.file) === null || _b === void 0 ? void 0 : _b.mimetype,
+                const name = ((_a = req.body) === null || _a === void 0 ? void 0 : _a.name) === undefined
+                    ? req.file.originalname.slice(0, 120)
+                    : (0, http_utils_1.text)(req.body.name, 'name', 1, 120);
+                const file = yield file_model_1.FileModel.create({
+                    name,
+                    type,
+                    url: req.file.filename,
                     file: JSON.stringify(req.file),
-                    type: 'video',
-                    fieldname: (_c = req.file) === null || _c === void 0 ? void 0 : _c.fieldname,
-                    originalname: (_d = req.file) === null || _d === void 0 ? void 0 : _d.originalname,
-                    encoding: (_e = req.file) === null || _e === void 0 ? void 0 : _e.encoding,
-                    destination: (_f = req.file) === null || _f === void 0 ? void 0 : _f.destination,
-                    filename: (_g = req.file) === null || _g === void 0 ? void 0 : _g.filename,
-                    path: (_h = req.file) === null || _h === void 0 ? void 0 : _h.path,
-                    size: (_j = req.file) === null || _j === void 0 ? void 0 : _j.size,
-                    createdBy: user.id,
-                    baseUrl: `${req.protocol}://${req.get('host')}`
-                };
-                const file = yield this.fileService.add(new file_model_1.FileModel(fileData));
-                res.status(200).json({ message: 'Video uploaded successfully', file: file });
+                    fieldname: req.file.fieldname,
+                    originalname: req.file.originalname,
+                    encoding: req.file.encoding,
+                    mimetype: req.file.mimetype,
+                    destination: req.file.destination,
+                    filename: req.file.filename,
+                    path: req.file.path,
+                    size: req.file.size,
+                    createdBy: res.locals.user._id,
+                    baseUrl: `${req.protocol}://${req.get('host')}`,
+                });
+                res
+                    .status(200)
+                    .json({ message: `${type === 'image' ? 'Image' : 'Video'} uploaded successfully`, file });
             }
-            catch (err) {
-                res.status(500).json({ error: err.message });
+            catch (error) {
+                yield promises_1.default.unlink(req.file.path).catch(() => { });
+                throw error;
             }
         });
     }

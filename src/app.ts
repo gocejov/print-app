@@ -1,3 +1,8 @@
+import 'dotenv/config';
+import { collectionRoutes } from './routes/collection.routes';
+import { requireAuth, protectWrites } from './middlewares/auth.middleware';
+import { managementAccess } from './middlewares/management.middleware';
+import { asyncHandler } from './utils/http.utils';
 import express, { Application } from 'express';
 import connectDB from './config/db.config';
 import userRoutes from './routes/user.routes';
@@ -20,7 +25,7 @@ import path from 'path';
 
 
 const app: Application = express();
-const reservedAliases = new Set(['api', 'api-docs', 'l']);
+const reservedAliases = new Set(['api', 'api-docs', 'l', 'admin', 'crud']);
 
 export const initApp = async (): Promise<Application> => {
     try {
@@ -33,42 +38,58 @@ export const initApp = async (): Promise<Application> => {
         app.use(sesionConfig);
 
         // Middleware for user identification
+        app.use(express.json());
         app.use(userIdentificationMiddleware);
 
         // swagger configuration
         app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-        app.use(express.json());
         app.use(express.static(path.resolve('public')));
 
-        // Allow requests from a specific origin
+        const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3001')
+            .split(',')
+            .map(origin => origin.trim());
+
         app.use(cors({
-            origin: 'http://localhost:3001',
-            methods: 'GET,POST,PUT,DELETE',
+            origin: corsOrigins,
+            methods: 'GET,POST,PUT,PATCH,DELETE',
             credentials: true,
         }));
 
+        app.get('/health', (_req, res) => {
+            res.status(200).json({ status: 'ok' });
+        });
+
         app.get('/', async (req: any, res) => {
-            res.json(req.fingerprintData);
+            res.json(res.locals.fingerprintData);
+        });
+
+        // React client assets are built into public/admin; keep deep links under its prefix.
+        app.get('/admin/*', (req, res, next) => {
+            if (path.extname(req.path)) { next(); return; }
+            res.sendFile(path.resolve('public/admin/index.html'));
         });
 
         //Main Routes
+        app.use('/api', protectWrites);
         app.use('/api/users', userRoutes);
-        app.use('/api/products', productsRoutes);
-        app.use('/api/upload', uploadRoutes);
-        app.use('/api/files', fileRoutes);
-        app.use('/api/qrcodes', qrCodeRoutes);
-        app.use('/api/statistics', statisticRoutes);
+        app.use('/api/categories', requireAuth, collectionRoutes('category'));
+        app.use('/api/campaigns', requireAuth, collectionRoutes('campaign'));
+        app.use('/api/products', requireAuth, managementAccess('products'), productsRoutes);
+        app.use('/api/upload', requireAuth, managementAccess('upload'), uploadRoutes);
+        app.use('/api/files', requireAuth, managementAccess('files'), fileRoutes);
+        app.use('/api/qrcodes', requireAuth, managementAccess('qrcodes'), qrCodeRoutes);
+        app.use('/api/statistics', requireAuth, managementAccess('statistics'), statisticRoutes);
 
         const qrCodeController: IQrCodeController = new QrCodeController()
-        app.get('/l/:alias/:type/:qid', (req, res) => qrCodeController.getVideo(req, res));
-        app.get('/:alias/:qid', (req, res, next) => {
+        app.get('/l/:alias/:type/:qid', asyncHandler((req, res) => qrCodeController.getVideo(req, res)));
+        app.get('/:alias/:qid', asyncHandler((req, res, next) => {
             if (reservedAliases.has(req.params.alias)) {
                 next();
                 return;
             }
-            qrCodeController.playVideo(req, res);
-        });
+            return qrCodeController.playVideo(req, res);
+        }));
 
         // Error handling middleware
         app.use(uploadErrorHandler);

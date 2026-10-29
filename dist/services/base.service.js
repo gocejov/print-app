@@ -49,7 +49,7 @@ class BaseService {
                 query = query.select(select);
             }
             if (sort)
-                query = query.populate(sort);
+                query = query.sort(sort);
             if (populate)
                 query = query.populate(populate);
             return query;
@@ -61,7 +61,7 @@ class BaseService {
             if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
                 return null;
             }
-            let query = this.model.findById(id);
+            let query = this.model.findOne({ $and: [{ _id: id }, queryOptions] });
             if (select) {
                 query = query.select(select);
             }
@@ -88,7 +88,7 @@ class BaseService {
             if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
                 return null;
             }
-            let query = this.model.findByIdAndUpdate(id, data, { new: true });
+            let query = this.model.findOneAndUpdate({ $and: [{ _id: id }, queryOptions] }, { $set: Object.assign(Object.assign({}, data), { updated_at: new Date() }) }, { new: true, runValidators: true });
             // if (select) {
             //   query = query.select(select);
             // }
@@ -102,7 +102,7 @@ class BaseService {
             if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
                 return null;
             }
-            let query = this.model.findByIdAndDelete(id);
+            let query = this.model.findOneAndDelete({ $and: [{ _id: id }, queryOptions] });
             // if (select) {
             //   query = query.select(select);
             // }

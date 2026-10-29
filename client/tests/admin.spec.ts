@@ -1,0 +1,372 @@
+import jsQR from 'jsqr'
+import sharp from 'sharp'
+import { readFile } from 'node:fs/promises'
+import { test, expect, type Page } from '@playwright/test'
+
+async function register(page: Page, name: string) {
+  await page.goto('/admin/')
+  await page.getByRole('button', { name: 'Create an account', exact: true }).click()
+  await page.getByLabel('First name').fill(name)
+  await page.getByLabel('Last name').fill('Tester')
+  await page.getByLabel('Email address').fill(`${name.toLowerCase()}-${Date.now()}@example.test`)
+  await page.getByLabel('Password', { exact: true }).fill('browser test password')
+  await page.getByRole('button', { name: 'Create your account', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: 'A little code. A lot of possibility.' }),
+  ).toBeVisible()
+}
+
+async function addUrlProduct(page: Page, name: string, url: string) {
+  await page.getByRole('link', { name: 'Files', exact: true }).click()
+  await page.getByRole('button', { name: 'Add file', exact: true }).click()
+  await page.getByRole('button', { name: 'URL', exact: true }).click()
+  await page.getByLabel('File name', { exact: true }).fill(`${name} file`)
+  await page.getByLabel('Website URL', { exact: true }).fill(url)
+  await page.getByRole('dialog').getByRole('button', { name: 'Add file', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('button', { name: `Create product from ${name} file`, exact: true }).click()
+  await page.getByLabel('Product name', { exact: true }).fill(name)
+  await page.getByLabel('Product description').fill('A reusable product for our collection.')
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create product', exact: true })
+    .click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+}
+
+test('create, download, edit, pause and delete a dynamic code', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await register(page, 'Alex')
+  await expect(
+    page.getByRole('heading', { name: 'Your next great connection starts here.' }),
+  ).toBeVisible()
+  await page.screenshot({ path: '/tmp/qr2share-overview.png', fullPage: true })
+  await addUrlProduct(page, 'Summer product', 'https://example.com/summer')
+  await page
+    .locator('.product-card')
+    .filter({ has: page.getByRole('heading', { name: 'Summer product', exact: true }) })
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click()
+  await page.getByLabel('QR code name', { exact: true }).fill('Summer collection')
+  await expect(page.getByRole('combobox', { name: 'Assigned product' })).toHaveValue(/.+/)
+  await page.screenshot({ path: '/tmp/qr2share-create.png', fullPage: true })
+  await page.getByRole('button', { name: 'Create QR code', exact: true }).last().click()
+  await expect(page.getByRole('heading', { name: 'Your QR code is ready' })).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download PNG', exact: true }).click()
+  const png = await download
+  expect(png.suggestedFilename()).toBe('Summer-collection.png')
+  const { data, info } = await sharp(await readFile((await png.path())!))
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  const decoded = jsQR(new Uint8ClampedArray(data), info.width, info.height)
+  const records = await (await page.request.get('/api/qrcodes')).json()
+  expect(decoded?.data).toBe(records[0].url)
+  await page.getByRole('button', { name: 'Back to my QR codes' }).click()
+  await page.getByRole('link', { name: 'My QR codes', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Summer collection', exact: true })).toBeVisible()
+  await page.screenshot({ path: '/tmp/qr2share-library.png', fullPage: true })
+  const csvDownload = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Export CSV' }).click()
+  expect((await csvDownload).suggestedFilename()).toBe('qr2share-codes.csv')
+  await page.getByRole('button', { name: 'Summer collection', exact: true }).click()
+  const scanLink = await page.getByRole('textbox', { name: 'Permanent scan link' }).inputValue()
+  const before = await page.request.get(scanLink, { maxRedirects: 0 })
+  expect(before.status()).toBe(302)
+  expect(before.headers().location).toBe('https://example.com/summer')
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click()
+  await addUrlProduct(page, 'Autumn product', 'https://example.com/autumn')
+  await page.getByRole('link', { name: 'My QR codes', exact: true }).click()
+  await page.getByLabel('Actions for Summer collection').click()
+  await page.getByRole('button', { name: 'Edit QR target' }).click()
+  await page
+    .getByRole('combobox', { name: 'Assigned product' })
+    .selectOption({ label: 'Autumn product · URL' })
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const after = await page.request.get(scanLink, { maxRedirects: 0 })
+  expect(after.headers().location).toBe('https://example.com/autumn')
+  await page.getByLabel('Actions for Summer collection').click()
+  await page.getByRole('button', { name: 'Pause code' }).click()
+  await expect(page.locator('.status-badge', { hasText: 'Paused' })).toBeVisible()
+  expect((await page.request.get(scanLink)).status()).toBe(410)
+  await page.getByLabel('Actions for Summer collection').click()
+  await page.getByRole('button', { name: 'Resume code' }).click()
+  await expect(page.locator('.status-badge', { hasText: 'Active' })).toBeVisible()
+  await page.getByRole('button', { name: 'Grid view' }).click()
+  await expect(page.locator('.code-card')).toHaveCount(1)
+  await page.getByRole('textbox', { name: 'Search QR codes' }).fill('nonexistent')
+  await expect(page.getByRole('heading', { name: 'No matching connections.' })).toBeVisible()
+  await page.getByRole('button', { name: 'Clear filters' }).click()
+  await page.getByRole('link', { name: 'Analytics', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Connection insights.' })).toBeVisible()
+  await page.getByRole('combobox', { name: 'Analytics time period' }).selectOption('7')
+  await page.getByRole('link', { name: 'My QR codes', exact: true }).click()
+  await page.getByLabel('Actions for Summer collection').click()
+  await page.getByRole('button', { name: 'Delete code', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Delete this QR code?' })).toBeVisible()
+  await page.getByRole('button', { name: 'Delete QR code', exact: true }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Your next great connection starts here.' }),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+  expect(errors).toEqual([])
+})
+
+test('mobile navigation, profile editing and deep links', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await register(page, 'Morgan')
+  await page.screenshot({ path: '/tmp/qr2share-mobile.png', fullPage: true })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  )
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await page.getByRole('link', { name: 'Settings', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Workspace settings.' })).toBeVisible()
+  await page.getByLabel('First name').fill('Morgan Updated')
+  await page.getByRole('button', { name: 'Save profile' }).click()
+  await expect(page.getByRole('status')).toContainText('Your profile is up to date.')
+  await page.reload()
+  await expect(page.getByLabel('First name')).toHaveValue('Morgan Updated')
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await page.getByRole('link', { name: 'My QR codes', exact: true }).click()
+  await page.getByRole('button', { name: 'Create QR code', exact: true }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.screenshot({ path: '/tmp/qr2share-mobile-dialog.png', fullPage: true })
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('login errors and keyboard-accessible registration', async ({ page }) => {
+  await page.goto('/admin/')
+  await page.screenshot({ path: '/tmp/qr2share-login.png', fullPage: true })
+  await page.getByLabel('Email address').fill('unknown@example.test')
+  await page.getByLabel('Password', { exact: true }).fill('incorrect password')
+  await page.getByRole('button', { name: 'Sign in to your workspace' }).click()
+  await expect(page.getByRole('alert')).toHaveText('Invalid email or password')
+  await page.getByRole('button', { name: 'Create an account', exact: true }).focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByLabel('First name')).toBeVisible()
+})
+
+test('upload image/video, attach to products, and change a product without reprinting', async ({
+  page,
+}) => {
+  await register(page, 'Content')
+  await page.getByRole('link', { name: 'Files', exact: true }).click()
+  await page.getByRole('button', { name: 'Add file', exact: true }).click()
+  const png = await sharp({ create: { width: 96, height: 64, channels: 4, background: '#2c8769' } })
+    .png()
+    .toBuffer()
+  await page.getByLabel('File name', { exact: true }).fill('Catalog photo')
+  await page
+    .getByLabel('Image file', { exact: true })
+    .setInputFiles({ name: 'catalog.png', mimeType: 'image/png', buffer: png })
+  await page.getByRole('dialog').getByRole('button', { name: 'Add file', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Create product from Catalog photo', exact: true }).click()
+  await page.getByLabel('Product name', { exact: true }).fill('Catalog product')
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create product', exact: true })
+    .click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.screenshot({ path: '/tmp/qr2share-products.png', fullPage: true })
+  await page.getByRole('button', { name: 'Create QR code', exact: true }).click()
+  await page.getByLabel('QR code name', { exact: true }).fill('Catalog QR')
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Your QR code is ready' })).toBeVisible()
+  await page.getByRole('button', { name: 'Back to my QR codes' }).click()
+  await page.getByRole('button', { name: 'Catalog QR', exact: true }).click()
+  const scanLink = await page.getByRole('textbox', { name: 'Permanent scan link' }).inputValue()
+  const publicPage = await page.context().newPage()
+  await publicPage.goto(scanLink)
+  await expect(publicPage.getByRole('img', { name: 'Catalog photo', exact: true })).toBeVisible()
+  expect(
+    await publicPage.getByRole('img').evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBe(96)
+  await publicPage.close()
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click()
+  await page.getByRole('link', { name: 'Files', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: 'Delete Catalog photo', exact: true }),
+  ).toBeDisabled()
+  await page.getByRole('button', { name: 'Add file', exact: true }).click()
+  await page.getByRole('button', { name: 'Video', exact: true }).click()
+  await page.getByLabel('File name', { exact: true }).fill('Demo video')
+  await page
+    .getByLabel('Video file', { exact: true })
+    .setInputFiles(new URL('./fixtures/sample.mp4', import.meta.url).pathname)
+  await page.getByRole('dialog').getByRole('button', { name: 'Add file', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.screenshot({ path: '/tmp/qr2share-files.png', fullPage: true })
+  await page.getByRole('link', { name: 'Products', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: 'Delete Catalog product', exact: true }),
+  ).toBeDisabled()
+  await page.getByRole('button', { name: 'Edit Catalog product', exact: true }).click()
+  await page
+    .getByRole('combobox', { name: 'Attached file' })
+    .selectOption({ label: 'Demo video · Video' })
+  await page.getByRole('button', { name: 'Save product', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const videoPage = await page.context().newPage()
+  await videoPage.goto(scanLink)
+  await expect(videoPage.locator('video')).toBeVisible()
+  await expect
+    .poll(() => videoPage.locator('video').evaluate((video: HTMLVideoElement) => video.readyState))
+    .toBeGreaterThanOrEqual(2)
+  await videoPage.close()
+  await page.getByRole('link', { name: 'My QR codes', exact: true }).click()
+  await page.getByRole('button', { name: 'Video', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Catalog QR', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Catalog QR', exact: true }).click()
+  await expect(page.getByRole('textbox', { name: 'Permanent scan link' })).toHaveValue(scanLink)
+})
+
+test('ordered categories and mixed campaigns can run through one QR code', async ({ page }) => {
+  await register(page, 'Campaign')
+  await addUrlProduct(page, 'Alpha', 'https://example.com/alpha')
+  await addUrlProduct(page, 'Beta', 'https://example.com/beta')
+  await page.getByRole('link', { name: 'Categories', exact: true }).click()
+  await page.getByRole('button', { name: 'Create category', exact: true }).click()
+  await page.getByLabel('Category name', { exact: true }).fill('Menu')
+  await page.getByLabel('Include Alpha', { exact: true }).check()
+  await page.getByLabel('Include Beta', { exact: true }).check()
+  await page.getByRole('button', { name: 'Move Beta up', exact: true }).click()
+  await expect(page.locator('.collection-selected li').first()).toContainText('Beta')
+  await page.screenshot({ path: '/tmp/qr2share-category-editor.png', fullPage: true })
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create category', exact: true })
+    .click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('link', { name: 'Campaigns', exact: true }).click()
+  await page.getByRole('button', { name: 'Create campaign', exact: true }).click()
+  await page.getByLabel('Campaign name', { exact: true }).fill('Summer campaign')
+  await page.getByLabel('Include Alpha', { exact: true }).check()
+  await page.getByRole('button', { name: 'Categories', exact: true }).click()
+  await page.getByLabel('Include Menu', { exact: true }).check()
+  await expect(page.locator('.campaign-rule')).toContainText('2 distinct eligible products')
+  await page.screenshot({ path: '/tmp/qr2share-campaign-editor.png', fullPage: true })
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create campaign', exact: true })
+    .click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.screenshot({ path: '/tmp/qr2share-campaigns.png', fullPage: true })
+  await page.getByRole('button', { name: 'Create QR code', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Assigned campaign' })).toHaveValue(/.+/)
+  await page.getByLabel('QR code name', { exact: true }).fill('Whole menu QR')
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create QR code', exact: true })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Your QR code is ready' })).toBeVisible()
+  await page.getByRole('button', { name: 'Back to my QR codes' }).click()
+  await page.getByRole('button', { name: 'Campaigns', exact: true }).click()
+  await expect(page.locator('.codes-table .type-label')).toHaveText('Campaign')
+  await page.getByRole('button', { name: 'Whole menu QR', exact: true }).click()
+  const scanLink = await page.getByRole('textbox', { name: 'Permanent scan link' }).inputValue()
+  for (let i = 0; i < 5; i++) {
+    const scan = await page.request.get(scanLink, { maxRedirects: 0 })
+    expect(scan.status()).toBe(302)
+    expect(['https://example.com/alpha', 'https://example.com/beta']).toContain(
+      scan.headers().location,
+    )
+  }
+  await page.getByRole('button', { name: 'Close dialog', exact: true }).click()
+  await page.getByRole('link', { name: 'Campaigns', exact: true }).click()
+  await expect(
+    page.getByRole('button', { name: 'Delete Summer campaign', exact: true }),
+  ).toBeDisabled()
+  await page.getByRole('button', { name: 'Edit Summer campaign', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Campaign status' }).selectOption('paused')
+  await page.getByRole('button', { name: 'Save campaign', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect((await page.request.get(scanLink)).status()).toBe(410)
+  await page.getByRole('button', { name: 'Edit Summer campaign', exact: true }).click()
+  await page.getByRole('combobox', { name: 'Campaign status' }).selectOption('active')
+  await page.getByRole('button', { name: 'Save campaign', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('link', { name: 'Categories', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Delete Menu', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Edit Menu', exact: true }).click()
+  await page.getByRole('button', { name: 'Remove Beta', exact: true }).click()
+  await page.getByRole('button', { name: 'Save category', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect((await page.request.get(scanLink, { maxRedirects: 0 })).headers().location).toBe(
+    'https://example.com/alpha',
+  )
+  await page.getByRole('link', { name: 'Products', exact: true }).click()
+  await page
+    .getByRole('combobox', { name: 'Filter products by category' })
+    .selectOption({ label: 'Menu' })
+  await expect(page.locator('.product-card')).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Delete Alpha', exact: true })).toBeDisabled()
+  await page.getByRole('link', { name: 'My QR codes', exact: true }).click()
+  await page.getByLabel('Actions for Whole menu QR').click()
+  await page.getByRole('button', { name: 'Edit QR target' }).click()
+  await page.getByRole('button', { name: 'Single product', exact: true }).click()
+  await page
+    .getByRole('combobox', { name: 'Assigned product' })
+    .selectOption({ label: 'Beta · URL' })
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect((await page.request.get(scanLink, { maxRedirects: 0 })).headers().location).toBe(
+    'https://example.com/beta',
+  )
+  await page.getByRole('link', { name: 'Campaigns', exact: true }).click()
+  await page.getByRole('button', { name: 'Delete Summer campaign', exact: true }).click()
+  await page.getByRole('button', { name: 'Delete campaign', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Let one code share more.' })).toBeVisible()
+})
+
+test('mobile category and campaign editors keep ordering controls accessible', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await register(page, 'MobileCollections')
+  for (const name of ['Mobile Alpha', 'Mobile Beta']) {
+    const file = await (
+      await page.request.post('/api/files', {
+        data: { type: 'web-url', url: 'https://example.com' },
+      })
+    ).json()
+    expect(
+      (await page.request.post('/api/products/create/', { data: { name, fileId: file._id } })).ok(),
+    ).toBe(true)
+  }
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await page.getByRole('link', { name: 'Categories', exact: true }).click()
+  await page.getByRole('button', { name: 'Create category', exact: true }).click()
+  await page.getByLabel('Category name', { exact: true }).fill('Mobile list')
+  await page.getByLabel('Include Mobile Alpha', { exact: true }).check()
+  await page.getByLabel('Include Mobile Beta', { exact: true }).check()
+  await page.getByRole('button', { name: 'Move Mobile Beta up', exact: true }).click()
+  await expect(page.locator('.collection-selected li').first()).toContainText('Mobile Beta')
+  await page.screenshot({ path: '/tmp/qr2share-mobile-category.png', fullPage: true })
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create category', exact: true })
+    .click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await page.getByRole('link', { name: 'Campaigns', exact: true }).click()
+  await page.getByRole('button', { name: 'Create campaign', exact: true }).click()
+  await page.getByLabel('Campaign name', { exact: true }).fill('Mobile campaign')
+  await page.getByRole('button', { name: 'Categories', exact: true }).click()
+  await page.getByLabel('Include Mobile list', { exact: true }).check()
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Create campaign', exact: true })
+    .click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  )
+})

@@ -13,81 +13,38 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QrCodeController = void 0;
+const qr_playback_service_1 = require("../services/qr-playback.service");
 const base_controller_1 = require("./base.controller");
-const qrcode_model_1 = require("../models/qrcode.model");
 const qrcode_service_1 = require("../services/qrcode.service");
-const product_service_1 = require("../services/product.service");
-const file_service_1 = require("../services/file.service");
 const alias_constant_1 = require("../constants/alias.constant");
-const file_model_1 = require("../models/file.model");
-const path_1 = __importDefault(require("path"));
 const mongoose_1 = __importDefault(require("mongoose"));
-const statistic_service_1 = require("@/services/statistic.service");
+const statistic_service_1 = require("../services/statistic.service");
+const dynamic_qrcode_service_1 = require("../services/dynamic-qrcode.service");
+const media_service_1 = require("../services/media.service");
 class QrCodeController extends base_controller_1.BaseController {
     constructor() {
         super(new qrcode_service_1.QrCodeService());
-        this.productService = new product_service_1.ProductService();
         this.statisticService = new statistic_service_1.StatisticService();
-        this.fileService = new file_service_1.FileService();
-        this.qrCodeService = this.service;
     }
     add(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { productId, userId } = req.body;
-            try {
-                const queryOptions = { populate: [{ path: 'file' }, { path: 'owner' }] };
-                const product = yield this.productService.findById(productId, queryOptions);
-                const file = product === null || product === void 0 ? void 0 : product.file;
-                const user = product === null || product === void 0 ? void 0 : product.owner;
-                if (!(0, file_model_1.isIFile)(file) || !product || !user) {
-                    res.status(406).json({ error: "Incorrect input file" });
-                    return;
-                }
-                const qrCodeData = {
-                    file: file.id,
-                    owner: userId,
-                    product: productId,
-                    createdBy: userId
-                };
-                const qrCode = yield this.service.add(new qrcode_model_1.QrCodeModel(qrCodeData));
-                const alias = user.useAlias ? user.alias : 'q';
-                const url = `${req.protocol}://${req.get('host')}/${alias}/${qrCode.id}`;
-                const qrCodeBase64Url = yield this.qrCodeService.generateQrCodeBase64Url(url);
-                if (!qrCodeBase64Url) {
-                    res.status(404).json({ error: "Can't generate qr code" });
-                    return;
-                }
-                const updateCodeData = {
-                    qrCode: qrCodeBase64Url,
-                    url: url
-                };
-                const qrUpdateCode = yield this.service.update(qrCode.id, updateCodeData);
-                res.status(201).json(qrUpdateCode);
-            }
-            catch (err) {
-                res.status(500).json({ error: err.message });
-            }
+            const service = new dynamic_qrcode_service_1.DynamicQrCodeService();
+            res
+                .status(201)
+                .json(yield (req.body.campaignId
+                ? service.createForCampaign.bind(service)
+                : service.createForProduct.bind(service))(String(res.locals.user._id), req.body.campaignId || req.body.productId, req.body.name, `${req.protocol}://${req.get('host')}`));
         });
     }
     getAllWithOptions(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const id = '6753972793a2442b1fa32';
-                const $or = [
-                    { alias: 'qr-goce-code' },
-                    { _id: id }
-                ];
-                const pagination = {
-                    limit: 1,
-                    skip: 0
-                };
-                const options = {
-                    populate: ['owner', 'createdBy', 'file', 'product'],
-                    pagination
-                };
-                const alias = 'c';
-                const queryOptions = mongoose_1.default.Types.ObjectId.isValid(id) ? Object.assign({ $or }, options) : Object.assign({ alias }, options);
-                const qrcodes = yield this.service.getAll(queryOptions);
+                const qrcodes = yield this.service.getAll(Object.assign(Object.assign({}, res.locals.scope), { populate: [
+                        'owner',
+                        'createdBy',
+                        'campaign',
+                        { path: 'product', populate: { path: 'file' } },
+                    ] }));
                 res.json(qrcodes);
             }
             catch (err) {
@@ -103,21 +60,24 @@ class QrCodeController extends base_controller_1.BaseController {
                 if (!id) {
                     return res.status(400).send('URL query parameter is required');
                 }
-                const $or = [
-                    { alias: 'qr-goce-code' },
-                    { _id: id }
-                ];
+                const $or = [{ _id: id }];
                 const pagination = {
                     limit: 1,
-                    skip: 0
+                    skip: 0,
                 };
                 const options = {
-                    populate: ['owner', 'createdBy', 'file', 'product'],
-                    pagination
+                    populate: [
+                        'owner',
+                        'createdBy',
+                        'campaign',
+                        { path: 'product', populate: { path: 'file' } },
+                    ],
+                    pagination,
                 };
                 const alias = id;
-                const queryOptions = mongoose_1.default.Types.ObjectId.isValid(id) ? Object.assign({ $or }, options) : Object.assign({ alias }, options);
-                const qrCodes = yield this.service.getAll(queryOptions);
+                const queryOptions = mongoose_1.default.Types.ObjectId.isValid(id)
+                    ? Object.assign({ $or }, options) : Object.assign({ alias }, options);
+                const qrCodes = yield this.service.getAll(Object.assign(Object.assign({}, queryOptions), res.locals.scope));
                 const qrCode = qrCodes[0];
                 if (!(qrCode === null || qrCode === void 0 ? void 0 : qrCode.qrCode)) {
                     return res.status(400).send('QrCode not found');
@@ -158,135 +118,60 @@ class QrCodeController extends base_controller_1.BaseController {
     }
     getVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { type, qid } = req.params;
-            // Define the video file path
-            ///:alias/:type/:pid
-            const $or = [
-                { alias: 'qr-goce-code' },
-                { _id: qid }
-            ];
-            const pagination = {
-                limit: 1,
-                skip: 0
-            };
-            const options = {
-                populate: ['owner', 'createdBy', 'file', 'product'],
-                pagination
-            };
-            const alias = qid;
-            const queryOptions = mongoose_1.default.Types.ObjectId.isValid(qid) ? Object.assign({ $or }, options) : Object.assign({ alias }, options);
-            const qrCodes = yield this.service.getAll(queryOptions);
-            const qrCode = qrCodes[0];
-            const product = qrCode === null || qrCode === void 0 ? void 0 : qrCode.product;
-            if (!product) {
-                res.status(406).json({ error: "Incorrect url" });
-                return;
-            }
-            const f = product === null || product === void 0 ? void 0 : product.file;
-            const file = yield this.fileService.findById(f);
-            if (!file) {
-                res.status(406).json({ error: "Incorrect url" });
-                return;
-            }
-            const typeKey = alias_constant_1.TypeAlias[file.type];
-            if (!type || type !== typeKey) {
-                res.status(406).json({ error: "Incorrect url" });
+            res.set('Cache-Control', 'no-store');
+            const playback = new qr_playback_service_1.QrPlaybackService();
+            const code = yield playback.load(req.params.qid);
+            const target = yield playback.mediaTarget(code, req.query.selection);
+            const file = target.file;
+            if (req.params.type !== alias_constant_1.TypeAlias[String(file.type)]) {
+                res.status(406).json({ error: 'Incorrect URL' });
                 return;
             }
             if (file.type === 'web-url') {
-                res.redirect(product.url);
+                res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url));
                 return;
             }
-            const videoPath = product.url;
-            const fullVideoPath = path_1.default.resolve(videoPath);
-            // Check if the video file exists (optional)
-            res.sendFile(fullVideoPath, (err) => {
-                if (err) {
-                    console.error('Error sending video:', err);
-                    res.status(404).send('Video not found');
-                }
+            res.set('X-Content-Type-Options', 'nosniff').type(String(file.mimetype));
+            res.sendFile((0, media_service_1.mediaPath)(file.path), (error) => {
+                if (error && !res.headersSent)
+                    res.status(404).send('Media not found');
             });
         });
     }
     playVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { qid } = req.params;
-            const $or = [
-                { alias: 'qr-goce-code' },
-                { _id: qid }
-            ];
-            const pagination = {
-                limit: 1,
-                skip: 0
-            };
-            const options = {
-                populate: ['owner', 'createdBy', 'file', 'product'],
-                pagination
-            };
-            const alias = qid;
-            const queryOptions = mongoose_1.default.Types.ObjectId.isValid(qid) ? Object.assign({ $or }, options) : Object.assign({ alias }, options);
-            const qrCodes = yield this.service.getAll(queryOptions);
-            const qrCode = qrCodes[0];
-            const product = qrCode === null || qrCode === void 0 ? void 0 : qrCode.product;
-            if (!product) {
-                res.status(406).json({ error: "Incorrect url" });
-                return;
-            }
-            const f = product === null || product === void 0 ? void 0 : product.file;
-            const file = yield this.fileService.findById(f);
-            if (!file) {
-                res.status(406).json({ error: "Incorrect url" });
-                return;
-            }
+            var _a;
+            res.set('Cache-Control', 'no-store');
+            const playback = new qr_playback_service_1.QrPlaybackService();
+            const code = yield playback.load(req.params.qid);
+            const target = yield playback.draw(code);
+            const file = target.file;
             const { fingerprint, fingerprintData } = res.locals;
-            const statistic = {
-                qrCode: qrCode._id,
-                data: { fingerprintData, fingerprint }
-            };
-            this.statisticService.add(statistic).catch((err) => {
-                console.error("Error saving statistic:", err);
-            });
+            const statistic = Object.assign(Object.assign({ qrCode: code._id, product: target.product._id }, (target.campaignId ? { campaign: new mongoose_1.default.Types.ObjectId(target.campaignId) } : {})), { data: {
+                    fingerprintData,
+                    fingerprint,
+                    request: {
+                        method: req.method,
+                        path: req.path.slice(0, 2048),
+                        query: [...new URLSearchParams((req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '').slice(0, 8192))],
+                        referrer: (_a = req.get('referer')) === null || _a === void 0 ? void 0 : _a.slice(0, 2048),
+                    },
+                } });
+            this.statisticService
+                .add(statistic)
+                .catch((error) => console.error('Error saving statistic:', error));
             if (file.type === 'web-url') {
-                res.redirect(product.url);
+                res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url));
                 return;
             }
-            const type = alias_constant_1.TypeAlias[file.type];
-            const videoPath = `${req.protocol}://${req.get('host')}/l/${alias}/${type}/${qid}`;
-            // Check if the video file exists (optional)
-            res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Video Stream</title>
-        <style>
-          body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0; /* Light background for better visibility */
-          }
-
-          video {
-            height: 100vh; /* Full height of the viewport */
-            width: auto;    /* Adjust width to maintain aspect ratio */
-            border: none;   /* Optional: Remove border */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional shadow for aesthetics */
-          }
-        </style>
-      </head>
-      <body>
-        <video controls>
-          <source src="${videoPath}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      </body>
-      </html>
-
-      `);
+            const ticket = code.campaign ? `?selection=${yield playback.ticket(code, target)}` : '';
+            const mediaUrl = `/l/q/${alias_constant_1.TypeAlias[String(file.type)]}/${code._id}${ticket}`;
+            const content = file.type === 'image'
+                ? `<img src="${(0, media_service_1.escapeHtml)(mediaUrl)}" alt="${(0, media_service_1.escapeHtml)(String(file.name || file.originalname || 'Shared image'))}" />`
+                : `<video controls playsinline><source src="${(0, media_service_1.escapeHtml)(mediaUrl)}" type="${(0, media_service_1.escapeHtml)(String(file.mimetype || 'video/mp4'))}">Your browser does not support this video.</video>`;
+            res
+                .type('html')
+                .send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shared ${file.type === 'image' ? 'image' : 'video'} — QR2Share</title><style>body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#101915}img,video{display:block;max-width:100%;max-height:100dvh;object-fit:contain}</style></head><body>${content}</body></html>`);
         });
     }
 }

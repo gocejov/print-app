@@ -16,12 +16,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                ""
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": [""]
             }
           },
           "response": []
@@ -38,13 +34,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
             }
           },
           "response": []
@@ -56,14 +47,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -90,13 +75,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users"]
             }
           },
           "response": []
@@ -117,14 +97,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -142,14 +116,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -172,13 +140,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "products"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
             }
           },
           "response": []
@@ -190,14 +153,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products/with-options",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "products",
-                "with-options"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "with-options"]
             }
           },
           "response": []
@@ -209,14 +166,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "products",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -243,15 +194,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/products/create/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "products",
-                "create",
-                ""
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "create", ""]
             }
           },
           "response": []
@@ -272,14 +216,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/products/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "products",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -297,14 +235,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/products/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "products",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -337,15 +269,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/upload/video/:uid",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "upload",
-                "video",
-                ":uid"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload", "video", ":uid"],
               "variable": [
                 {
                   "key": "uid",
@@ -368,13 +293,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/files",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "files"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "files"]
             }
           },
           "response": []
@@ -386,14 +306,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/files/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "files",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "files", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -420,13 +334,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/files",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "files"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "files"]
             }
           },
           "response": []
@@ -447,14 +356,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/files/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "files",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "files", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -472,14 +375,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/files/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "files",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "files", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -502,13 +399,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes"]
             }
           },
           "response": []
@@ -520,14 +412,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/with-options",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                "with-options"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", "with-options"]
             }
           },
           "response": []
@@ -539,15 +425,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/qr-code/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                "qr-code",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", "qr-code", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -565,14 +444,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -599,13 +472,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes"
-              ]
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes"]
             }
           },
           "response": []
@@ -626,14 +494,8 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -651,14 +513,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -676,15 +532,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/videos/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                "videos",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", "videos", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -702,15 +551,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/qrcodes/play-video/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "qrcodes",
-                "play-video",
-                ":id"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qrcodes", "play-video", ":id"],
               "variable": [
                 {
                   "key": "id",
@@ -733,13 +575,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/:alias/:qid",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                ":alias",
-                ":qid"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": [":alias", ":qid"],
               "variable": [
                 {
                   "key": "alias",
@@ -761,15 +598,8 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/l/:alias/:type/:qid",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "l",
-                ":alias",
-                ":type",
-                ":qid"
-              ],
+              "host": ["{{baseUrl}}"],
+              "path": ["l", ":alias", ":type", ":qid"],
               "variable": [
                 {
                   "key": "alias",

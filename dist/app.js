@@ -13,6 +13,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initApp = void 0;
+require("dotenv/config");
+const collection_routes_1 = require("./routes/collection.routes");
+const auth_middleware_1 = require("./middlewares/auth.middleware");
+const management_middleware_1 = require("./middlewares/management.middleware");
+const http_utils_1 = require("./utils/http.utils");
 const express_1 = __importDefault(require("express"));
 const db_config_1 = __importDefault(require("./config/db.config"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
@@ -20,6 +25,7 @@ const product_routes_1 = __importDefault(require("./routes/product.routes"));
 const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 const file_routes_1 = __importDefault(require("./routes/file.routes"));
 const qrcode_routes_1 = __importDefault(require("./routes/qrcode.routes"));
+const statistic_routes_1 = __importDefault(require("./routes/statistic.routes"));
 const sesion_config_1 = __importDefault(require("./config/sesion.config"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_config_1 = __importDefault(require("./config/swagger.config"));
@@ -31,7 +37,7 @@ const userIdentification_middleware_1 = require("./middlewares/userIdentificatio
 const path_1 = __importDefault(require("path"));
 // import { DeviceFingerprint } from 'device-fingerprint';
 const app = (0, express_1.default)();
-const reservedAliases = new Set(['api', 'api-docs', 'l']);
+const reservedAliases = new Set(['api', 'api-docs', 'l', 'admin', 'crud']);
 const initApp = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, db_config_1.default)();
@@ -40,35 +46,52 @@ const initApp = () => __awaiter(void 0, void 0, void 0, function* () {
         //session configuration
         app.use(sesion_config_1.default);
         // Middleware for user identification
+        app.use(express_1.default.json());
         app.use(userIdentification_middleware_1.userIdentificationMiddleware);
         // swagger configuration
         app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_config_1.default));
-        app.use(express_1.default.json());
         app.use(express_1.default.static(path_1.default.resolve('public')));
-        // Allow requests from a specific origin
+        const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3001')
+            .split(',')
+            .map(origin => origin.trim());
         app.use((0, cors_1.default)({
-            origin: 'http://localhost:3001',
-            methods: 'GET,POST,PUT,DELETE',
+            origin: corsOrigins,
+            methods: 'GET,POST,PUT,PATCH,DELETE',
             credentials: true,
         }));
+        app.get('/health', (_req, res) => {
+            res.status(200).json({ status: 'ok' });
+        });
         app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-            res.json(req.fingerprintData);
+            res.json(res.locals.fingerprintData);
         }));
+        // React client assets are built into public/admin; keep deep links under its prefix.
+        app.get('/admin/*', (req, res, next) => {
+            if (path_1.default.extname(req.path)) {
+                next();
+                return;
+            }
+            res.sendFile(path_1.default.resolve('public/admin/index.html'));
+        });
         //Main Routes
+        app.use('/api', auth_middleware_1.protectWrites);
         app.use('/api/users', user_routes_1.default);
-        app.use('/api/products', product_routes_1.default);
-        app.use('/api/upload', upload_routes_1.default);
-        app.use('/api/files', file_routes_1.default);
-        app.use('/api/qrcodes', qrcode_routes_1.default);
+        app.use('/api/categories', auth_middleware_1.requireAuth, (0, collection_routes_1.collectionRoutes)('category'));
+        app.use('/api/campaigns', auth_middleware_1.requireAuth, (0, collection_routes_1.collectionRoutes)('campaign'));
+        app.use('/api/products', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('products'), product_routes_1.default);
+        app.use('/api/upload', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('upload'), upload_routes_1.default);
+        app.use('/api/files', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('files'), file_routes_1.default);
+        app.use('/api/qrcodes', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('qrcodes'), qrcode_routes_1.default);
+        app.use('/api/statistics', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('statistics'), statistic_routes_1.default);
         const qrCodeController = new qrcode_controller_1.QrCodeController();
-        app.get('/l/:alias/:type/:qid', (req, res) => qrCodeController.getVideo(req, res));
-        app.get('/:alias/:qid', (req, res, next) => {
+        app.get('/l/:alias/:type/:qid', (0, http_utils_1.asyncHandler)((req, res) => qrCodeController.getVideo(req, res)));
+        app.get('/:alias/:qid', (0, http_utils_1.asyncHandler)((req, res, next) => {
             if (reservedAliases.has(req.params.alias)) {
                 next();
                 return;
             }
-            qrCodeController.playVideo(req, res);
-        });
+            return qrCodeController.playVideo(req, res);
+        }));
         // Error handling middleware
         app.use(upload_error_middlewares_1.uploadErrorHandler);
         //handling any unhandled internal errors

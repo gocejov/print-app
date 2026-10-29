@@ -3,6 +3,7 @@ import { IUserDocument } from './user.model';
 
 // Define the interface for a File document
 export interface IFile {
+  name?: string,
   type: String,
   file?: String;
   url: String;
@@ -34,6 +35,7 @@ const requiredForUploadType = function (this: IFileDocument): boolean {
 
 // Create the File schema
 const FileSchema: Schema<IFileDocument> = new Schema({
+  name: { type: String, maxlength: 120, trim: true },
   type: { type: String, required: true },
   fieldname: { type: String, required: requiredForUploadType },
   originalname: { type: String, required: requiredForUploadType },
@@ -47,9 +49,9 @@ const FileSchema: Schema<IFileDocument> = new Schema({
   file: { type: String, required: requiredForUploadType },
   url: { type: String, required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
-  date: { type: Date, required: true, default: new Date() },
-  created_at: { type: Date, required: true, default: new Date() },
-  updated_at: { type: Date, required: true, default: new Date() },
+  date: { type: Date, required: true, default: Date.now },
+  created_at: { type: Date, required: true, default: Date.now },
+  updated_at: { type: Date, required: true, default: Date.now },
 });
 
 FileSchema.pre('save', async function (next) { // this line

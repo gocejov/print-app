@@ -36,14 +36,16 @@ exports.ProductModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 // Create the Product schema
 const ProductSchema = new mongoose_1.Schema({
+    name: { type: String, maxlength: 120, trim: true },
+    description: { type: String, maxlength: 1000, default: "" },
     qrcode: { type: String },
     file: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'files', required: true },
     alias: { type: String, required: true, default: 'c' },
     url: { type: String, required: true },
     owner: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
     createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
-    created_at: { type: Date, required: true, default: new Date() },
-    updated_at: { type: Date, required: true, default: new Date() },
+    created_at: { type: Date, required: true, default: Date.now },
+    updated_at: { type: Date, required: true, default: Date.now },
 });
 ProductSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {

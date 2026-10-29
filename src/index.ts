@@ -8,7 +8,7 @@ const startServer = async () => {
   const hostname = process.env.HOSTNAME || "127.0.0.1";
   const app: Application = await initApp()
   app.listen(port, hostname, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on http://${hostname}:${port}`);
   });
 }
 
