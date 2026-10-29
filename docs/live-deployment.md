@@ -1,6 +1,6 @@
 # QR2Share live deployment
 
-Deployment target: `root@realno.live`, application directory `/var/www/html/qr2share.com`, Git branch `dev-qr2share`. The initial deployed checkout is `cc68725` (merge of the tested application changes). The prebuilt image is `qr2share:release-3a7efd7`; the source trees of this image commit and the merge commit matched at deployment.
+Deployment target: `root@realno.live`, application directory `/var/www/html/qr2share.com`, Git branch `dev-qr2share`. The initial deployed checkout is `cc68725` (merge of the tested application changes). The initial prebuilt image was `qr2share:release-3a7efd7`; the source trees of that image commit and the merge commit matched at initial deployment. Automated releases now use `qr2share:sha-COMMIT_SHA`. Inspect the current container image or `/var/lib/qr2share-deploy/current-revision` for the active release.
 
 ## Runtime
 

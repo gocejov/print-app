@@ -14,7 +14,7 @@ ESLint uses recommended JavaScript/TypeScript rules and React hooks checks. Lega
 
 ## Production environment and credentials
 
-Repository: `gocejov/print-app`. GitHub environment: **production**, with a deployment branch policy restricted to `dev-qr2share`. No manual reviewer is required, matching automatic deployment on push. Default workflow token permissions are read-only, review approval is disabled, and actions must be pinned to full commit SHAs. Dependabot proposes weekly reviewed dependency/action updates; it does not auto-merge them.
+Repository: `gocejov/print-app`. GitHub environment: **production**, with a deployment branch policy restricted to `dev-qr2share`. No manual reviewer is required, matching automatic deployment on push. Default workflow token permissions are read-only, review approval is disabled, and actions must be pinned to full commit SHAs. The Dependabot file configures weekly dependency/action PRs targeting `dev-qr2share`; it does not auto-merge them. GitHub activates this schedule only after `.github/dependabot.yml` also exists on the repository default branch (`main`). Until that merge, the schedule is configured but not active. The repository default branch was left unchanged.
 
 Environment secrets:
 
@@ -49,4 +49,4 @@ For a team repository, require the **Lint** and **Build and integration tests** 
 
 The setup follows GitHub's [secure-use guidance](https://docs.github.com/en/actions/reference/security/secure-use) for immutable action pins and reduced credentials, [environment branch restrictions](https://docs.github.com/en/rest/deployments/branch-policies), and the [typescript-eslint flat-config setup](https://typescript-eslint.io/docs/). Actionlint/ShellCheck images are pinned by digest and action references by full upstream SHA.
 
-Local validation includes lint, production compilation, nine backend/unit cases, eight Chromium desktop/mobile scenarios, workflow validation and deployment shell checks. The restricted SSH key was verified to reject arbitrary commands. The first actual GitHub Actions run provides the end-to-end record of runner installation, build, transfer and release; inspect its result in Actions rather than inferring success from local checks alone.
+Local validation includes lint, production compilation, nine backend/unit cases, eight Chromium desktop/mobile scenarios, workflow validation and deployment shell checks. The restricted SSH key was verified to reject arbitrary commands. The [first hosted run](https://github.com/gocejov/print-app/actions/runs/40969745733) passed all three jobs, including runner installation, isolated tests, image build/transfer, database backup, systemd release and public HTTPS checks. The production environment recorded a successful deployment of `f62914f474ac108fceccbc0d908b55086ec3ed5f`. Subsequent pushes use the same release path. This is a single-instance deployment with a brief stack restart, rather than a zero-downtime rollout.
