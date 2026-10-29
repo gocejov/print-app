@@ -2,7 +2,7 @@
 
 ## Local development with nvm
 
-Use Node 22. There is currently no `.nvmrc`; select the version explicitly:
+Use Node 22, recorded in `.nvmrc`:
 
 ```bash
 source "$HOME/.nvm/nvm.sh"
@@ -118,3 +118,11 @@ Images upload to `uploads/media-images/` (10 MiB; JPEG/PNG/WebP/GIF) and videos 
 Categories and campaigns use existing MongoDB/Redis services, with no new environment variables, dependencies or upload volumes. Existing product QR documents need no migration. Rebuild/restart compiled execution to load the new backend routes. Redis holds 30-minute campaign media tickets; a Redis reset invalidates open campaign media pages, which require a fresh scan. Back up the new collections alongside existing MongoDB data. See [campaigns](campaigns.md).
 
 Campaign weights and detailed scan analytics also use existing services and need no migration/configuration. Rebuild frontend assets and restart compiled execution after updating. Existing campaigns default to equal weights; older scans remain visible with their originally recorded fields. See [weights](campaign-weights.md) and [analytics](analytics.md).
+
+## Existing live host
+
+For `realno.live`, use the explicit `qr2share-live` Compose project and systemd units described in [live deployment](live-deployment.md). It uses host port 3001, a prebuilt image, restored external volumes, HTTPS and a recovery timer. Avoid unqualified Compose commands because the preserved old containers reference the same original checkout path.
+
+## Automated releases
+
+Every branch push runs lint, build and isolated integration/browser checks. Successful `dev-qr2share` pushes deploy through GitHub Actions using restricted SSH, immutable images, backups, health checks and rollback. See [CI/CD](ci-cd.md).

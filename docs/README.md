@@ -13,6 +13,8 @@ This documentation describes the current TypeScript source, a local runtime chec
 | [Architecture](architecture.md) | Components, startup, middleware, data model and storage |
 | [Authentication](authentication.md) | Registration, sessions, ownership, validation and compatibility |
 | [API and workflows](api-and-workflows.md) | Routes, request bodies and the upload-to-scan flow |
+| [GitHub Actions CI/CD](ci-cd.md) | All-branch lint/tests, protected deployment secrets, release safeguards and rollback |
+| [Live deployment](live-deployment.md) | Production paths, independent stack, backups, HTTPS and automatic recovery |
 | [Running the app](running-the-app.md) | Node 22, environment, Docker and troubleshooting |
 | [Runtime review](runtime-review.md) | Verified behavior, verification limits and implementation gaps |
 

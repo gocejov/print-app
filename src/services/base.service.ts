@@ -90,7 +90,7 @@ export class BaseService<T extends Document> implements IBaseService<T> {
 
     const doc = new this.model(data);
 
-    let query: any = doc.save();
+    const query: any = doc.save();
 
     // if (select) {
     //   query = query.select(select);
@@ -110,7 +110,7 @@ export class BaseService<T extends Document> implements IBaseService<T> {
       return null;
     }
 
-    let query: any = this.model.findOneAndUpdate({ $and: [{ _id: id }, queryOptions] }, { $set: { ...data, updated_at: new Date() } }, { new: true, runValidators: true });
+    const query: any = this.model.findOneAndUpdate({ $and: [{ _id: id }, queryOptions] }, { $set: { ...data, updated_at: new Date() } }, { new: true, runValidators: true });
 
     // if (select) {
     //   query = query.select(select);
@@ -129,7 +129,7 @@ export class BaseService<T extends Document> implements IBaseService<T> {
       return null;
     }
 
-    let query: any = this.model.findOneAndDelete({ $and: [{ _id: id }, queryOptions] });
+    const query: any = this.model.findOneAndDelete({ $and: [{ _id: id }, queryOptions] });
 
     // if (select) {
     //   query = query.select(select);

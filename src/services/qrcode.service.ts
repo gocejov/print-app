@@ -7,7 +7,7 @@ import { toInteger } from 'lodash';
 
 export interface IQrCodeServie extends IBaseService<IQrCodeDocument> {
   findQrCodesByUserId(userId: string): Promise<IQrCodeDocument[]>
-  generateQrCodeBase64Url(id: string, qrCodeOptions?: Object | null): Promise<String | null>
+  generateQrCodeBase64Url(id: string, qrCodeOptions?: object | null): Promise<string | null>
 }
 
 export class QrCodeService extends BaseService<IQrCodeDocument> implements IQrCodeServie {
@@ -21,14 +21,14 @@ export class QrCodeService extends BaseService<IQrCodeDocument> implements IQrCo
     });
   }
 
-  async generateQrCodeBase64Url(url: string, qrCodeOptions: Object | null = null): Promise<String | null> {
+  async generateQrCodeBase64Url(url: string, qrCodeOptions: object | null = null): Promise<string | null> {
 
     // errorCorrectionLevel: 'L', // High error correction level (L, M, Q, H)
     // width: 500,               // Size in pixels
     const WIDTH = 2024
     const LOGO_WIDTH = Math.round((20 / 100) * WIDTH); // 20% of QR code width
 
-    const options: Object = qrCodeOptions ? qrCodeOptions : { errorCorrectionLevel: 'Q', width: WIDTH, };
+    const options: object = qrCodeOptions ? qrCodeOptions : { errorCorrectionLevel: 'Q', width: WIDTH, };
 
     try {
       const qrCodeDataBuffer: any = await QRCode.toBuffer(url, options);

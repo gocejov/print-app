@@ -74,7 +74,7 @@ class BaseService {
         return __awaiter(this, void 0, void 0, function* () {
             const _a = options || {}, { populate, select } = _a, queryOptions = __rest(_a, ["populate", "select"]);
             const doc = new this.model(data);
-            let query = doc.save();
+            const query = doc.save();
             // if (select) {
             //   query = query.select(select);
             // }
@@ -88,7 +88,7 @@ class BaseService {
             if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
                 return null;
             }
-            let query = this.model.findOneAndUpdate({ $and: [{ _id: id }, queryOptions] }, { $set: Object.assign(Object.assign({}, data), { updated_at: new Date() }) }, { new: true, runValidators: true });
+            const query = this.model.findOneAndUpdate({ $and: [{ _id: id }, queryOptions] }, { $set: Object.assign(Object.assign({}, data), { updated_at: new Date() }) }, { new: true, runValidators: true });
             // if (select) {
             //   query = query.select(select);
             // }
@@ -102,7 +102,7 @@ class BaseService {
             if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
                 return null;
             }
-            let query = this.model.findOneAndDelete({ $and: [{ _id: id }, queryOptions] });
+            const query = this.model.findOneAndDelete({ $and: [{ _id: id }, queryOptions] });
             // if (select) {
             //   query = query.select(select);
             // }

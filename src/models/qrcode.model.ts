@@ -8,10 +8,10 @@ export interface IQrCode {
   name?: string
   status?: 'active' | 'paused'
   destinationUrl?: string
-  qrCode?: String
+  qrCode?: string
   file?: IFileDocument['_id']
-  alias?: String
-  url?: String
+  alias?: string
+  url?: string
   owner: IUserDocument['_id']
   product?: IProductDocument['_id']
   campaign?: mongoose.Types.ObjectId

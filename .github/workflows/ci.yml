@@ -1,0 +1,146 @@
+name: CI and production deployment
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  # Never interrupt an in-progress production release.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/dev-qr2share' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - name: Check deployment scripts
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          bash -n deploy/*.sh
+          docker run --rm -v "$PWD:/mnt" koalaman/shellcheck@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d deploy/*.sh
+
+  test:
+    name: Build and integration tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'"
+          --health-interval 10s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_MONGO_URI: mongodb://127.0.0.1:27017/qr2share_ci
+      TEST_REDIS_URL: redis://127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix client
+      - run: npm run build
+      - run: npm test
+      - name: Install browser
+        run: |
+          npm --prefix client exec -- playwright install --with-deps chromium
+          node -e 'console.log("CHROME_PATH=" + require("./client/node_modules/playwright").chromium.executablePath())' >> "$GITHUB_ENV"
+      - run: npm run test:ui
+      - name: Save browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: browser-failure-${{ github.run_id }}
+          path: client/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy production
+    needs: [lint, test]
+    if: github.ref == 'refs/heads/dev-qr2share' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: https://qr2share.com/admin/
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Build release image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: qr2share:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/gocejov/print-app
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Deploy verified revision over restricted SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing production DEPLOY_HOST secret}"
+          : "${DEPLOY_USER:?Missing production DEPLOY_USER secret}"
+          : "${DEPLOY_SSH_KEY:?Missing production DEPLOY_SSH_KEY secret}"
+          : "${DEPLOY_KNOWN_HOSTS:?Missing production DEPLOY_KNOWN_HOSTS secret}"
+          install -d -m 700 "$HOME/.ssh"
+          umask 077
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          trap 'rm -f "$HOME/.ssh/deploy_key"' EXIT
+          docker save "qr2share:sha-$REVISION" | gzip -1 | ssh \
+            -i "$HOME/.ssh/deploy_key" -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o ConnectTimeout=20 \
+            "$DEPLOY_USER@$DEPLOY_HOST" "deploy $REVISION"
+      - name: Verify public HTTPS endpoints
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 --retry-all-errors https://qr2share.com/health
+          curl --fail --silent --show-error --output /dev/null https://qr2share.com/admin/

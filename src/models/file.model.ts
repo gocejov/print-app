@@ -4,18 +4,18 @@ import { IUserDocument } from './user.model';
 // Define the interface for a File document
 export interface IFile {
   name?: string,
-  type: String,
-  file?: String;
-  url: String;
-  fieldname?: String,
-  originalname?: String,
-  encoding?: String,
-  mimetype?: String,
-  destination?: String,
-  filename?: String,
-  path?: String,
-  size?: Number,
-  baseUrl?: String,
+  type: string,
+  file?: string;
+  url: string;
+  fieldname?: string,
+  originalname?: string,
+  encoding?: string,
+  mimetype?: string,
+  destination?: string,
+  filename?: string,
+  path?: string,
+  size?: number,
+  baseUrl?: string,
   createdBy: IUserDocument['_id'];
   date?: Date;
   created_at?: Date;

@@ -6,10 +6,10 @@ import { IFile, IFileDocument } from './file.model';
 export interface IProduct {
   name?: string;
   description?: string;
-  qrcode?: String;
+  qrcode?: string;
   file: IFileDocument['_id'];
-  alias?: String;
-  url: String;
+  alias?: string;
+  url: string;
   owner: IUserDocument['_id'];
   createdBy: IUserDocument['_id'];
   created_at?: Date;

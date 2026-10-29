@@ -69,3 +69,13 @@ docker compose down
 
 Do not run `docker compose down -v` unless you intend to delete the database,
 Redis data, and uploaded videos.
+
+The existing `realno.live` production installation uses a separate Compose project,
+port 3001, HTTPS and systemd recovery. See [live operations and backups](docs/live-deployment.md)
+before changing that server. Deployment unit/override templates are in `deploy/`.
+
+## Continuous integration and deployment
+
+GitHub Actions runs lint, build and integration/browser checks on every branch push
+and pull request. Successful `dev-qr2share` pushes automatically deploy production
+with backups, health checks and application rollback. See [CI/CD setup and operations](docs/ci-cd.md).

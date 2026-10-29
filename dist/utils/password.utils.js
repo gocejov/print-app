@@ -26,6 +26,7 @@ function verifyPassword(password, encoded) {
         if (/^\$2[aby]\$/.test(encoded)) {
             // Keep existing bcrypt accounts usable; new passwords use scrypt.
             return new Promise(resolve => {
+                // eslint-disable-next-line @typescript-eslint/no-require-imports -- Legacy package has no bundled TypeScript declarations.
                 require('bcrypt-nodejs').compare(password, encoded, (err, match) => resolve(!err && match));
             });
         }

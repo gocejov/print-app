@@ -13,7 +13,6 @@ test('campaign/category ownership, live expansion, random scans and pinned media
   const { redisClient } = require('../src/config/redis.config');
   const { selectionKey } = require('../src/services/qr-playback.service');
   const { StatisticModel } = require('../src/models/statistic.model');
-  const { ProductModel } = require('../src/models/product.model');
   const { FileModel } = require('../src/models/file.model');
   const uploaded = [];
   let server;

@@ -103,3 +103,13 @@ The combined Node 22 build and nine backend/unit cases passed. All eight Chromiu
 Overview and Scan details now use separate navigation tabs. The scan toolbar has a wider search field, clear-search/reset controls and an independent QR selector. QR action menus, previews and list scan counts link to a URL-backed QR filter, preserving that scope on reload. Backend recording and access policy are unchanged. The production build passed; the existing analytics browser scenario now also exercises tab separation, filter reloads and each QR entry point. See [analytics](analytics.md).
 
 Verification completed: all eight browser scenarios passed across the full run and corrected analytics rerun. The analytics scenario covers tab navigation, QR links, reload persistence, clearing filters and desktop/mobile scan details; server/client production compilation and Markdown link/format checks also passed.
+
+## Live host deployment
+
+`realno.live` now uses the isolated `qr2share-live` project behind HTTPS Nginx on port 3001, with preserved old containers/volumes and checksum-verified pre-migration backups. The copied MongoDB was recovered successfully; all five old application collections were empty. Dedicated systemd startup and recovery units, Docker restart policies, log rotation and automatic TLS renewal are configured. See [live operations](live-deployment.md).
+
+Live verification passed for HTTPS/admin routing, secure registration, category/product weights, campaign redirects, scan details, actual image/video uploads/previews and upload cleanup. A controlled full-stack restart preserved MongoDB records and Redis authentication; forced app termination recovered under Docker, and a stopped app recovered under the watchdog service. Temporary verification fixtures were removed. Boot startup and Certbot/recovery timers are enabled; no host reboot was performed.
+
+## CI/CD setup
+
+Added ESLint/React hooks checks, actionlint/ShellCheck validation, Node 22 pinning and GitHub Actions jobs for all-branch lint/build/integration/browser checks. Production is restricted to successful `dev-qr2share` releases through a protected environment and forced-command SSH key. Deployment uses image SHA/source verification, a server lock, free-space checks, pre-release database/configuration backups and application rollback. Local lint/build, nine backend and eight browser cases passed. See [CI/CD](ci-cd.md) and actual GitHub run status for hosted execution.
