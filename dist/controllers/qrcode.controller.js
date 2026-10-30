@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QrCodeController = void 0;
+const embed_service_1 = require("../services/embed.service");
 const visitor_service_1 = require("../services/visitor.service");
 const browser_scan_service_1 = require("../services/browser-scan.service");
 const file_model_1 = require("../models/file.model");
@@ -212,8 +213,9 @@ class QrCodeController extends base_controller_1.BaseController {
             return this.deliver(req, res, code, target);
         });
     }
-    deliver(_req, res, code, target) {
+    deliver(req, res, code, target) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const playback = new qr_playback_service_1.QrPlaybackService();
             const file = target.file;
             if (target.product.displayMode === 'page') {
@@ -227,7 +229,13 @@ class QrCodeController extends base_controller_1.BaseController {
                 return;
             }
             if (file.type === 'web-url') {
-                res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url));
+                const destination = code.campaign ? String(file.url) : code.destinationUrl || String(file.url);
+                if (((_a = req.get('accept')) === null || _a === void 0 ? void 0 : _a.includes('text/html')) &&
+                    (yield (0, embed_service_1.canEmbed)(destination, `${req.protocol}://${req.get('host')}`))) {
+                    res.type('html').send((0, embed_service_1.embeddedPage)(destination, target.product.name || 'Shared content'));
+                }
+                else
+                    res.redirect(destination);
                 return;
             }
             const ticket = code.campaign ? `?selection=${yield playback.ticket(code, target)}` : '';

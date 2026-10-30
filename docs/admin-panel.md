@@ -122,3 +122,5 @@ The lazy analytics feature now includes `scan-table.tsx`, using the shared works
 Visitor analytics includes recognized browser/repeat/unrecognized counts, new/returning audience filters and browser scan history. Estimated fingerprints stay separate from cookie IDs; see [visitor recognition](visitor-recognition.md).
 
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
+
+HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.

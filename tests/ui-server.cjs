@@ -13,11 +13,22 @@ process.env.NODE_ENV = 'test';
 process.env.SESSION_SECRET = randomUUID();
 process.env.PUBLIC_URL = `http://127.0.0.1:${process.env.UI_TEST_PORT || 3011}`;
 const mongoose = require('mongoose');
+// Browser-only fixture host: avoids external network dependencies for iframe behavior.
+const embed = require('../src/services/embed.service');
+const canEmbed = embed.canEmbed;
+embed.canEmbed = async (destination, parent) => new URL(destination).origin === process.env.PUBLIC_URL && new URL(destination).pathname === '/embed-fixture-content'
+  ? new URL(destination).searchParams.get('mode') !== 'blocked'
+  : canEmbed(destination, parent);
 const { initApp } = require('../src/app');
 const { redisClient } = require('../src/config/redis.config');
 let server;
 (async () => {
   const app = await initApp();
+  app.get('/embed-fixture-content', async (req, res) => {
+    if (req.query.mode === 'slow' && req.get('sec-fetch-dest') === 'iframe') await new Promise(resolve => setTimeout(resolve, 6000));
+    if (req.query.mode === 'blocked') res.set('X-Frame-Options', 'DENY');
+    res.type('html').send('<h1>Website content</h1>' + (req.query.mode === 'message-error' ? `<script>if(parent!==window)setTimeout(function(){parent.postMessage({type:'qr2share:embed-error'},location.origin)},100)</script>` : ''));
+  });
   server = app.listen(Number(process.env.UI_TEST_PORT || 3011), '127.0.0.1');
 })();
 let stopping = false;

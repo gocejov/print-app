@@ -15,7 +15,7 @@
     "build:server": "tsc",
     "build:client": "npm --prefix client run build",
     "test:ui": "npm --prefix client test",
-    "lint": "eslint src client/src client/tests client/*.ts tests public/scan/collect.js eslint.config.mjs --max-warnings=0",
+    "lint": "eslint src client/src client/tests client/*.ts tests public/scan/*.js eslint.config.mjs --max-warnings=0",
     "lint:fix": "npm run lint -- --fix"
   },
   "author": "Goce Jovancevski",
@@ -56,6 +56,7 @@
     "geoip-lite": "^1.4.10",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.1",
+    "ipaddr.js": "2.2.0",
     "jimp": "^1.6.0",
     "lodash": "^4.17.21",
     "mongoose": "^8.8.2",

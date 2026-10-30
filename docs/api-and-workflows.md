@@ -111,3 +111,5 @@ HTML QR navigations collect allowlisted browser metrics before continuing to con
 HTML scans also establish a signed first-party visitor cookie. Statistics may include `data.visitor` and `data.browserFingerprint`; metrics submissions use same-origin credentials to confirm recognition. These IDs are owner-scoped and do not authenticate a visitor. See [visitor recognition](visitor-recognition.md).
 
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
+
+HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.

@@ -112,3 +112,5 @@ HTML QR navigation records one server scan, then uses a 10-minute Redis capabili
 `visitor.service.ts` signs first-party visitor cookies and derives owner-scoped HMAC IDs and estimated browser fingerprints. Scan documents store recognition separately from the original request fingerprint. A compound QR/visitor/confirmation index supports returning-browser lookups. The browser metrics and continuation endpoints confirm cookies without requiring an account. See [visitor recognition](visitor-recognition.md).
 
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
+
+HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.

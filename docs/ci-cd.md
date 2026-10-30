@@ -53,4 +53,4 @@ Local validation includes lint, production compilation, nine backend/unit cases,
 
 Production was switched from `dev-qr2share` to `main` at the owner's request. The server branch guard, GitHub environment branch policy, workflow deploy condition and Dependabot targets all use `main`; development branches run checks without deployment.
 
-The lint job also checks the public pre-redirect browser collector (`public/scan/collect.js`), alongside backend/admin source and test files. Browser integration covers collection and fail-open redirects; see [browser metrics](browser-metrics.md).
+The lint job also checks the public pre-redirect browser collector (`public/scan/*.js`), alongside backend/admin source and test files. Browser integration covers collection and fail-open redirects; see [browser metrics](browser-metrics.md).

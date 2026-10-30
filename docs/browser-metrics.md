@@ -59,3 +59,5 @@ Backend integration checks cover bounded payloads, rejected cross-origin writes,
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
 
 The collection document still requires a browser navigation and may briefly appear blank while the destination loads; collecting browser-side data before an external redirect cannot guarantee zero transition time. No permission prompts are introduced.
+
+HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.

@@ -10,7 +10,7 @@ flowchart LR
     Files --> Product[Product with primary file and optional gallery]
     Product --> QR[One or more QR codes]
     QR --> Scan[Permanent scan link]
-    Scan --> Content[Display image, play video or redirect]
+    Scan --> Content[Display media, embed website or redirect]
 ```
 
 A file can be reused by several products. A product has one primary attached file, optional additional media, and can be assigned to several QR codes. Its scan experience is either direct file delivery or a [product page](product-pages.md) with a gallery and action button. Users own each of these records; there is no organization-wide administrator role.
@@ -20,7 +20,7 @@ A file can be reused by several products. A product has one primary attached fil
 1. Open **Files** at `/admin/files`, click **Add file**, and choose Image, Video or URL. Give the file a name, then upload or enter its URL. You can preview uploaded media and open saved URLs.
 2. Open **Products** at `/admin/products`, click **Create product**, add a name/optional description and choose an attached file. Alternatively use a file row’s **Create product** action, which preselects that file.
 3. Open **My QR codes**, click **Create QR code**, name the code and select a product. Alternatively use **Create QR code** on a product card, which preselects it.
-4. Download the saved QR PNG. A scan displays the attached image, renders the attached video, or redirects to the attached URL.
+4. Download the saved QR PNG. A scan displays the attached image, renders the attached video, or automatically embeds the attached website with redirect fallback.
 
 To change shared content, edit a product and select another uploaded/saved file. All QR codes assigned to it follow the new file. To change just one code’s assignment, use its **Edit QR target** action. The saved QR image and scan URL stay unchanged in both cases.
 
@@ -75,7 +75,7 @@ The earlier URL shortcut `POST /api/qrcodes/dynamic` remains compatible for API 
 
 Public routes:
 
-- `GET /:alias/:qid`: record a scan and show an image/video page or redirect to a URL.
+- `GET /:alias/:qid`: record a scan, collect browser data, and deliver media/product pages or automatically embed a website with redirect fallback.
 - `GET /l/:alias/:type/:qid`: serve media/redirect without another scan event. Type aliases are `i`, `v`, and `u` for image, video and URL.
 - Paused codes return 410 on both public routes.
 
@@ -104,3 +104,5 @@ The direct product flow remains available. You can also arrange products into re
 Campaign product weights default to equal chances (1 each); increasing a product weight changes its relative frequency without changing the file or QR. See [weights](campaign-weights.md). Individual recorded selections and request parameters can be inspected in the [scan analytics table](analytics.md).
 
 HTML browser scans now pass through a brief [browser metrics collection step](browser-metrics.md) before direct playback, URL redirect or product-page delivery. It retains the original scan and campaign selection; media and continuation requests add no scan events.
+
+HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.

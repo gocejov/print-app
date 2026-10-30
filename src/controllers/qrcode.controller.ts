@@ -1,3 +1,4 @@
+import { canEmbed, embeddedPage } from '../services/embed.service'
 import { identifyVisitor } from '../services/visitor.service'
 import { BrowserScanService, browserScanPage } from '../services/browser-scan.service'
 import { FileModel } from '../models/file.model'
@@ -240,7 +241,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   }
 
   private async deliver(
-    _req: Request,
+    req: Request,
     res: Response,
     code: IQrCodeDocument,
     target: PlaybackTarget,
@@ -258,7 +259,13 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
     if (file.type === 'web-url') {
-      res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url))
+      const destination = code.campaign ? String(file.url) : code.destinationUrl || String(file.url)
+      if (
+        req.get('accept')?.includes('text/html') &&
+        (await canEmbed(destination, `${req.protocol}://${req.get('host')}`))
+      ) {
+        res.type('html').send(embeddedPage(destination, target.product.name || 'Shared content'))
+      } else res.redirect(destination)
       return
     }
     const ticket = code.campaign ? `?selection=${await playback.ticket(code, target)}` : ''

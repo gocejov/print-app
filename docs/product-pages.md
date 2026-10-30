@@ -11,7 +11,7 @@ Products can open their attached file directly (the default), or show a mobile-f
 5. Optionally enter both an action button label (up to 60 characters) and an HTTP/HTTPS URL (up to 2048 characters). Clear both to remove the action.
 6. Save and assign the product to a QR code or campaign. Scan the existing QR to see the page.
 
-Image/video primary files appear in the gallery. A primary URL appears as a separate **View linked content** link. Product name and description are public in page mode. Direct mode continues to show the original image/video viewer or URL redirect. Settings are retained when switching modes; action fields must always be a complete pair.
+Image/video primary files appear in the gallery. A primary URL appears as a separate **View linked content** link. Product name and description are public in page mode. Direct mode shows the image/video viewer or automatically attempts URL embedding with redirect fallback. Settings are retained when switching modes; action fields must always be a complete pair.
 
 ## API
 
@@ -43,3 +43,5 @@ The existing scan analytics records page scans and the selected campaign product
 Backend integration checks cover direct/page switching, unchanged QR links, escaped names/labels, unsafe action URLs, duplicate or unsupported attachments, deletion guards, media bytes and pinned campaign attachments. The browser scenario configures a page through the admin editor and verifies the public action, loaded image, mobile layout and desktop/mobile screenshots. These run alongside the existing authentication, content, campaigns and analytics scenarios.
 
 HTML QR navigations collect [browser metrics](browser-metrics.md) before this page is shown. JavaScript-disabled visitors continue to the server-rendered page through the fallback.
+
+HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.

@@ -4,6 +4,7 @@ This documentation describes the current TypeScript source, a local runtime chec
 
 | Document | Contents |
 | --- | --- |
+| [Automatic URL embedding](embedded-content.md) | Iframe delivery, automatic redirect fallback, readiness messages and browser limits |
 | [Files → Products → QR codes](content-workflow.md) | Core content model, uploads, product attachments, QR assignment and persistence |
 | [Product pages](product-pages.md) | Multiple media attachments, public product pages and primary action buttons |
 | [Loyalty rewards proposal](loyalty-rewards.md) | Proposed qualifying visits, progress, one-time claims and staff redemption |
