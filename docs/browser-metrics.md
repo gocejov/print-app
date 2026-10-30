@@ -1,6 +1,6 @@
 # Browser metrics before QR playback
 
-Every public QR navigation requesting HTML first receives a short collection page. It records browser signals without visitor login and then opens the current URL, image, video or product page. All existing printed QR links work. API/non-HTML requests keep direct playback and server-only analytics.
+Every public QR navigation requesting HTML first receives a visually blank collection document with no branding, message or controls. It records browser signals without visitor login and then opens the current URL, image, video or product page. All existing printed QR links work. API/non-HTML requests keep direct playback and server-only analytics.
 
 ## Automatic signals
 
@@ -30,7 +30,7 @@ A first-time visitor will usually have `prompt` status and no precise location. 
 
 1. Resolve the target once and save one server scan, retaining original query parameters and request context.
 2. Mint a random 48-hex capability in Redis, valid for 10 minutes, scoped to that scan, QR, product and primary file. Campaigns retain their selected product through the existing selection ticket.
-3. Serve `/scan/collect.js` on the HTML landing page. Browser data collection normally completes promptly, with a 650 ms location budget and 550 ms upload wait. An overall 1400 ms timer bounds the wait once the script starts. A manual **Continue now** link is always present; disabled JavaScript uses a noscript redirect. A three-second HTML refresh also continues if the external script is blocked or never loads.
+3. Serve `/scan/collect.js` in the blank HTML collection document. Browser data collection normally completes promptly, with a 650 ms location budget and 550 ms upload wait. An overall 1400 ms timer bounds the wait once the script starts. The document has an empty body and title, so no interstitial content is displayed. Disabled JavaScript uses an immediate noscript redirect. A three-second HTML refresh also continues if the external script is blocked or never loads.
 4. `POST /scan/:token/metrics` enriches only that scan. It requires JSON, rejects cross-origin submissions, allowlists bounded values, rejects invalid coordinates and caps JSON at 8192 characters after parsing. Unknown fields are discarded. Only the first accepted submission writes browser data; retries cannot overwrite it. The capability expires after 10 minutes and is never put in an outbound destination URL.
 5. `GET /scan/:token/continue` revalidates QR status and the same current target, then delivers content without recording another scan. Reloading this continuation within its lifetime does not create another scan. Changed or unavailable targets require a fresh scan. A fresh visit to the original QR URL is a new scan.
 
@@ -57,3 +57,5 @@ Age, gender, income, email, phone number, interests, exact identity and browsing
 Backend integration checks cover bounded payloads, rejected cross-origin writes, invalid coordinates, ignored fields, replay protection, paused QR continuation and one-scan counting. Browser tests cover visitors without an account/session, normal redirects, already-granted geolocation, blocked metric uploads, blocked collection scripts, JavaScript-disabled fallback, and campaign continuation without a redraw. Existing public image/video/product-page flows remain covered by the full browser suite.
 
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
+
+The collection document still requires a browser navigation and may briefly appear blank while the destination loads; collecting browser-side data before an external redirect cannot guarantee zero transition time. No permission prompts are introduced.

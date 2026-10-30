@@ -62,6 +62,10 @@ for (const mode of [
       if (mode === 'blocked metrics')
         await page.route('**/scan/*/metrics', (route) => route.abort())
       await page.goto(new URL(code.url).pathname + '?utm_source=poster')
+      if (mode === 'blocked script') {
+        await expect(page.locator('body')).toBeEmpty()
+        await expect(page).toHaveTitle('')
+      }
       await expect(page).toHaveURL(/\/health$/)
       await expect(page.locator('body')).toContainText('ok')
       if (!['no JavaScript', 'blocked metrics', 'blocked script'].includes(mode))
