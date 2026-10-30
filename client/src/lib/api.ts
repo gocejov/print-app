@@ -1,3 +1,4 @@
+import type { VisitorTarget } from './types'
 import type { VisitorProfileData } from './types'
 import type { ProductPageOptions } from './types'
 import type { AssetFile, Campaign, Category, Product, QrCode, Scan, User } from './types'
@@ -78,8 +79,11 @@ export const api = {
     request<Category>(`/categories/${id}`, { method: 'DELETE', body: '{}' }),
   deleteCampaign: (id: string) =>
     request<Campaign>(`/campaigns/${id}`, { method: 'DELETE', body: '{}' }),
-  createCampaignCode: (name: string, campaignId: string) =>
-    request<QrCode>('/qrcodes', { method: 'POST', body: JSON.stringify({ name, campaignId }) }),
+  createCampaignCode: (name: string, campaignId: string, visitorTarget?: VisitorTarget) =>
+    request<QrCode>('/qrcodes', {
+      method: 'POST',
+      body: JSON.stringify({ name, campaignId, visitorTarget }),
+    }),
   files: (signal?: AbortSignal) => request<AssetFile[]>('/files', { signal }),
   products: (signal?: AbortSignal) => request<Product[]>('/products/with-options', { signal }),
   createUrlFile: (name: string, url: string) =>
@@ -116,11 +120,15 @@ export const api = {
   ) => request<Product>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (id: string) =>
     request<Product>(`/products/${id}`, { method: 'DELETE', body: '{}' }),
-  createCode: (name: string, productId: string) =>
-    request<QrCode>('/qrcodes', { method: 'POST', body: JSON.stringify({ name, productId }) }),
+  createCode: (name: string, productId: string, visitorTarget?: VisitorTarget) =>
+    request<QrCode>('/qrcodes', {
+      method: 'POST',
+      body: JSON.stringify({ name, productId, visitorTarget }),
+    }),
   editCode: (
     id: string,
     data: {
+      visitorTarget?: VisitorTarget | null
       name?: string
       status?: 'active' | 'paused'
       destinationUrl?: string

@@ -3437,3 +3437,11 @@ button.scan-visitor-name:hover { color:var(--green); text-decoration:underline; 
 .scan-audience-toolbar > label select { margin:0; border:1px solid var(--border); background:var(--white); border-radius:10px; height:42px; padding:0 12px; font-size:13px; color:var(--ink); }
 .scan-audience-toolbar > span { margin-left:auto; font-size:12px; color:var(--muted); line-height:1.6; padding-bottom:8px; }
 @media (max-width:600px) { .scan-audience-toolbar > label { width:100%; } .scan-audience-toolbar > span { width:100%; margin:0; padding:0; } .scan-visitor-links button { min-height:36px; } }
+.visitor-target-editor { border:1px solid var(--border); border-radius:12px; padding:16px; margin:20px 0; background:#fafcfb; }
+.visitor-target-editor .visitor-target-toggle { display:flex; flex-direction:row; align-items:center; gap:10px; font-weight:600; margin:0; }
+.visitor-target-toggle input[type='checkbox'] { width:18px; height:18px; flex-shrink:0; margin:0; }
+.visitor-target-editor > label,.visitor-target-editor > select { margin-bottom:12px; }
+.visitor-target-editor .form-hint { line-height:1.6; }
+.visitor-assignment-list { padding:0; margin:14px 0; list-style:none; }
+.visitor-assignment-list li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.visitor-assignment-list span { color:var(--muted); }

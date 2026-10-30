@@ -3,8 +3,14 @@ import { IUserDocument } from './user.model'
 import { IFileDocument } from './file.model'
 import { IProductDocument } from './product.model'
 
+export interface IVisitorTarget {
+  visitorId: string
+  productId: string
+}
+
 // Define the interface for a QrCode document
 export interface IQrCode {
+  visitorTarget?: IVisitorTarget
   name?: string
   status?: 'active' | 'paused'
   destinationUrl?: string
@@ -25,6 +31,16 @@ export interface IQrCodeDocument extends IQrCode, Document {}
 
 // Create the QrCode schema
 const QrCodeSchema: Schema<IQrCodeDocument> = new Schema({
+  visitorTarget: {
+    type: new Schema(
+      {
+        visitorId: { type: String, required: true, match: /^[a-f0-9]{64}$/ },
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'products', required: true },
+      },
+      { _id: false },
+    ),
+    default: undefined,
+  },
   name: { type: String, maxlength: 120, trim: true },
   status: { type: String, enum: ['active', 'paused'], default: 'active' },
   destinationUrl: { type: String },

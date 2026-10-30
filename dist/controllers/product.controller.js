@@ -77,7 +77,9 @@ class ProductController extends base_controller_1.BaseController {
                     entries: { $elemMatch: { kind: 'product', target: req.params.id } },
                 })))
                 throw new http_utils_1.HttpError(409, 'Remove this product from its categories and campaigns before deleting it');
-            if (yield qrcode_model_1.QrCodeModel.exists({ product: req.params.id }))
+            if (yield qrcode_model_1.QrCodeModel.exists({
+                $or: [{ product: req.params.id }, { 'visitorTarget.productId': req.params.id }],
+            }))
                 throw new http_utils_1.HttpError(409, 'This product is assigned to a QR code. Reassign or delete that QR code first.');
             const product = yield product_model_1.ProductModel.findOneAndDelete({
                 _id: req.params.id,

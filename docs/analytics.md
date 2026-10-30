@@ -70,3 +70,5 @@ Rows show a short pseudonymous visitor label, single-scan/returning status, scan
 Counts are derived from the same fetched account scan collection. This adds no new tracking, fingerprint matching or game/reward decisions. Pagination/grouping is client-side and retains the existing large-history scaling limits.
 
 In Scan details, click the short visitor label to open its profile. The compact Visitor cell provides **Scan history** and **Similar browsers** links; full hashes stay in the scan details and Advanced profile evidence. Similar-browser groups remain estimates.
+
+See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.

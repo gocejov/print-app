@@ -56,7 +56,12 @@ export interface Campaign {
   created_at: string
 }
 
+export interface VisitorTarget {
+  visitorId: string
+  productId: string
+}
 export interface QrCode {
+  visitorTarget?: VisitorTarget
   _id: string
   name?: string
   status?: 'active' | 'paused'

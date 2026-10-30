@@ -1,3 +1,5 @@
+import { validateVisitorTarget, validateVisitorFallback } from './visitor-target.service'
+import type { IVisitorTarget } from '../models/qrcode.model'
 import { CampaignService } from './campaign.service'
 import mongoose from 'mongoose'
 import { FileModel } from '../models/file.model'
@@ -22,7 +24,14 @@ export function destinationUrl(value: unknown): string {
 export class DynamicQrCodeService {
   private renderer = new QrCodeService()
 
-  async create(userId: string, name: string, target: string, origin: string) {
+  async create(
+    userId: string,
+    name: string,
+    target: string,
+    origin: string,
+    visitorTarget?: unknown,
+  ) {
+    const personalized = await validateVisitorTarget(userId, visitorTarget)
     const user = await UserModel.findById(userId)
     if (!user) throw new HttpError(401, 'Login required')
     const codeId = new mongoose.Types.ObjectId()
@@ -44,6 +53,7 @@ export class DynamicQrCodeService {
       })
       return await QrCodeModel.create({
         _id: codeId,
+        visitorTarget: personalized,
         name,
         destinationUrl: target,
         status: 'active',
@@ -71,7 +81,10 @@ export class DynamicQrCodeService {
     productId: string,
     name: string | undefined,
     origin: string,
+    visitorTarget?: unknown,
   ) {
+    const personalized = await validateVisitorTarget(userId, visitorTarget)
+    await validateVisitorFallback(userId, productId, undefined, personalized)
     const product = await ProductModel.findOne({ _id: productId, createdBy: userId }).populate(
       'file',
     )
@@ -87,6 +100,7 @@ export class DynamicQrCodeService {
     const image = await this.renderer.generateQrCodeBase64Url(url)
     return QrCodeModel.create({
       _id: codeId,
+      visitorTarget: personalized,
       name: name || product.name || 'Untitled QR code',
       status: 'active',
       file: String(file._id),
@@ -103,7 +117,10 @@ export class DynamicQrCodeService {
     campaignId: string,
     name: string | undefined,
     origin: string,
+    visitorTarget?: unknown,
   ) {
+    const personalized = await validateVisitorTarget(userId, visitorTarget)
+    await validateVisitorFallback(userId, undefined, campaignId, personalized)
     const result = await new CampaignService().eligible(userId, campaignId)
     if (!result.products.length) throw new HttpError(409, 'This campaign has no eligible products')
     const user = await UserModel.findById(userId)
@@ -114,6 +131,7 @@ export class DynamicQrCodeService {
     const image = await this.renderer.generateQrCodeBase64Url(url)
     return QrCodeModel.create({
       _id: id,
+      visitorTarget: personalized,
       name: name || result.campaign.name,
       status: 'active',
       campaign: campaignId,
@@ -128,6 +146,7 @@ export class DynamicQrCodeService {
     userId: string,
     codeId: string,
     changes: {
+      visitorTarget?: IVisitorTarget | null
       name?: string
       status?: string
       destinationUrl?: string
@@ -177,6 +196,20 @@ export class DynamicQrCodeService {
       update.campaign = result.campaign._id
       unset = { product: 1, file: 1, destinationUrl: 1 }
     }
+    if (changes.visitorTarget === null) {
+      delete update.visitorTarget
+      unset = { ...unset, visitorTarget: 1 }
+    } else if (changes.visitorTarget !== undefined) {
+      const unchanged =
+        code.visitorTarget &&
+        changes.visitorTarget.visitorId === code.visitorTarget.visitorId &&
+        changes.visitorTarget.productId === String(code.visitorTarget.productId)
+      update.visitorTarget = unchanged
+        ? code.visitorTarget
+        : await validateVisitorTarget(userId, changes.visitorTarget)
+    }
+    const effectiveTarget = changes.visitorTarget === null ? undefined : (update.visitorTarget || code.visitorTarget)
+    await validateVisitorFallback(userId, unset?.product ? undefined : (update.product || code.product), unset?.campaign ? undefined : (update.campaign || code.campaign), effectiveTarget)
     // The image and public scan URL are immutable when changing a destination.
     const updated = await QrCodeModel.findOneAndUpdate(
       { _id: codeId, createdBy: userId },

@@ -126,3 +126,5 @@ Combined evidence and activity counters are available in the [visitor profile vi
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
 
 The **Analytics → Visitors** workspace groups scans by recognized browser, with account-wide audience metrics, search, returning/single-scan filters, sorting, pagination and mobile cards. Visitor profiles emphasize readable activity and browser information; advanced evidence remains available. Scan-history links preserve the visitor filter in the URL. See [visitor analytics](analytics.md#visitors-workspace).
+
+See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.

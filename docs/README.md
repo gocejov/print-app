@@ -36,3 +36,5 @@ Useful local URLs:
 The repository still uses `print-prank` in package metadata and Swagger. The implemented application manages files, products, categories, campaigns, QR links and scan statistics.
 
 When behavior, routes, configuration or architecture changes, update the relevant documents in the same change. Keep historical observations distinct from current behavior.
+
+See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.

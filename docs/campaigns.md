@@ -87,3 +87,5 @@ MongoDB stores the new categories/campaigns collections; Redis stores temporary 
 On 2026-10-29, nine backend/unit cases and eight Chromium desktop/mobile scenarios passed across the application. Campaign coverage includes ordering, deduplication, live category edits, ownership, invalid rules, paused/empty pools, pinned image delivery, expired/invalid tickets, reference guards, selected statistics and switching QR targets while preserving the PNG/link. Browser coverage includes desktop category/campaign creation, campaign QR creation and pause/resume, live membership, product filtering, target switching and mobile collection forms. See [test setup](admin-panel.md#verification).
 
 The current suite also covers weighted probabilities and the complete [scan details table](analytics.md). Product weights default to 1 and range from 1 to 1000; category-wide weighting is not implemented.
+
+See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.

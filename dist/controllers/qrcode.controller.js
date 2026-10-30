@@ -39,7 +39,7 @@ class QrCodeController extends base_controller_1.BaseController {
                 .status(201)
                 .json(yield (req.body.campaignId
                 ? service.createForCampaign.bind(service)
-                : service.createForProduct.bind(service))(String(res.locals.user._id), req.body.campaignId || req.body.productId, req.body.name, `${req.protocol}://${req.get('host')}`));
+                : service.createForProduct.bind(service))(String(res.locals.user._id), req.body.campaignId || req.body.productId, req.body.name, `${req.protocol}://${req.get('host')}`, req.body.visitorTarget));
         });
     }
     getAllWithOptions(req, res) {
@@ -125,10 +125,10 @@ class QrCodeController extends base_controller_1.BaseController {
     getVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a;
-            res.set('Cache-Control', 'no-store');
+            res.set('Cache-Control', 'no-store').vary('Cookie');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
-            const target = yield playback.mediaTarget(code, req.query.selection);
+            const target = yield playback.mediaTarget(code, req.query.selection, req);
             let file = target.file;
             if (req.query.media !== undefined) {
                 if (target.product.displayMode !== 'page' ||
@@ -149,7 +149,9 @@ class QrCodeController extends base_controller_1.BaseController {
                 return;
             }
             if (file.type === 'web-url') {
-                res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url));
+                res.redirect(target.visitorId || code.campaign
+                    ? String(file.url)
+                    : code.destinationUrl || String(file.url));
                 return;
             }
             res.set('X-Content-Type-Options', 'nosniff').type(String(file.mimetype));
@@ -162,16 +164,16 @@ class QrCodeController extends base_controller_1.BaseController {
     playVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
-            res.set('Cache-Control', 'no-store');
+            res.set('Cache-Control', 'no-store').vary('Cookie');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
-            const target = yield playback.draw(code);
+            const target = yield playback.draw(code, req);
             const file = target.file;
             const { fingerprint, fingerprintData } = res.locals;
             const visitor = ((_a = req.get('accept')) === null || _a === void 0 ? void 0 : _a.includes('text/html'))
                 ? yield (0, visitor_service_1.identifyVisitor)(req, res, String(code.createdBy))
                 : undefined;
-            const statistic = Object.assign(Object.assign({ qrCode: code._id, product: target.product._id }, (target.campaignId ? { campaign: new mongoose_1.default.Types.ObjectId(target.campaignId) } : {})), { data: Object.assign(Object.assign({}, (visitor ? { visitor } : {})), { fingerprintData,
+            const statistic = Object.assign(Object.assign({ qrCode: code._id, product: target.product._id }, (target.campaignId ? { campaign: new mongoose_1.default.Types.ObjectId(target.campaignId) } : {})), { data: Object.assign(Object.assign({ targeting: { kind: target.visitorId ? 'visitor' : 'default' } }, (visitor ? { visitor } : {})), { fingerprintData,
                     fingerprint, request: {
                         method: req.method,
                         path: req.path.slice(0, 2048),
@@ -188,7 +190,9 @@ class QrCodeController extends base_controller_1.BaseController {
             });
             if (saved && ((_c = req.get('accept')) === null || _c === void 0 ? void 0 : _c.includes('text/html'))) {
                 try {
-                    const token = yield new browser_scan_service_1.BrowserScanService().create(Object.assign({ ownerId: String(code.createdBy), qrId: String(code._id), productId: String(target.product._id), fileId: String(file._id), statisticId: String(saved._id) }, (code.campaign ? { selection: yield playback.ticket(code, target) } : {})));
+                    const token = yield new browser_scan_service_1.BrowserScanService().create(Object.assign({ ownerId: String(code.createdBy), qrId: String(code._id), productId: String(target.product._id), fileId: String(file._id), statisticId: String(saved._id) }, (code.campaign || target.visitorId
+                        ? { selection: yield playback.ticket(code, target) }
+                        : {})));
                     res.set('Referrer-Policy', 'no-referrer').type('html').send((0, browser_scan_service_1.browserScanPage)(token));
                     return;
                 }
@@ -201,11 +205,11 @@ class QrCodeController extends base_controller_1.BaseController {
     }
     continueScan(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            res.set('Cache-Control', 'no-store').set('Referrer-Policy', 'no-referrer');
+            res.set('Cache-Control', 'no-store').vary('Cookie').set('Referrer-Policy', 'no-referrer');
             const context = yield new browser_scan_service_1.BrowserScanService().load(req.params.token);
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(context.qrId);
-            const target = yield playback.mediaTarget(code, context.selection);
+            const target = yield playback.mediaTarget(code, context.selection, req);
             if (String(target.product._id) !== context.productId ||
                 String(target.file._id) !== context.fileId)
                 throw new http_utils_1.HttpError(410, 'Content changed; scan the QR code again');
@@ -219,7 +223,7 @@ class QrCodeController extends base_controller_1.BaseController {
             const playback = new qr_playback_service_1.QrPlaybackService();
             const file = target.file;
             if (target.product.displayMode === 'page') {
-                const token = code.campaign ? yield playback.ticket(code, target) : undefined;
+                const token = code.campaign || target.visitorId ? yield playback.ticket(code, target) : undefined;
                 const media = yield file_model_1.FileModel.find({
                     _id: { $in: target.product.mediaIds || [] },
                     createdBy: code.createdBy,
@@ -229,7 +233,9 @@ class QrCodeController extends base_controller_1.BaseController {
                 return;
             }
             if (file.type === 'web-url') {
-                const destination = code.campaign ? String(file.url) : code.destinationUrl || String(file.url);
+                const destination = target.visitorId || code.campaign
+                    ? String(file.url)
+                    : code.destinationUrl || String(file.url);
                 if (((_a = req.get('accept')) === null || _a === void 0 ? void 0 : _a.includes('text/html')) &&
                     (yield (0, embed_service_1.canEmbed)(destination, `${req.protocol}://${req.get('host')}`))) {
                     res.type('html').send((0, embed_service_1.embeddedPage)(destination, target.product.name || 'Shared content'));
@@ -238,7 +244,7 @@ class QrCodeController extends base_controller_1.BaseController {
                     res.redirect(destination);
                 return;
             }
-            const ticket = code.campaign ? `?selection=${yield playback.ticket(code, target)}` : '';
+            const ticket = code.campaign || target.visitorId ? `?selection=${yield playback.ticket(code, target)}` : '';
             const mediaUrl = `/l/q/${alias_constant_1.TypeAlias[String(file.type)]}/${code._id}${ticket}`;
             const content = file.type === 'image'
                 ? `<img src="${(0, media_service_1.escapeHtml)(mediaUrl)}" alt="${(0, media_service_1.escapeHtml)(String(file.name || file.originalname || 'Shared image'))}" />`

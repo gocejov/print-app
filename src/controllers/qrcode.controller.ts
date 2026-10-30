@@ -45,6 +45,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
           req.body.campaignId || req.body.productId,
           req.body.name,
           `${req.protocol}://${req.get('host')}`,
+          req.body.visitorTarget,
         ),
       )
   }
@@ -135,10 +136,10 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   }
 
   async getVideo(req: Request, res: Response) {
-    res.set('Cache-Control', 'no-store')
+    res.set('Cache-Control', 'no-store').vary('Cookie')
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
-    const target = await playback.mediaTarget(code, req.query.selection)
+    const target = await playback.mediaTarget(code, req.query.selection, req)
     let file = target.file
     if (req.query.media !== undefined) {
       if (
@@ -160,7 +161,11 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
     if (file.type === 'web-url') {
-      res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url))
+      res.redirect(
+        target.visitorId || code.campaign
+          ? String(file.url)
+          : code.destinationUrl || String(file.url),
+      )
       return
     }
     res.set('X-Content-Type-Options', 'nosniff').type(String(file.mimetype))
@@ -170,10 +175,10 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   }
 
   async playVideo(req: Request, res: Response) {
-    res.set('Cache-Control', 'no-store')
+    res.set('Cache-Control', 'no-store').vary('Cookie')
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
-    const target = await playback.draw(code)
+    const target = await playback.draw(code, req)
     const file = target.file
     const { fingerprint, fingerprintData } = res.locals
     const visitor = req.get('accept')?.includes('text/html')
@@ -184,6 +189,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       product: target.product._id as mongoose.Types.ObjectId,
       ...(target.campaignId ? { campaign: new mongoose.Types.ObjectId(target.campaignId) } : {}),
       data: {
+        targeting: { kind: target.visitorId ? 'visitor' : 'default' },
         ...(visitor ? { visitor } : {}),
         fingerprintData,
         fingerprint,
@@ -214,7 +220,9 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
           productId: String(target.product._id),
           fileId: String(file._id),
           statisticId: String(saved._id),
-          ...(code.campaign ? { selection: await playback.ticket(code, target) } : {}),
+          ...(code.campaign || target.visitorId
+            ? { selection: await playback.ticket(code, target) }
+            : {}),
         })
         res.set('Referrer-Policy', 'no-referrer').type('html').send(browserScanPage(token))
         return
@@ -226,11 +234,11 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
   }
 
   async continueScan(req: Request, res: Response) {
-    res.set('Cache-Control', 'no-store').set('Referrer-Policy', 'no-referrer')
+    res.set('Cache-Control', 'no-store').vary('Cookie').set('Referrer-Policy', 'no-referrer')
     const context = await new BrowserScanService().load(req.params.token)
     const playback = new QrPlaybackService()
     const code = await playback.load(context.qrId)
-    const target = await playback.mediaTarget(code, context.selection)
+    const target = await playback.mediaTarget(code, context.selection, req)
     if (
       String(target.product._id) !== context.productId ||
       String(target.file._id) !== context.fileId
@@ -249,7 +257,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const playback = new QrPlaybackService()
     const file = target.file
     if (target.product.displayMode === 'page') {
-      const token = code.campaign ? await playback.ticket(code, target) : undefined
+      const token =
+        code.campaign || target.visitorId ? await playback.ticket(code, target) : undefined
       const media = await FileModel.find({
         _id: { $in: target.product.mediaIds || [] },
         createdBy: code.createdBy,
@@ -259,7 +268,10 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       return
     }
     if (file.type === 'web-url') {
-      const destination = code.campaign ? String(file.url) : code.destinationUrl || String(file.url)
+      const destination =
+        target.visitorId || code.campaign
+          ? String(file.url)
+          : code.destinationUrl || String(file.url)
       if (
         req.get('accept')?.includes('text/html') &&
         (await canEmbed(destination, `${req.protocol}://${req.get('host')}`))
@@ -268,7 +280,8 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       } else res.redirect(destination)
       return
     }
-    const ticket = code.campaign ? `?selection=${await playback.ticket(code, target)}` : ''
+    const ticket =
+      code.campaign || target.visitorId ? `?selection=${await playback.ticket(code, target)}` : ''
     const mediaUrl = `/l/q/${TypeAlias[String(file.type)]}/${code._id}${ticket}`
     const content =
       file.type === 'image'

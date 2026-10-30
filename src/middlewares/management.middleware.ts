@@ -120,7 +120,7 @@ export function managementAccess(resource: Resource) {
           'name',
           ...(resource === 'products'
             ? ['fileId', 'description', ...pageFields]
-            : ['productId', 'campaignId']),
+            : ['productId', 'campaignId', 'visitorTarget']),
         ])
         if (body.userId !== undefined && body.userId !== userId)
           throw new HttpError(403, 'Cannot create for another user')
@@ -142,6 +142,9 @@ export function managementAccess(resource: Resource) {
           throw new HttpError(404, 'Referenced item not found')
         req.body = {
           ...(resource === 'products' ? await productPageFields(body, userId) : {}),
+          ...(resource === 'qrcodes' && body.visitorTarget !== undefined
+            ? { visitorTarget: body.visitorTarget }
+            : {}),
           [field]: referenceId,
           userId,
           ...(body.name !== undefined ? { name: text(body.name, 'name', 1, 120) } : {}),

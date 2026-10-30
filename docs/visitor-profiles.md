@@ -49,3 +49,5 @@ Tests cover summary windows, activity/source counters, explicitly estimated fing
 ## Admin presentation
 
 The Visitors tab provides one row per confirmed browser, readable summary metrics, search/audience/sort controls and responsive mobile cards. Profile dialogs present activity with current resource names and readable browser facts; raw evidence is collapsed under **Technical data & identity evidence**. Activity references fall back to abbreviated IDs when the resource is unavailable. Profiles still use the same owner-scoped endpoint and do not alter recognition or counter semantics. See [Visitors workspace](analytics.md#visitors-workspace).
+
+See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.

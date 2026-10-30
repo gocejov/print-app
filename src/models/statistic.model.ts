@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose'
 import { IQrCodeDocument } from './qrcode.model'
 
 export interface IStatisticData {
+  targeting?: { kind: 'visitor' | 'default' }
   visitor?: { id?: string; method: string; confirmed?: boolean; audience?: string; reason?: string }
   browserFingerprint?: { hash: string; version: number; confidence: string }
   browser?: Record<string, unknown>

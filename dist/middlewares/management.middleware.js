@@ -125,7 +125,7 @@ function managementAccess(resource) {
                     'name',
                     ...(resource === 'products'
                         ? ['fileId', 'description', ...pageFields]
-                        : ['productId', 'campaignId']),
+                        : ['productId', 'campaignId', 'visitorTarget']),
                 ]);
                 if (body.userId !== undefined && body.userId !== userId)
                     throw new http_utils_1.HttpError(403, 'Cannot create for another user');
@@ -141,7 +141,9 @@ function managementAccess(resource) {
                 const model = field === 'fileId' ? file_model_1.FileModel : field === 'campaignId' ? campaign_model_1.CampaignModel : product_model_1.ProductModel;
                 if (!(yield model.exists({ _id: referenceId, createdBy: userId })))
                     throw new http_utils_1.HttpError(404, 'Referenced item not found');
-                req.body = Object.assign(Object.assign(Object.assign(Object.assign({}, (resource === 'products' ? yield productPageFields(body, userId) : {})), { [field]: referenceId, userId }), (body.name !== undefined ? { name: (0, http_utils_1.text)(body.name, 'name', 1, 120) } : {})), (body.description !== undefined
+                req.body = Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (resource === 'products' ? yield productPageFields(body, userId) : {})), (resource === 'qrcodes' && body.visitorTarget !== undefined
+                    ? { visitorTarget: body.visitorTarget }
+                    : {})), { [field]: referenceId, userId }), (body.name !== undefined ? { name: (0, http_utils_1.text)(body.name, 'name', 1, 120) } : {})), (body.description !== undefined
                     ? { description: (0, http_utils_1.text)(body.description, 'description', 0, 1000) }
                     : {}));
             }

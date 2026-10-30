@@ -1,8 +1,9 @@
+import { useWorkspace } from './use-workspace'
 import { useCollections } from '../collections/use-collections'
 import { Link } from 'react-router-dom'
 import { useAssets } from '../assets/use-assets'
 import { FileIcon } from '../assets/file-preview'
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { ArrowRight, Check, Download, Package, RefreshCw, ShieldCheck, Shuffle } from 'lucide-react'
 import { Modal } from '../../components/modal'
 import { QrPreview } from '../../components/qr-preview'
@@ -33,6 +34,25 @@ export function CodeEditor({
   onSaved: () => Promise<unknown>
 }) {
   const [name, setName] = useState(code ? codeName(code) : '')
+  const workspace = useWorkspace()
+  const [personalize, setPersonalize] = useState(Boolean(code?.visitorTarget))
+  const [visitorId, setVisitorId] = useState(code?.visitorTarget?.visitorId || '')
+  const [visitorProductId, setVisitorProductId] = useState(code?.visitorTarget?.productId || '')
+  const knownVisitors = useMemo(() => {
+    const visitors = new Map<string, { id: string; count: number; lastSeen: string }>()
+    for (const scan of workspace.scans) {
+      const visitor = scan.data?.visitor
+      if (!visitor?.confirmed || !visitor.id) continue
+      const previous = visitors.get(visitor.id)
+      visitors.set(visitor.id, {
+        id: visitor.id,
+        count: (previous?.count || 0) + 1,
+        lastSeen:
+          previous && previous.lastSeen > scan.created_at ? previous.lastSeen : scan.created_at,
+      })
+    }
+    return [...visitors.values()].sort((a, b) => b.lastSeen.localeCompare(a.lastSeen))
+  }, [workspace.scans])
   const assets = useAssets()
   const collections = useCollections()
   const [targetKind, setTargetKind] = useState<'product' | 'campaign'>(
@@ -45,7 +65,7 @@ export function CodeEditor({
   )
   const selectedCampaign = collections.campaigns.find((campaign) => campaign._id === campaignId)
   const campaignPool = selectedCampaign
-    ? campaignProducts(selectedCampaign, collections.categories, assets.products)
+    ? campaignProducts(selectedCampaign, collections.categories, assets.products).filter(product => !personalize || product._id !== visitorProductId)
     : []
   const [productId, setProductId] = useState(
     initialProductId ||
@@ -63,14 +83,16 @@ export function CodeEditor({
     setBusy(true)
     setError('')
     try {
+      const visitorTarget = personalize ? { visitorId, productId: visitorProductId } : undefined
       const result = code
         ? await api.editCode(code._id, {
             name: name.trim(),
+            visitorTarget: visitorTarget || null,
             ...(targetKind === 'campaign' ? { campaignId } : { productId }),
           })
         : targetKind === 'campaign'
-          ? await api.createCampaignCode(name.trim(), campaignId)
-          : await api.createCode(name.trim(), productId)
+          ? await api.createCampaignCode(name.trim(), campaignId, visitorTarget)
+          : await api.createCode(name.trim(), productId, visitorTarget)
       await onSaved()
       if (code) {
         toast('QR target updated. Your QR code stays the same.')
@@ -268,6 +290,80 @@ export function CodeEditor({
                 )}
               </>
             )}
+            <section className='visitor-target-editor' aria-label='Visitor-specific product'>
+              <label className='visitor-target-toggle'>
+                <input
+                  type='checkbox'
+                  checked={personalize}
+                  onChange={(e) => setPersonalize(e.target.checked)}
+                />
+                Show a different product to one visitor
+              </label>
+              <p className='form-hint'>
+                Everyone else sees the product or campaign selected above.
+              </p>
+              {personalize && (
+                <>
+                  <label>
+                    Assigned visitor
+                    <select
+                      aria-label='Assigned visitor'
+                      required
+                      value={visitorId}
+                      onChange={(e) => setVisitorId(e.target.value)}
+                    >
+                      <option value=''>Choose a recognized browser</option>
+                      {code?.visitorTarget &&
+                        !knownVisitors.some(
+                          (visitor) => visitor.id === code.visitorTarget?.visitorId,
+                        ) && (
+                          <option value={code.visitorTarget.visitorId}>
+                            Assigned browser ·{' '}
+                            {code.visitorTarget.visitorId.slice(0, 6).toUpperCase()}
+                          </option>
+                        )}
+                      {knownVisitors.map((visitor) => (
+                        <option key={visitor.id} value={visitor.id}>
+                          Visitor {visitor.id.slice(0, 6).toUpperCase()} · {visitor.count} scans
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Product for this visitor
+                    <select
+                      aria-label='Product for assigned visitor'
+                      required
+                      value={visitorProductId}
+                      onChange={(e) => setVisitorProductId(e.target.value)}
+                    >
+                      <option value=''>Choose their product</option>
+                      {assets.products.map((product) => (
+                        <option key={product._id} value={product._id}>
+                          {productName(product)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className='form-hint'>
+                    Uses this browser’s signed visitor cookie. Similar fingerprints cannot unlock
+                    the assigned product. Clearing cookies or using another device shows the default
+                    content.
+                  </p>
+                  {!workspace.loading && !knownVisitors.length && !code?.visitorTarget && (
+                    <p className='form-hint'>
+                      A visitor needs to scan one of your public QR codes first. Find recognized
+                      browsers in Analytics → Visitors.
+                    </p>
+                  )}
+                  {workspace.error && (
+                    <p className='form-error' role='alert'>
+                      Visitor list could not be loaded. Refresh and try again.
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
             {code?.destinationUrl && (
               <p className='form-hint'>
                 This code has a custom link. Saving will use the selected product’s attached file
@@ -318,6 +414,7 @@ export function CodeEditor({
             className='btn btn-primary'
             disabled={
               busy ||
+              (personalize && (!visitorId || !visitorProductId)) ||
               (targetKind === 'product'
                 ? !selectedProduct || !selectedFile
                 : !selectedCampaign || !campaignPool.length)

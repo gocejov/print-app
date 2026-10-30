@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import {
   Activity,
   ArrowUpRight,
@@ -24,6 +25,12 @@ export function VisitorProfile({
   basis: 'visitor' | 'fingerprint'
   onClose: () => void
 }) {
+  const client = useQueryClient()
+  const [assignCodeId, setAssignCodeId] = useState('')
+  const [assignProductId, setAssignProductId] = useState('')
+  const [assignmentBusy, setAssignmentBusy] = useState(false)
+  const [assignmentError, setAssignmentError] = useState('')
+  const [assignmentSaved, setAssignmentSaved] = useState(false)
   const profile = useQuery({
     queryKey: ['visitor-profile', basis, id],
     queryFn: () => api.visitorProfile(id, basis),
@@ -38,6 +45,25 @@ export function VisitorProfile({
     queryKey: ['campaigns'],
     queryFn: ({ signal }) => api.campaigns(signal),
   })
+  const assignedCodes = (codes.data || []).filter((code) => code.visitorTarget?.visitorId === id)
+  const selectedCode = codes.data?.find((code) => code._id === assignCodeId)
+  async function assign(event: FormEvent) {
+    event.preventDefault()
+    setAssignmentBusy(true)
+    setAssignmentError('')
+    setAssignmentSaved(false)
+    try {
+      await api.editCode(assignCodeId, {
+        visitorTarget: { visitorId: id, productId: assignProductId },
+      })
+      await client.invalidateQueries({ queryKey: ['codes'] })
+      setAssignmentSaved(true)
+    } catch (error) {
+      setAssignmentError((error as Error).message)
+    } finally {
+      setAssignmentBusy(false)
+    }
+  }
   const data = profile.data
   const browser = data?.latestSignals.browser as BrowserMetrics | undefined
   const server = data?.latestSignals.server as NonNullable<Scan['data']>['fingerprintData']
@@ -130,6 +156,97 @@ export function VisitorProfile({
                 </div>
               ))}
             </div>
+            {basis === 'visitor' && (
+              <section
+                className='visitor-profile-section visitor-target-editor'
+                aria-label='Personalized QR codes'
+              >
+                <h3>Personalized QR codes</h3>
+                <p className='form-hint'>
+                  Choose a QR and a product for this browser. Other visitors keep seeing that QR’s
+                  default product or campaign.
+                </p>
+                {assignedCodes.length > 0 && (
+                  <ul className='visitor-assignment-list'>
+                    {assignedCodes.map((code) => (
+                      <li key={code._id}>
+                        <strong>{codeName(code)}</strong>
+                        <span>
+                          {products.data?.find(
+                            (product) => product._id === code.visitorTarget?.productId,
+                          )?.name || 'Assigned product'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <form onSubmit={assign}>
+                  <label>
+                    QR code
+                    <select
+                      aria-label='QR code to personalize'
+                      required
+                      value={assignCodeId}
+                      disabled={assignmentBusy}
+                      onChange={(event) => {
+                        setAssignCodeId(event.target.value)
+                        setAssignmentSaved(false)
+                      }}
+                    >
+                      <option value=''>Choose one of your QR codes</option>
+                      {codes.data?.map((code) => (
+                        <option key={code._id} value={code._id}>
+                          {codeName(code)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Product for this browser
+                    <select
+                      aria-label='Personalized product'
+                      required
+                      value={assignProductId}
+                      disabled={assignmentBusy}
+                      onChange={(event) => {
+                        setAssignProductId(event.target.value)
+                        setAssignmentSaved(false)
+                      }}
+                    >
+                      <option value=''>Choose a product</option>
+                      {products.data?.map((product) => (
+                        <option key={product._id} value={product._id}>
+                          {productName(product)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {selectedCode?.visitorTarget && selectedCode.visitorTarget.visitorId !== id && (
+                    <p className='form-hint'>
+                      This QR is personalized for another browser. Saving replaces that assignment;
+                      its default target stays the same.
+                    </p>
+                  )}
+                  {assignmentError && (
+                    <p className='form-error' role='alert'>
+                      {assignmentError}
+                    </p>
+                  )}
+                  {assignmentSaved && <p role='status'>QR code personalized for this visitor.</p>}
+                  <button
+                    className='btn btn-primary'
+                    disabled={assignmentBusy || !assignCodeId || !assignProductId}
+                  >
+                    {assignmentBusy ? 'Saving…' : 'Assign visitor product'}
+                    <ArrowUpRight size={15} />
+                  </button>
+                </form>
+                <p className='form-hint'>
+                  Manage or remove this assignment in the QR editor. Cookies identify this browser;
+                  a similar fingerprint alone will not receive the product.
+                </p>
+              </section>
+            )}
             <div className='visitor-profile-dates'>
               <div>
                 <span>First seen</span>

@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DynamicQrCodeService = void 0;
 exports.destinationUrl = destinationUrl;
+const visitor_target_service_1 = require("./visitor-target.service");
 const campaign_service_1 = require("./campaign.service");
 const mongoose_1 = __importDefault(require("mongoose"));
 const file_model_1 = require("../models/file.model");
@@ -38,8 +39,9 @@ class DynamicQrCodeService {
     constructor() {
         this.renderer = new qrcode_service_1.QrCodeService();
     }
-    create(userId, name, target, origin) {
+    create(userId, name, target, origin, visitorTarget) {
         return __awaiter(this, void 0, void 0, function* () {
+            const personalized = yield (0, visitor_target_service_1.validateVisitorTarget)(userId, visitorTarget);
             const user = yield user_model_1.UserModel.findById(userId);
             if (!user)
                 throw new http_utils_1.HttpError(401, 'Login required');
@@ -62,6 +64,7 @@ class DynamicQrCodeService {
                 });
                 return yield qrcode_model_1.QrCodeModel.create({
                     _id: codeId,
+                    visitorTarget: personalized,
                     name,
                     destinationUrl: target,
                     status: 'active',
@@ -85,8 +88,10 @@ class DynamicQrCodeService {
             }
         });
     }
-    createForProduct(userId, productId, name, origin) {
+    createForProduct(userId, productId, name, origin, visitorTarget) {
         return __awaiter(this, void 0, void 0, function* () {
+            const personalized = yield (0, visitor_target_service_1.validateVisitorTarget)(userId, visitorTarget);
+            yield (0, visitor_target_service_1.validateVisitorFallback)(userId, productId, undefined, personalized);
             const product = yield product_model_1.ProductModel.findOne({ _id: productId, createdBy: userId }).populate('file');
             const file = product === null || product === void 0 ? void 0 : product.file;
             if (!product || !file || !['image', 'video', 'web-url'].includes(file.type))
@@ -102,6 +107,7 @@ class DynamicQrCodeService {
             const image = yield this.renderer.generateQrCodeBase64Url(url);
             return qrcode_model_1.QrCodeModel.create({
                 _id: codeId,
+                visitorTarget: personalized,
                 name: name || product.name || 'Untitled QR code',
                 status: 'active',
                 file: String(file._id),
@@ -113,8 +119,10 @@ class DynamicQrCodeService {
             });
         });
     }
-    createForCampaign(userId, campaignId, name, origin) {
+    createForCampaign(userId, campaignId, name, origin, visitorTarget) {
         return __awaiter(this, void 0, void 0, function* () {
+            const personalized = yield (0, visitor_target_service_1.validateVisitorTarget)(userId, visitorTarget);
+            yield (0, visitor_target_service_1.validateVisitorFallback)(userId, undefined, campaignId, personalized);
             const result = yield new campaign_service_1.CampaignService().eligible(userId, campaignId);
             if (!result.products.length)
                 throw new http_utils_1.HttpError(409, 'This campaign has no eligible products');
@@ -127,6 +135,7 @@ class DynamicQrCodeService {
             const image = yield this.renderer.generateQrCodeBase64Url(url);
             return qrcode_model_1.QrCodeModel.create({
                 _id: id,
+                visitorTarget: personalized,
                 name: name || result.campaign.name,
                 status: 'active',
                 campaign: campaignId,
@@ -179,6 +188,20 @@ class DynamicQrCodeService {
                 update.campaign = result.campaign._id;
                 unset = { product: 1, file: 1, destinationUrl: 1 };
             }
+            if (changes.visitorTarget === null) {
+                delete update.visitorTarget;
+                unset = Object.assign(Object.assign({}, unset), { visitorTarget: 1 });
+            }
+            else if (changes.visitorTarget !== undefined) {
+                const unchanged = code.visitorTarget &&
+                    changes.visitorTarget.visitorId === code.visitorTarget.visitorId &&
+                    changes.visitorTarget.productId === String(code.visitorTarget.productId);
+                update.visitorTarget = unchanged
+                    ? code.visitorTarget
+                    : yield (0, visitor_target_service_1.validateVisitorTarget)(userId, changes.visitorTarget);
+            }
+            const effectiveTarget = changes.visitorTarget === null ? undefined : (update.visitorTarget || code.visitorTarget);
+            yield (0, visitor_target_service_1.validateVisitorFallback)(userId, (unset === null || unset === void 0 ? void 0 : unset.product) ? undefined : (update.product || code.product), (unset === null || unset === void 0 ? void 0 : unset.campaign) ? undefined : (update.campaign || code.campaign), effectiveTarget);
             // The image and public scan URL are immutable when changing a destination.
             const updated = yield qrcode_model_1.QrCodeModel.findOneAndUpdate({ _id: codeId, createdBy: userId }, Object.assign({ $set: update }, (unset ? { $unset: unset } : {})), { new: true, runValidators: true });
             if (!updated)

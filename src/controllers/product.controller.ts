@@ -76,7 +76,11 @@ export class ProductController extends BaseController<IProductDocument> {
         409,
         'Remove this product from its categories and campaigns before deleting it',
       )
-    if (await QrCodeModel.exists({ product: req.params.id }))
+    if (
+      await QrCodeModel.exists({
+        $or: [{ product: req.params.id }, { 'visitorTarget.productId': req.params.id }],
+      })
+    )
       throw new HttpError(
         409,
         'This product is assigned to a QR code. Reassign or delete that QR code first.',

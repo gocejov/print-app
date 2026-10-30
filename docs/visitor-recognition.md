@@ -42,3 +42,5 @@ The intended next use is [loyalty rewards](loyalty-rewards.md): qualifying repea
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
 
 For a readable per-browser table, use **Analytics → Visitors**. Its **Scan history** links persist the visitor ID in the URL; see [visitor workspace](analytics.md#visitors-workspace).
+
+See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.

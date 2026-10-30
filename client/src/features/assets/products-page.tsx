@@ -48,7 +48,8 @@ export function ProductsPage() {
   const uses = (product: Product) =>
     assets.codes.filter(
       (code) =>
-        (typeof code.product === 'object' ? code.product?._id : code.product) === product._id,
+        (typeof code.product === 'object' ? code.product?._id : code.product) === product._id ||
+        code.visitorTarget?.productId === product._id,
     ).length +
     collections.categories.filter((category) => category.products.includes(product._id)).length +
     collections.campaigns.filter((campaign) =>

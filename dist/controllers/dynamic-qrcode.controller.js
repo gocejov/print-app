@@ -16,18 +16,27 @@ const http_utils_1 = require("../utils/http.utils");
 const service = new dynamic_qrcode_service_1.DynamicQrCodeService();
 function createDynamicCode(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const body = (0, http_utils_1.objectBody)(req.body, ['name', 'url']);
+        const body = (0, http_utils_1.objectBody)(req.body, ['name', 'url', 'visitorTarget']);
         const name = (0, http_utils_1.text)(body.name, 'name', 1, 120);
         const url = (0, dynamic_qrcode_service_1.destinationUrl)(body.url);
         res
             .status(201)
-            .json(yield service.create(String(res.locals.user._id), name, url, `${req.protocol}://${req.get('host')}`));
+            .json(yield service.create(String(res.locals.user._id), name, url, `${req.protocol}://${req.get('host')}`, body.visitorTarget));
     });
 }
 function editDynamicCode(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const body = (0, http_utils_1.objectBody)(req.body, ['name', 'status', 'destinationUrl', 'productId', 'campaignId']);
+        const body = (0, http_utils_1.objectBody)(req.body, [
+            'name',
+            'status',
+            'destinationUrl',
+            'productId',
+            'campaignId',
+            'visitorTarget',
+        ]);
         const changes = {};
+        if (body.visitorTarget !== undefined)
+            changes.visitorTarget = body.visitorTarget;
         if (body.campaignId !== undefined)
             changes.campaignId = (0, http_utils_1.text)(body.campaignId, 'campaignId', 24, 24);
         if (body.productId !== undefined)
