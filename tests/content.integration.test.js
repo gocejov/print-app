@@ -21,8 +21,8 @@ test('owned files → products → QR codes for images, videos and URLs', { skip
     server = await new Promise(resolve => { const s = app.listen(0, '127.0.0.1', () => resolve(s)); });
     const base = `http://127.0.0.1:${server.address().port}`;
     process.env.PUBLIC_URL = base;
-    async function request(method, path, body, cookie) {
-      const headers = cookie ? { cookie } : {};
+    async function request(method, path, body, cookie, extraHeaders = {}) {
+      const headers = { ...(cookie ? { cookie } : {}), ...extraHeaders };
       const options = { method, headers, redirect: 'manual' };
       if (body instanceof FormData) options.body = body;
       else if (!['GET','HEAD'].includes(method)) { headers['content-type'] = 'application/json'; options.body = JSON.stringify(body || {}); }
@@ -84,11 +84,54 @@ test('owned files → products → QR codes for images, videos and URLs', { skip
     assert.equal(check(await request('GET', scanPath), 302).location, 'https://example.com/updated');
     const foreignProduct = check(await makeProduct('Bob website', check(await request('POST', '/api/files', { type: 'web-url', url: 'https://example.org' }, b.cookie), 201).data._id, b), 200).data.product;
     check(await request('PATCH', `/api/qrcodes/${qr._id}`, { productId: foreignProduct._id }, a.cookie), 404);
+    // Product pages preserve the printed code and serve only their attached, owned media.
+    const pageChanges = { displayMode: 'page', mediaIds: [image._id, video._id], actionLabel: 'Order <now>', actionUrl: 'https://example.com/order', name: 'Product <script>alert(1)</script>' };
+    check(await request('PUT', `/api/products/${urlProduct._id}`, { ...pageChanges, actionUrl: 'javascript:alert(1)' }, a.cookie), 400);
+    check(await request('PUT', `/api/products/${urlProduct._id}`, { ...pageChanges, mediaIds: [urlFile._id] }, a.cookie), 400);
+    check(await request('PUT', `/api/products/${urlProduct._id}`, { ...pageChanges, mediaIds: [image._id, image._id] }, a.cookie), 400);
+    check(await request('PUT', `/api/products/${urlProduct._id}`, pageChanges, a.cookie), 200);
+    const richPage = check(await request('GET', scanPath), 200).data;
+    assert.match(richPage, /Product &lt;script&gt;/);
+    assert.doesNotMatch(richPage, /<script>/);
+    assert.match(richPage, /Order &lt;now&gt;/);
+    assert.match(richPage, /<video /);
+    assert.match(richPage, /<img /);
+    assert.ok(check(await request('GET', `/l/q/i/${qr._id}?media=${image._id}`), 200).data.equals(png));
+    assert.ok(check(await request('GET', `/l/q/v/${qr._id}?media=${video._id}`), 200).data.equals(videoBytes));
+    check(await request('GET', `/l/q/i/${qr._id}?media=${urlFile._id}`), 404);
+    check(await request('DELETE', `/api/products/${second._id}`, {}, a.cookie), 200);
+    check(await request('PUT', `/api/products/${product._id}`, { fileId: video._id }, a.cookie), 200);
+    check(await request('DELETE', `/api/files/${image._id}`, {}, a.cookie), 409);
+    check(await request('PUT', `/api/products/${urlProduct._id}`, { displayMode: 'direct', mediaIds: [], actionLabel: '', actionUrl: '' }, a.cookie), 200);
+    assert.equal(check(await request('GET', scanPath), 302).location, 'https://example.com/updated');
+    // Browser navigation gets a one-scan capability; metrics cannot change another scan.
+    const landing = check(await request('GET', scanPath, null, null, { accept: 'text/html' }), 200).data;
+    const browserToken = landing.match(/data-token="([a-f0-9]{48})"/)[1];
+    const metricsPath = `/scan/${browserToken}/metrics`;
+    check(await request('POST', metricsPath, { screenWidth: 390, language: 'en-GB', timezone: 'Europe/Skopje', locationStatus: 'prompt', unknownField: 'discard' }), 204);
+    check(await request('POST', metricsPath, { language: 'replay' }), 204);
+    check(await request('POST', metricsPath, { locationStatus: 'granted', location: { latitude: 500, longitude: 20, accuracyMeters: 10, permissionGranted: true } }), 400);
+    check(await request('POST', metricsPath, { screenWidth: 'bad' }), 400);
+    check(await request('POST', metricsPath, { oversized: 'x'.repeat(9000) }), 400);
+    check(await request('POST', metricsPath, {}, null, { origin: 'https://evil.example' }), 403);
+    check(await request('POST', '/scan/invalid/metrics', {}), 404);
+    const { StatisticModel } = require('../src/models/statistic.model');
+    const enriched = await StatisticModel.findOne({ qrCode: qr._id, 'data.browser': { $exists: true } });
+    assert.equal(enriched.data.browser.language, 'en-GB');
+    assert.equal(enriched.data.browser.unknownField, undefined);
+    const beforeContinue = await StatisticModel.countDocuments({ qrCode: qr._id });
+    assert.equal(check(await request('GET', `/scan/${browserToken}/continue`), 302).location, 'https://example.com/updated');
+    check(await request('GET', `/scan/${browserToken}/continue`), 302);
+    assert.equal(await StatisticModel.countDocuments({ qrCode: qr._id }), beforeContinue);
     check(await request('PATCH', `/api/qrcodes/${qr._id}`, { status: 'paused' }, a.cookie), 200);
     check(await request('GET', scanPath), 410);
+    check(await request('GET', `/scan/${browserToken}/continue`), 410);
     check(await request('PATCH', `/api/qrcodes/${qr._id}`, { status: 'active' }, a.cookie), 200);
+    await redisClient.del(`${process.env.SESSION_KEY_PREFIX}browser-scan:${browserToken}`);
+    check(await request('GET', `/scan/${browserToken}/continue`), 410);
+    check(await request('POST', metricsPath, {}), 410);
     check(await request('DELETE', `/api/qrcodes/${qr._id}`, {}, a.cookie), 200);
-    for (const p of [product, second, videoProduct, urlProduct]) check(await request('DELETE', `/api/products/${p._id}`, {}, a.cookie), 200);
+    for (const p of [product, videoProduct, urlProduct]) check(await request('DELETE', `/api/products/${p._id}`, {}, a.cookie), 200);
     check(await request('DELETE', `/api/files/${image._id}`, {}, a.cookie), 200);
     await assert.rejects(fs.access(image.path));
     check(await request('DELETE', `/api/files/${video._id}`, {}, a.cookie), 200);

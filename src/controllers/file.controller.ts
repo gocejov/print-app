@@ -57,7 +57,7 @@ export class FileController extends BaseController<IFileDocument> {
   }
 
   async remove(req: Request, res: Response): Promise<void> {
-    if (await ProductModel.exists({ file: req.params.id }))
+    if (await ProductModel.exists({ $or: [{ file: req.params.id }, { mediaIds: req.params.id }] }))
       throw new HttpError(
         409,
         'This file is attached to a product. Replace or delete that product first.',

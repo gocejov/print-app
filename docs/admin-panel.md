@@ -7,6 +7,7 @@ The main interface is **http://127.0.0.1:3000/admin/**. It uses the existing Red
 - Overview with real totals for QR codes, recorded scans and active codes.
 - QR library with search, image/video/website/campaign filters, status filters, name/date/scan sorting and list/grid layouts.
 - Separate Files and Products sections: upload images/videos or save URLs, attach them to named products, then assign products to QR codes.
+- Product-page mode with an ordered image/video gallery and optional primary action button; direct file delivery remains the default. See [product pages](product-pages.md).
 - Creation of named dynamic QR codes from existing products or campaigns.
 - Ordered category lists, product category filters and campaigns mixing products with categories, with random playback.
 - Product file replacement and QR product reassignment without changing the saved QR image or scan link.
@@ -14,6 +15,7 @@ The main interface is **http://127.0.0.1:3000/admin/**. It uses the existing Red
 - CSV export of the currently filtered library, with spreadsheet formula-prefix protection.
 - Daily scan charts for 7, 14 or 30 local-calendar days; all-time top codes and country counts.
 - Separate analytics Overview and Scan details tabs, with metadata/parameter search, QR filters, 25-row pages, manual refresh and full field/value details.
+- Browser-enriched scan details, including timezone/viewport/network hints and location only with previously granted browser permission.
 - View scans links in each QR action menu, preview and list scan count, opening the prefiltered details tab.
 - Per-product campaign weights (default 1), probability previews and equal-weight reset.
 - Profile/alias editing and password changes.
@@ -116,3 +118,7 @@ Categories and Campaigns have dedicated sidebar pages. Editors preserve list ord
 ## Detailed analytics
 
 The lazy analytics feature now includes `scan-table.tsx`, using the shared workspace query and local filter/page/dialog state. The separate Scan details tab shows recorded scans for current owned codes, independently of the Overview chart time window. The active view and QR filter use URL search parameters; direct QR links preselect that code and survive reloads. Details render all actual stored fields, including visitor metadata and new bounded request parameters/referrer. Search/pagination are client-side. See [analytics behavior and limitations](analytics.md); see [campaign weights](campaign-weights.md) for the editor controls and API.
+
+Visitor analytics includes recognized browser/repeat/unrecognized counts, new/returning audience filters and browser scan history. Estimated fingerprints stay separate from cookie IDs; see [visitor recognition](visitor-recognition.md).
+
+Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.

@@ -98,3 +98,17 @@ The main product model and update semantics are documented in [Files → Product
 `src/routes/collection.routes.ts` mounts account-scoped category/campaign CRUD. `src/services/campaign.service.ts` validates owned references and expands/deduplicates live campaign pools. `src/services/qr-playback.service.ts` resolves targets and pins a campaign media selection in Redis, revalidating it without another draw on media requests. See [campaign behavior and lifecycle](campaigns.md).
 
 Analytics reads existing account-scoped statistics through the workspace query. The client scan table filters/pages these records and renders every stored field in a details dialog. New successful scan events include a bounded request snapshot without cookies or authorization headers. See [scan details](analytics.md) and [weighted campaign selection](campaign-weights.md).
+
+## Product-page rendering
+
+Products retain their primary file for compatibility and may add `displayMode`, ordered `mediaIds`, and an action label/URL pair. `product-page.service.ts` renders escaped public HTML. The playback controller loads only owned gallery files and reuses campaign selection tickets for attachment delivery. See [product pages](product-pages.md) for validation and access behavior.
+
+## Browser scan enrichment
+
+HTML QR navigation records one server scan, then uses a 10-minute Redis capability and a same-origin browser collector before content delivery. `browser-scan.service.ts` validates/enriches that scan; continuation revalidates the original product/file and campaign selection. Browser values stay under `data.browser`, separate from request-derived fingerprints. See [browser metrics](browser-metrics.md).
+
+## Visitor recognition
+
+`visitor.service.ts` signs first-party visitor cookies and derives owner-scoped HMAC IDs and estimated browser fingerprints. Scan documents store recognition separately from the original request fingerprint. A compound QR/visitor/confirmation index supports returning-browser lookups. The browser metrics and continuation endpoints confirm cookies without requiring an account. See [visitor recognition](visitor-recognition.md).
+
+Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.

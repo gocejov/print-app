@@ -6,6 +6,10 @@ import { IFile, IFileDocument } from './file.model';
 export interface IProduct {
   name?: string;
   description?: string;
+  displayMode?: 'direct' | 'page';
+  mediaIds?: mongoose.Types.ObjectId[];
+  actionLabel?: string;
+  actionUrl?: string;
   qrcode?: string;
   file: IFileDocument['_id'];
   alias?: string;
@@ -26,6 +30,10 @@ export interface IProductDocument extends IProduct, Document {
 const ProductSchema: Schema<IProductDocument> = new Schema({
   name: { type: String, maxlength: 120, trim: true },
   description: { type: String, maxlength: 1000, default: "" },
+  displayMode: { type: String, enum: ['direct', 'page'], default: 'direct' },
+  mediaIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'files' }],
+  actionLabel: { type: String, maxlength: 60, default: '' },
+  actionUrl: { type: String, maxlength: 2048, default: '' },
   qrcode: { type: String },
   file: { type: mongoose.Schema.Types.ObjectId, ref: 'files', required: true },
   alias: { type: String, required: true, default: 'c' },

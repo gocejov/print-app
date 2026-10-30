@@ -13,6 +13,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QrCodeController = void 0;
+const visitor_service_1 = require("../services/visitor.service");
+const browser_scan_service_1 = require("../services/browser-scan.service");
+const file_model_1 = require("../models/file.model");
+const http_utils_1 = require("../utils/http.utils");
+const product_page_service_1 = require("../services/product-page.service");
 const qr_playback_service_1 = require("../services/qr-playback.service");
 const base_controller_1 = require("./base.controller");
 const qrcode_service_1 = require("../services/qrcode.service");
@@ -118,11 +123,26 @@ class QrCodeController extends base_controller_1.BaseController {
     }
     getVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             res.set('Cache-Control', 'no-store');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
             const target = yield playback.mediaTarget(code, req.query.selection);
-            const file = target.file;
+            let file = target.file;
+            if (req.query.media !== undefined) {
+                if (target.product.displayMode !== 'page' ||
+                    typeof req.query.media !== 'string' ||
+                    !((_a = target.product.mediaIds) === null || _a === void 0 ? void 0 : _a.some((id) => String(id) === req.query.media)))
+                    throw new http_utils_1.HttpError(404, 'Media not found');
+                const attachment = yield file_model_1.FileModel.findOne({
+                    _id: req.query.media,
+                    createdBy: code.createdBy,
+                    type: { $in: ['image', 'video'] },
+                });
+                if (!attachment)
+                    throw new http_utils_1.HttpError(404, 'Media not found');
+                file = attachment;
+            }
             if (req.params.type !== alias_constant_1.TypeAlias[String(file.type)]) {
                 res.status(406).json({ error: 'Incorrect URL' });
                 return;
@@ -140,26 +160,72 @@ class QrCodeController extends base_controller_1.BaseController {
     }
     playVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            var _a, _b, _c;
             res.set('Cache-Control', 'no-store');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
             const target = yield playback.draw(code);
             const file = target.file;
             const { fingerprint, fingerprintData } = res.locals;
-            const statistic = Object.assign(Object.assign({ qrCode: code._id, product: target.product._id }, (target.campaignId ? { campaign: new mongoose_1.default.Types.ObjectId(target.campaignId) } : {})), { data: {
-                    fingerprintData,
-                    fingerprint,
-                    request: {
+            const visitor = ((_a = req.get('accept')) === null || _a === void 0 ? void 0 : _a.includes('text/html'))
+                ? yield (0, visitor_service_1.identifyVisitor)(req, res, String(code.createdBy))
+                : undefined;
+            const statistic = Object.assign(Object.assign({ qrCode: code._id, product: target.product._id }, (target.campaignId ? { campaign: new mongoose_1.default.Types.ObjectId(target.campaignId) } : {})), { data: Object.assign(Object.assign({}, (visitor ? { visitor } : {})), { fingerprintData,
+                    fingerprint, request: {
                         method: req.method,
                         path: req.path.slice(0, 2048),
-                        query: [...new URLSearchParams((req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '').slice(0, 8192))],
-                        referrer: (_a = req.get('referer')) === null || _a === void 0 ? void 0 : _a.slice(0, 2048),
-                    },
-                } });
-            this.statisticService
-                .add(statistic)
-                .catch((error) => console.error('Error saving statistic:', error));
+                        query: [
+                            ...new URLSearchParams((req.originalUrl.includes('?')
+                                ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1)
+                                : '').slice(0, 8192)),
+                        ],
+                        referrer: (_b = req.get('referer')) === null || _b === void 0 ? void 0 : _b.slice(0, 2048),
+                    } }) });
+            const saved = yield this.statisticService.add(statistic).catch((error) => {
+                console.error('Error saving statistic:', error);
+                return undefined;
+            });
+            if (saved && ((_c = req.get('accept')) === null || _c === void 0 ? void 0 : _c.includes('text/html'))) {
+                try {
+                    const token = yield new browser_scan_service_1.BrowserScanService().create(Object.assign({ ownerId: String(code.createdBy), qrId: String(code._id), productId: String(target.product._id), fileId: String(file._id), statisticId: String(saved._id) }, (code.campaign ? { selection: yield playback.ticket(code, target) } : {})));
+                    res.set('Referrer-Policy', 'no-referrer').type('html').send((0, browser_scan_service_1.browserScanPage)(token));
+                    return;
+                }
+                catch (error) {
+                    console.error('Browser scan collection unavailable:', error);
+                }
+            }
+            return this.deliver(req, res, code, target);
+        });
+    }
+    continueScan(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            res.set('Cache-Control', 'no-store').set('Referrer-Policy', 'no-referrer');
+            const context = yield new browser_scan_service_1.BrowserScanService().load(req.params.token);
+            const playback = new qr_playback_service_1.QrPlaybackService();
+            const code = yield playback.load(context.qrId);
+            const target = yield playback.mediaTarget(code, context.selection);
+            if (String(target.product._id) !== context.productId ||
+                String(target.file._id) !== context.fileId)
+                throw new http_utils_1.HttpError(410, 'Content changed; scan the QR code again');
+            yield new browser_scan_service_1.BrowserScanService().confirm(context, req);
+            return this.deliver(req, res, code, target);
+        });
+    }
+    deliver(_req, res, code, target) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const playback = new qr_playback_service_1.QrPlaybackService();
+            const file = target.file;
+            if (target.product.displayMode === 'page') {
+                const token = code.campaign ? yield playback.ticket(code, target) : undefined;
+                const media = yield file_model_1.FileModel.find({
+                    _id: { $in: target.product.mediaIds || [] },
+                    createdBy: code.createdBy,
+                    type: { $in: ['image', 'video'] },
+                });
+                res.type('html').send((0, product_page_service_1.productPage)(target.product, file, media, String(code._id), token));
+                return;
+            }
             if (file.type === 'web-url') {
                 res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url));
                 return;

@@ -24,6 +24,10 @@ export class ProductController extends BaseController<IProductDocument> {
     const file = await FileModel.findOne({ _id: req.body.fileId, createdBy: res.locals.user._id })
     if (!file) throw new HttpError(404, 'File not found')
     const product = await ProductModel.create({
+      displayMode: req.body.displayMode,
+      mediaIds: req.body.mediaIds,
+      actionLabel: req.body.actionLabel,
+      actionUrl: req.body.actionUrl,
       name: req.body.name || file.name || file.originalname || 'Untitled product',
       description: req.body.description || '',
       file: file._id,

@@ -60,7 +60,7 @@ class FileController extends base_controller_1.BaseController {
     }
     remove(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (yield product_model_1.ProductModel.exists({ file: req.params.id }))
+            if (yield product_model_1.ProductModel.exists({ $or: [{ file: req.params.id }, { mediaIds: req.params.id }] }))
                 throw new http_utils_1.HttpError(409, 'This file is attached to a product. Replace or delete that product first.');
             const file = yield file_model_1.FileModel.findOneAndDelete({
                 _id: req.params.id,

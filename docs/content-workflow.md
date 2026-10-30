@@ -7,13 +7,13 @@ flowchart LR
     Image[Upload image] --> Files[File library]
     Video[Upload video] --> Files
     URL[Save URL] --> Files
-    Files --> Product[Product with one attached file]
+    Files --> Product[Product with primary file and optional gallery]
     Product --> QR[One or more QR codes]
     QR --> Scan[Permanent scan link]
     Scan --> Content[Display image, play video or redirect]
 ```
 
-A file can be reused by several products. A product has one current attached file and can be assigned to several QR codes. Users own each of these records; there is no organization-wide administrator role.
+A file can be reused by several products. A product has one primary attached file, optional additional media, and can be assigned to several QR codes. Its scan experience is either direct file delivery or a [product page](product-pages.md) with a gallery and action button. Users own each of these records; there is no organization-wide administrator role.
 
 ## Use the admin panel
 
@@ -54,7 +54,7 @@ Create with:
 
 POST to `/api/products/create/`. The description is optional and limited to 1000 characters; product names are limited to 120. Name is optional for legacy API callers, with a fallback from the attached file. Ownership is filled from the session. The old optional `userId` must match that session if supplied.
 
-`GET /api/products/with-options` populates the attached file for cards and selection. `PUT /api/products/:id` accepts name, description and an owned `fileId` (also the legacy alias field). Attaching a new file updates the product’s compatibility URL/path and the QR records’ file snapshots, and removes direct URL overrides on those QR codes so they follow the selected file.
+`GET /api/products/with-options` populates the attached file for cards and selection. `PUT /api/products/:id` accepts name, description and an owned `fileId` (also the legacy alias field), plus `displayMode`, `mediaIds`, `actionLabel` and `actionUrl` described in [product pages](product-pages.md). Attaching a new file updates the product’s compatibility URL/path and the QR records’ file snapshots, and removes direct URL overrides on those QR codes so they follow the selected file.
 
 ## QR assignment
 
@@ -83,7 +83,7 @@ Image HTML escapes labels, video sources use the stored MIME type, and media pat
 
 ## Deletion and persistence
 
-Deleting a referenced file returns 409: detach or delete its products first. Deleting a product referenced by a QR, category or direct campaign entry returns 409: remove or reassign those references first. The UI disables those deletes while a reference is visible; the API also enforces the check.
+Deleting a referenced file returns 409: remove its primary and additional-media references from products first. Deleting a product referenced by a QR, category or direct campaign entry returns 409: remove or reassign those references first. The UI disables those deletes while a reference is visible; the API also enforces the check.
 
 Deleting a QR preserves its product and file. Deleting an unreferenced product preserves its file. Deleting an unreferenced uploaded file removes both its MongoDB document and physical media (filesystem cleanup errors are logged). Historical statistics are not automatically purged by QR deletion.
 
@@ -102,3 +102,5 @@ Browser scenarios exercise URL file → product → QR creation, QR reassignment
 The direct product flow remains available. You can also arrange products into reusable ordered categories, combine categories and individual products in a campaign, then assign that campaign to a QR using `{campaignId}`. Each scan chooses one distinct eligible product at random; category order organizes the list and does not prescribe playback order. Editing category membership updates its campaigns live. Media requests keep the product selected by that scan through a short-lived ticket. See [complete campaign workflow](campaigns.md).
 
 Campaign product weights default to equal chances (1 each); increasing a product weight changes its relative frequency without changing the file or QR. See [weights](campaign-weights.md). Individual recorded selections and request parameters can be inspected in the [scan analytics table](analytics.md).
+
+HTML browser scans now pass through a brief [browser metrics collection step](browser-metrics.md) before direct playback, URL redirect or product-page delivery. It retains the original scan and campaign selection; media and continuation requests add no scan events.

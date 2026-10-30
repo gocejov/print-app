@@ -166,6 +166,11 @@ export function ProductsPage() {
                     </span>
                     <h3>{productName(product)}</h3>
                     <p>{product.description || 'Ready to share through your QR codes.'}</p>
+                    {product.displayMode === 'page' && (
+                      <span className='type-label'>
+                        Product page · {(product.mediaIds || []).length} additional media
+                      </span>
+                    )}
                     <div className='category-chips'>
                       {collections.categories
                         .filter((category) => category.products.includes(product._id))

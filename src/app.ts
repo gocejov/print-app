@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import { BrowserScanService } from './services/browser-scan.service';
+import { HttpError } from './utils/http.utils';
 import { collectionRoutes } from './routes/collection.routes';
 import { requireAuth, protectWrites } from './middlewares/auth.middleware';
 import { managementAccess } from './middlewares/management.middleware';
@@ -17,7 +19,7 @@ import swaggerSpec from './config/swagger.config';
 import { internalErrorHandler } from './middlewares/error.handler';
 import cors from 'cors'
 import { uploadErrorHandler } from './middlewares/upload.error.middlewares';
-import { IQrCodeController, QrCodeController } from './controllers/qrcode.controller';
+import { QrCodeController } from './controllers/qrcode.controller';
 import geoip from 'geoip-lite';
 import { userIdentificationMiddleware } from './middlewares/userIdentification.middleware';
 import path from 'path';
@@ -81,7 +83,17 @@ export const initApp = async (): Promise<Application> => {
         app.use('/api/qrcodes', requireAuth, managementAccess('qrcodes'), qrCodeRoutes);
         app.use('/api/statistics', requireAuth, managementAccess('statistics'), statisticRoutes);
 
-        const qrCodeController: IQrCodeController = new QrCodeController()
+        const qrCodeController = new QrCodeController()
+        app.post('/scan/:token/metrics', asyncHandler(async (req, res) => {
+            const origin = req.get('origin');
+            if (req.get('sec-fetch-site') === 'cross-site' || (origin && origin !== `${req.protocol}://${req.get('host')}`))
+                throw new HttpError(403, 'Cross-origin scan update rejected');
+            if (!req.is('application/json')) throw new HttpError(415, 'Use application/json');
+            res.set('Cache-Control', 'no-store');
+            await new BrowserScanService().collect(req.params.token, req.body, req, res);
+            res.sendStatus(204);
+        }));
+        app.get('/scan/:token/continue', asyncHandler((req, res) => qrCodeController.continueScan(req, res)));
         app.get('/l/:alias/:type/:qid', asyncHandler((req, res) => qrCodeController.getVideo(req, res)));
         app.get('/:alias/:qid', asyncHandler((req, res, next) => {
             if (reservedAliases.has(req.params.alias)) {

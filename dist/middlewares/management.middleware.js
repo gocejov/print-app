@@ -36,6 +36,39 @@ function alias(value) {
         throw new http_utils_1.HttpError(400, 'Invalid alias');
     return result;
 }
+const pageFields = ['displayMode', 'mediaIds', 'actionLabel', 'actionUrl'];
+function productPageFields(body_1, userId_1) {
+    return __awaiter(this, arguments, void 0, function* (body, userId, current = {}) {
+        const result = {};
+        if (body.displayMode !== undefined) {
+            if (!['direct', 'page'].includes(body.displayMode))
+                throw new http_utils_1.HttpError(400, 'Invalid display mode');
+            result.displayMode = body.displayMode;
+        }
+        if (body.mediaIds !== undefined) {
+            if (!Array.isArray(body.mediaIds) || body.mediaIds.length > 12)
+                throw new http_utils_1.HttpError(400, 'Choose at most 12 additional media files');
+            result.mediaIds = body.mediaIds.map((value) => id(value, 'media ID'));
+            if (new Set(result.mediaIds).size !== result.mediaIds.length)
+                throw new http_utils_1.HttpError(400, 'Duplicate media files');
+            const count = yield file_model_1.FileModel.countDocuments({
+                _id: { $in: result.mediaIds },
+                createdBy: userId,
+                type: { $in: ['image', 'video'] },
+            });
+            if (count !== result.mediaIds.length)
+                throw new http_utils_1.HttpError(400, 'Choose images or videos from your own library');
+        }
+        if (body.actionLabel !== undefined)
+            result.actionLabel = (0, http_utils_1.text)(body.actionLabel, 'actionLabel', 0, 60);
+        if (body.actionUrl !== undefined)
+            result.actionUrl = body.actionUrl === '' ? '' : (0, dynamic_qrcode_service_1.destinationUrl)(body.actionUrl);
+        const merged = Object.assign(Object.assign({}, current), result);
+        if (Boolean(merged.actionLabel) !== Boolean(merged.actionUrl))
+            throw new http_utils_1.HttpError(400, 'Supply both an action label and URL, or leave both empty');
+        return result;
+    });
+}
 /** Establish an ownership scope and validate only explicit, writable business fields. */
 function managementAccess(resource) {
     return (0, http_utils_1.asyncHandler)((req, res, next) => __awaiter(this, void 0, void 0, function* () {
@@ -63,7 +96,11 @@ function managementAccess(resource) {
         const recordRoute = !dynamicCreate &&
             segments.length > 0 &&
             !['with-options', 'create'].includes(last) &&
-            !['by-codes', 'total-by-codes'].includes(segments[0]);
+            ![
+                'by-codes',
+                'total-by-codes',
+                ...(resource === 'statistics' && req.method === 'GET' ? ['visitor-profile'] : []),
+            ].includes(segments[0]);
         if (recordRoute) {
             const recordId = id(resource === 'files' && last === 'content' ? segments[0] : last, 'ID');
             const record = yield models[resource].findOne({
@@ -86,7 +123,9 @@ function managementAccess(resource) {
                 const body = (0, http_utils_1.objectBody)(req.body, [
                     'userId',
                     'name',
-                    ...(resource === 'products' ? ['fileId', 'description'] : ['productId', 'campaignId']),
+                    ...(resource === 'products'
+                        ? ['fileId', 'description', ...pageFields]
+                        : ['productId', 'campaignId']),
                 ]);
                 if (body.userId !== undefined && body.userId !== userId)
                     throw new http_utils_1.HttpError(403, 'Cannot create for another user');
@@ -102,7 +141,7 @@ function managementAccess(resource) {
                 const model = field === 'fileId' ? file_model_1.FileModel : field === 'campaignId' ? campaign_model_1.CampaignModel : product_model_1.ProductModel;
                 if (!(yield model.exists({ _id: referenceId, createdBy: userId })))
                     throw new http_utils_1.HttpError(404, 'Referenced item not found');
-                req.body = Object.assign(Object.assign({ [field]: referenceId, userId }, (body.name !== undefined ? { name: (0, http_utils_1.text)(body.name, 'name', 1, 120) } : {})), (body.description !== undefined
+                req.body = Object.assign(Object.assign(Object.assign(Object.assign({}, (resource === 'products' ? yield productPageFields(body, userId) : {})), { [field]: referenceId, userId }), (body.name !== undefined ? { name: (0, http_utils_1.text)(body.name, 'name', 1, 120) } : {})), (body.description !== undefined
                     ? { description: (0, http_utils_1.text)(body.description, 'description', 0, 1000) }
                     : {}));
             }
@@ -123,8 +162,8 @@ function managementAccess(resource) {
                 req.body = changes;
             }
             else if (resource === 'products') {
-                const body = (0, http_utils_1.objectBody)(req.body, ['name', 'description', 'fileId', 'alias']);
-                const changes = {};
+                const body = (0, http_utils_1.objectBody)(req.body, ['name', 'description', 'fileId', 'alias', ...pageFields]);
+                const changes = yield productPageFields(body, userId, res.locals.record.toObject());
                 if (body.name !== undefined)
                     changes.name = (0, http_utils_1.text)(body.name, 'name', 1, 120);
                 if (body.description !== undefined)

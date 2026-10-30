@@ -3298,3 +3298,8 @@ label:not(.select-control) > select {
 .menu-popover a { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; font-size: 12px; border-radius: 5px; }
 .menu-popover a:hover { background: #f1f5ef; }
 @media (max-width: 600px) { .analytics-tabs { width: 100%; } .analytics-tabs a { flex: 1; justify-content: center; padding: 10px 12px; } .scan-code-filter { width: 100%; } .scan-code-filter select { width: 100%; max-width: 100%; } .scan-filter-summary { padding: 0 16px 16px; } }
+
+.product-media-picker { border: 1px solid var(--border, #dbe3dc); border-radius: 12px; padding: 16px; max-height: 240px; overflow: auto; }
+.product-media-picker legend { padding: 0 6px; font-size: 13px; }
+.product-media-picker label { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.product-media-picker input[type='checkbox'] { width: 18px; height: 18px; margin: 0; flex: 0 0 auto; }

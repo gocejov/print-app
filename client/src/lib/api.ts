@@ -1,3 +1,5 @@
+import type { VisitorProfileData } from './types'
+import type { ProductPageOptions } from './types'
 import type { AssetFile, Campaign, Category, Product, QrCode, Scan, User } from './types'
 
 export class ApiError extends Error {
@@ -33,6 +35,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  visitorProfile: (id: string, basis: 'visitor' | 'fingerprint') =>
+    request<VisitorProfileData>(`/statistics/visitor-profile/${id}?basis=${basis}`),
   me: async (signal?: AbortSignal) => {
     try {
       return await request<User>('/users/me', { signal })
@@ -94,15 +98,22 @@ export const api = {
   editFile: (id: string, changes: { name: string; url?: string }) =>
     request<AssetFile>(`/files/${id}`, { method: 'PUT', body: JSON.stringify(changes) }),
   deleteFile: (id: string) => request<AssetFile>(`/files/${id}`, { method: 'DELETE', body: '{}' }),
-  createProduct: async (name: string, description: string, fileId: string) =>
+  createProduct: async (
+    name: string,
+    description: string,
+    fileId: string,
+    page: ProductPageOptions = {},
+  ) =>
     (
       await request<{ product: Product }>('/products/create/', {
         method: 'POST',
-        body: JSON.stringify({ name, description, fileId }),
+        body: JSON.stringify({ name, description, fileId, ...page }),
       })
     ).product,
-  editProduct: (id: string, data: { name: string; description: string; fileId: string }) =>
-    request<Product>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  editProduct: (
+    id: string,
+    data: { name: string; description: string; fileId: string } & ProductPageOptions,
+  ) => request<Product>(`/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteProduct: (id: string) =>
     request<Product>(`/products/${id}`, { method: 'DELETE', body: '{}' }),
   createCode: (name: string, productId: string) =>

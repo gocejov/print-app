@@ -1,4 +1,9 @@
-import { QrPlaybackService } from '../services/qr-playback.service'
+import { identifyVisitor } from '../services/visitor.service'
+import { BrowserScanService, browserScanPage } from '../services/browser-scan.service'
+import { FileModel } from '../models/file.model'
+import { HttpError } from '../utils/http.utils'
+import { productPage } from '../services/product-page.service'
+import { PlaybackTarget, QrPlaybackService } from '../services/qr-playback.service'
 import { BaseController } from './base.controller'
 import { IQrCodeDocument } from '../models/qrcode.model'
 import { QrCodeService } from '../services/qrcode.service'
@@ -133,7 +138,22 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
     const target = await playback.mediaTarget(code, req.query.selection)
-    const file = target.file
+    let file = target.file
+    if (req.query.media !== undefined) {
+      if (
+        target.product.displayMode !== 'page' ||
+        typeof req.query.media !== 'string' ||
+        !target.product.mediaIds?.some((id) => String(id) === req.query.media)
+      )
+        throw new HttpError(404, 'Media not found')
+      const attachment = await FileModel.findOne({
+        _id: req.query.media,
+        createdBy: code.createdBy,
+        type: { $in: ['image', 'video'] },
+      })
+      if (!attachment) throw new HttpError(404, 'Media not found')
+      file = attachment
+    }
     if (req.params.type !== TypeAlias[String(file.type)]) {
       res.status(406).json({ error: 'Incorrect URL' })
       return
@@ -155,24 +175,88 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const target = await playback.draw(code)
     const file = target.file
     const { fingerprint, fingerprintData } = res.locals
+    const visitor = req.get('accept')?.includes('text/html')
+      ? await identifyVisitor(req, res, String(code.createdBy))
+      : undefined
     const statistic: IStatistic = {
       qrCode: code._id,
       product: target.product._id as mongoose.Types.ObjectId,
       ...(target.campaignId ? { campaign: new mongoose.Types.ObjectId(target.campaignId) } : {}),
       data: {
+        ...(visitor ? { visitor } : {}),
         fingerprintData,
         fingerprint,
         request: {
           method: req.method,
           path: req.path.slice(0, 2048),
-          query: [...new URLSearchParams((req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1) : '').slice(0, 8192))],
+          query: [
+            ...new URLSearchParams(
+              (req.originalUrl.includes('?')
+                ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1)
+                : ''
+              ).slice(0, 8192),
+            ),
+          ],
           referrer: req.get('referer')?.slice(0, 2048),
         },
       },
     }
-    this.statisticService
-      .add(statistic)
-      .catch((error) => console.error('Error saving statistic:', error))
+    const saved = await this.statisticService.add(statistic).catch((error) => {
+      console.error('Error saving statistic:', error)
+      return undefined
+    })
+    if (saved && req.get('accept')?.includes('text/html')) {
+      try {
+        const token = await new BrowserScanService().create({
+          ownerId: String(code.createdBy),
+          qrId: String(code._id),
+          productId: String(target.product._id),
+          fileId: String(file._id),
+          statisticId: String(saved._id),
+          ...(code.campaign ? { selection: await playback.ticket(code, target) } : {}),
+        })
+        res.set('Referrer-Policy', 'no-referrer').type('html').send(browserScanPage(token))
+        return
+      } catch (error) {
+        console.error('Browser scan collection unavailable:', error)
+      }
+    }
+    return this.deliver(req, res, code, target)
+  }
+
+  async continueScan(req: Request, res: Response) {
+    res.set('Cache-Control', 'no-store').set('Referrer-Policy', 'no-referrer')
+    const context = await new BrowserScanService().load(req.params.token)
+    const playback = new QrPlaybackService()
+    const code = await playback.load(context.qrId)
+    const target = await playback.mediaTarget(code, context.selection)
+    if (
+      String(target.product._id) !== context.productId ||
+      String(target.file._id) !== context.fileId
+    )
+      throw new HttpError(410, 'Content changed; scan the QR code again')
+    await new BrowserScanService().confirm(context, req)
+    return this.deliver(req, res, code, target)
+  }
+
+  private async deliver(
+    _req: Request,
+    res: Response,
+    code: IQrCodeDocument,
+    target: PlaybackTarget,
+  ) {
+    const playback = new QrPlaybackService()
+    const file = target.file
+    if (target.product.displayMode === 'page') {
+      const token = code.campaign ? await playback.ticket(code, target) : undefined
+      const media = await FileModel.find({
+        _id: { $in: target.product.mediaIds || [] },
+        createdBy: code.createdBy,
+        type: { $in: ['image', 'video'] },
+      })
+      res.type('html').send(productPage(target.product, file, media, String(code._id), token))
+      return
+    }
     if (file.type === 'web-url') {
       res.redirect(code.campaign ? String(file.url) : code.destinationUrl || String(file.url))
       return

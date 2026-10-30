@@ -38,6 +38,10 @@ const mongoose_1 = __importStar(require("mongoose"));
 const ProductSchema = new mongoose_1.Schema({
     name: { type: String, maxlength: 120, trim: true },
     description: { type: String, maxlength: 1000, default: "" },
+    displayMode: { type: String, enum: ['direct', 'page'], default: 'direct' },
+    mediaIds: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: 'files' }],
+    actionLabel: { type: String, maxlength: 60, default: '' },
+    actionUrl: { type: String, maxlength: 2048, default: '' },
     qrcode: { type: String },
     file: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'files', required: true },
     alias: { type: String, required: true, default: 'c' },

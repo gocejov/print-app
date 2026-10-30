@@ -27,6 +27,38 @@ function alias(value: unknown) {
   return result
 }
 
+const pageFields = ['displayMode', 'mediaIds', 'actionLabel', 'actionUrl']
+async function productPageFields(body: Record<string, any>, userId: string, current: any = {}) {
+  const result: Record<string, any> = {}
+  if (body.displayMode !== undefined) {
+    if (!['direct', 'page'].includes(body.displayMode))
+      throw new HttpError(400, 'Invalid display mode')
+    result.displayMode = body.displayMode
+  }
+  if (body.mediaIds !== undefined) {
+    if (!Array.isArray(body.mediaIds) || body.mediaIds.length > 12)
+      throw new HttpError(400, 'Choose at most 12 additional media files')
+    result.mediaIds = body.mediaIds.map((value: unknown) => id(value, 'media ID'))
+    if (new Set(result.mediaIds).size !== result.mediaIds.length)
+      throw new HttpError(400, 'Duplicate media files')
+    const count = await FileModel.countDocuments({
+      _id: { $in: result.mediaIds },
+      createdBy: userId,
+      type: { $in: ['image', 'video'] },
+    })
+    if (count !== result.mediaIds.length)
+      throw new HttpError(400, 'Choose images or videos from your own library')
+  }
+  if (body.actionLabel !== undefined)
+    result.actionLabel = text(body.actionLabel, 'actionLabel', 0, 60)
+  if (body.actionUrl !== undefined)
+    result.actionUrl = body.actionUrl === '' ? '' : destinationUrl(body.actionUrl)
+  const merged = { ...current, ...result }
+  if (Boolean(merged.actionLabel) !== Boolean(merged.actionUrl))
+    throw new HttpError(400, 'Supply both an action label and URL, or leave both empty')
+  return result
+}
+
 /** Establish an ownership scope and validate only explicit, writable business fields. */
 export function managementAccess(resource: Resource) {
   return asyncHandler(async (req, res, next) => {
@@ -56,7 +88,11 @@ export function managementAccess(resource: Resource) {
       !dynamicCreate &&
       segments.length > 0 &&
       !['with-options', 'create'].includes(last) &&
-      !['by-codes', 'total-by-codes'].includes(segments[0])
+      ![
+        'by-codes',
+        'total-by-codes',
+        ...(resource === 'statistics' && req.method === 'GET' ? ['visitor-profile'] : []),
+      ].includes(segments[0])
     if (recordRoute) {
       const recordId = id(resource === 'files' && last === 'content' ? segments[0] : last, 'ID')
       const record = await (models[resource] as mongoose.Model<any>).findOne({
@@ -82,7 +118,9 @@ export function managementAccess(resource: Resource) {
         const body = objectBody(req.body, [
           'userId',
           'name',
-          ...(resource === 'products' ? ['fileId', 'description'] : ['productId', 'campaignId']),
+          ...(resource === 'products'
+            ? ['fileId', 'description', ...pageFields]
+            : ['productId', 'campaignId']),
         ])
         if (body.userId !== undefined && body.userId !== userId)
           throw new HttpError(403, 'Cannot create for another user')
@@ -103,6 +141,7 @@ export function managementAccess(resource: Resource) {
         if (!(await (model as mongoose.Model<any>).exists({ _id: referenceId, createdBy: userId })))
           throw new HttpError(404, 'Referenced item not found')
         req.body = {
+          ...(resource === 'products' ? await productPageFields(body, userId) : {}),
           [field]: referenceId,
           userId,
           ...(body.name !== undefined ? { name: text(body.name, 'name', 1, 120) } : {}),
@@ -125,8 +164,8 @@ export function managementAccess(resource: Resource) {
         if (!Object.keys(changes).length) throw new HttpError(400, 'No changes supplied')
         req.body = changes
       } else if (resource === 'products') {
-        const body = objectBody(req.body, ['name', 'description', 'fileId', 'alias'])
-        const changes: Record<string, string> = {}
+        const body = objectBody(req.body, ['name', 'description', 'fileId', 'alias', ...pageFields])
+        const changes = await productPageFields(body, userId, res.locals.record.toObject())
         if (body.name !== undefined) changes.name = text(body.name, 'name', 1, 120)
         if (body.description !== undefined)
           changes.description = text(body.description, 'description', 0, 1000)

@@ -2,6 +2,9 @@ import mongoose, { Schema, Document, Model } from 'mongoose'
 import { IQrCodeDocument } from './qrcode.model'
 
 export interface IStatisticData {
+  visitor?: { id?: string; method: string; confirmed?: boolean; audience?: string; reason?: string }
+  browserFingerprint?: { hash: string; version: number; confidence: string }
+  browser?: Record<string, unknown>
   fingerprintData?: Record<string, any>
   fingerprint?: string
   request?: { method: string; path: string; query: [string, string][]; referrer?: string }
@@ -29,6 +32,8 @@ const statisticSchema: Schema<IStatisticDocument> = new Schema({
   created_at: { type: Date, required: true, default: Date.now },
   updated_at: { type: Date, required: true, default: Date.now },
 })
+
+statisticSchema.index({ qrCode: 1, 'data.visitor.id': 1, 'data.visitor.confirmed': 1 })
 
 statisticSchema.pre('save', async function (next) {
   // this line

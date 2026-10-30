@@ -43,6 +43,7 @@ const statisticSchema = new mongoose_1.Schema({
     created_at: { type: Date, required: true, default: Date.now },
     updated_at: { type: Date, required: true, default: Date.now },
 });
+statisticSchema.index({ qrCode: 1, 'data.visitor.id': 1, 'data.visitor.confirmed': 1 });
 statisticSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         // this line

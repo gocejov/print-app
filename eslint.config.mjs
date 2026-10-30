@@ -4,7 +4,7 @@ import hooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', 'dist/**', 'public/**', 'uploads/**', 'client/test-results/**', 'client/playwright-report/**', 'initial-data/**', 'postman/**'] },
+  { ignores: ['**/node_modules/**', 'dist/**', 'public/admin/**', 'uploads/**', 'client/test-results/**', 'client/playwright-report/**', 'initial-data/**', 'postman/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   { languageOptions: { globals: { ...globals.node, ...globals.browser } } },

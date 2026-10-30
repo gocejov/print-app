@@ -126,3 +126,5 @@ For `realno.live`, use the explicit `qr2share-live` Compose project and systemd 
 ## Automated releases
 
 Every branch push runs lint, build and isolated integration/browser checks. Successful `main` pushes deploy through GitHub Actions using restricted SSH, immutable images, backups, health checks and rollback. See [CI/CD](ci-cd.md).
+
+Browser recognition uses a signed first-party cookie and owner-scoped hashes. Optional `VISITOR_SECRET` is forwarded by Compose and defaults to `SESSION_SECRET`; keep it stable across deployments to preserve recognition. See [visitor recognition](visitor-recognition.md).

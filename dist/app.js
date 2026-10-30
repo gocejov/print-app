@@ -14,10 +14,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initApp = void 0;
 require("dotenv/config");
+const browser_scan_service_1 = require("./services/browser-scan.service");
+const http_utils_1 = require("./utils/http.utils");
 const collection_routes_1 = require("./routes/collection.routes");
 const auth_middleware_1 = require("./middlewares/auth.middleware");
 const management_middleware_1 = require("./middlewares/management.middleware");
-const http_utils_1 = require("./utils/http.utils");
+const http_utils_2 = require("./utils/http.utils");
 const express_1 = __importDefault(require("express"));
 const db_config_1 = __importDefault(require("./config/db.config"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
@@ -84,8 +86,19 @@ const initApp = () => __awaiter(void 0, void 0, void 0, function* () {
         app.use('/api/qrcodes', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('qrcodes'), qrcode_routes_1.default);
         app.use('/api/statistics', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('statistics'), statistic_routes_1.default);
         const qrCodeController = new qrcode_controller_1.QrCodeController();
-        app.get('/l/:alias/:type/:qid', (0, http_utils_1.asyncHandler)((req, res) => qrCodeController.getVideo(req, res)));
-        app.get('/:alias/:qid', (0, http_utils_1.asyncHandler)((req, res, next) => {
+        app.post('/scan/:token/metrics', (0, http_utils_2.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+            const origin = req.get('origin');
+            if (req.get('sec-fetch-site') === 'cross-site' || (origin && origin !== `${req.protocol}://${req.get('host')}`))
+                throw new http_utils_1.HttpError(403, 'Cross-origin scan update rejected');
+            if (!req.is('application/json'))
+                throw new http_utils_1.HttpError(415, 'Use application/json');
+            res.set('Cache-Control', 'no-store');
+            yield new browser_scan_service_1.BrowserScanService().collect(req.params.token, req.body, req, res);
+            res.sendStatus(204);
+        })));
+        app.get('/scan/:token/continue', (0, http_utils_2.asyncHandler)((req, res) => qrCodeController.continueScan(req, res)));
+        app.get('/l/:alias/:type/:qid', (0, http_utils_2.asyncHandler)((req, res) => qrCodeController.getVideo(req, res)));
+        app.get('/:alias/:qid', (0, http_utils_2.asyncHandler)((req, res, next) => {
             if (reservedAliases.has(req.params.alias)) {
                 next();
                 return;

@@ -30,7 +30,8 @@ export function FilesPage() {
   const uses = (file: AssetFile) =>
     assets.products.filter(
       (product) =>
-        (typeof product.file === 'object' ? product.file?._id : product.file) === file._id,
+        (typeof product.file === 'object' ? product.file?._id : product.file) === file._id ||
+        product.mediaIds?.includes(file._id),
     ).length
   async function remove() {
     if (!deleting) return

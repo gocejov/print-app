@@ -10,6 +10,7 @@ services:
       PORT: 3000
       MONGO_URI: mongodb://${MONGO_ROOT_USERNAME:-root}:${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}@mongo:27017/${MONGO_DATABASE:-qr2share}?authSource=admin
       REDIS_URL: redis://redis:6379
+      VISITOR_SECRET: ${VISITOR_SECRET:-}
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
       CORS_ORIGIN: ${CORS_ORIGIN:?Set CORS_ORIGIN in .env}
       PUBLIC_URL: ${PUBLIC_URL:?Set PUBLIC_URL in .env}

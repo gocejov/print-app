@@ -33,6 +33,10 @@ class ProductController extends base_controller_1.BaseController {
             if (!file)
                 throw new http_utils_1.HttpError(404, 'File not found');
             const product = yield product_model_1.ProductModel.create({
+                displayMode: req.body.displayMode,
+                mediaIds: req.body.mediaIds,
+                actionLabel: req.body.actionLabel,
+                actionUrl: req.body.actionUrl,
                 name: req.body.name || file.name || file.originalname || 'Untitled product',
                 description: req.body.description || '',
                 file: file._id,

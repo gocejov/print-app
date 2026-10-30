@@ -34,8 +34,8 @@ Profile writes support name, lastName, alias and useAlias. Email or password cha
 | GET | `/api/products` | Current account’s products |
 | GET | `/api/products/with-options` | Products with attached file, owner and creator populated |
 | GET | `/api/products/:id` | Product metadata |
-| POST | `/api/products/create/` | Create `{name,description,fileId}`; legacy name/description optional |
-| PUT | `/api/products/:id` | Edit name, description, owned fileId or legacy alias |
+| POST | `/api/products/create/` | Create `{name,description,fileId}` with optional product-page fields; legacy name/description optional |
+| PUT | `/api/products/:id` | Edit name, description, owned fileId, legacy alias, displayMode, mediaIds and actionLabel/actionUrl |
 | DELETE | `/api/products/:id` | Delete a product not referenced by a QR/category/direct campaign entry |
 | GET | `/api/qrcodes` | Current account’s QR codes |
 | GET | `/api/qrcodes/with-options` | Codes with product/current file and campaign populated |
@@ -101,3 +101,13 @@ Campaign QR scans select one distinct eligible product according to its campaign
 New scan records include bounded request method/path, duplicate-preserving query parameter pairs and optional referrer in `data.request`. The Analytics table lists all returned scans with filters, pages and a complete field/value details view. Existing records have no reconstructed request context. See [analytics metadata](analytics.md) and [campaign weight API](campaign-weights.md).
 
 Analytics UI deep links use `/admin/analytics` for Overview and `/admin/analytics?tab=scans&qrCode=QR_ID` for a QR-specific Scan details list. These client query parameters filter the existing authenticated scan collection and do not change the statistics API or public scan recording.
+
+Product-page payloads and public attachment query parameters are documented in [product pages](product-pages.md).
+
+## Public browser collection
+
+HTML QR navigations collect allowlisted browser metrics before continuing to content. `POST /scan/:token/metrics` accepts a single bounded browser snapshot, and `GET /scan/:token/continue` delivers the already selected content without another scan event. These short-lived, scan-specific capabilities need no account login; arbitrary statistic IDs cannot be submitted. Non-HTML clients retain direct delivery. See [browser metrics](browser-metrics.md) for payload fields, validation, location permission and fallbacks.
+
+HTML scans also establish a signed first-party visitor cookie. Statistics may include `data.visitor` and `data.browserFingerprint`; metrics submissions use same-origin credentials to confirm recognition. These IDs are owner-scoped and do not authenticate a visitor. See [visitor recognition](visitor-recognition.md).
+
+Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.

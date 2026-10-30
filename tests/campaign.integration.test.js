@@ -102,6 +102,10 @@ test('campaign/category ownership, live expansion, random scans and pinned media
       const product = check(await request('POST', '/api/products/create/', { name: color, fileId: file._id }, a.cookie), 200).data.product;
       imageProducts.push(product); imageBytes.set(product._id, bytes);
     }
+    for (const product of imageProducts) {
+      const extra = imageProducts.find(p => p._id !== product._id);
+      check(await request('PUT', `/api/products/${product._id}`, { displayMode: 'page', mediaIds: [extra.file], actionLabel: 'Explore', actionUrl: 'https://example.com/explore' }, a.cookie), 200);
+    }
     const imageBody = { name: 'Images', entries: imageProducts.map(p => entry('product', p._id)) };
     check(await request('PUT', `/api/campaigns/${campaign._id}`, imageBody, a.cookie), 200);
     const imagePage = check(await request('GET', path), 200);
@@ -111,6 +115,9 @@ test('campaign/category ownership, live expansion, random scans and pinned media
     assert.equal(selection.qrId, qr._id);
     assert.ok((await redisClient.ttl(selectionKey(token))) > 0);
     for (let i = 0; i < 3; i++) assert.ok(check(await request('GET', source), 200).data.equals(imageBytes.get(selection.productId)));
+    const extra = imageProducts.find(p => p._id !== selection.productId);
+    const extraSource = `/l/q/i/${qr._id}?selection=${token}&media=${extra.file}`;
+    assert.ok(check(await request('GET', extraSource), 200).data.equals(imageBytes.get(extra._id)));
     check(await request('GET', `/l/q/i/${qr._id}`), 400);
     const otherQr = check(await request('POST', '/api/qrcodes', { campaignId: campaign._id }, a.cookie), 201).data;
     check(await request('GET', `/l/q/i/${otherQr._id}?selection=${token}`), 404);

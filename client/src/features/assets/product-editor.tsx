@@ -26,6 +26,12 @@ export function ProductEditor({
   const [fileId, setFileId] = useState(
     initialFileId || (typeof product?.file === 'object' ? product.file?._id : product?.file) || '',
   )
+  const [displayMode, setDisplayMode] = useState<'direct' | 'page'>(
+    product?.displayMode || 'direct',
+  )
+  const [mediaIds, setMediaIds] = useState<string[]>(product?.mediaIds || [])
+  const [actionLabel, setActionLabel] = useState(product?.actionLabel || '')
+  const [actionUrl, setActionUrl] = useState(product?.actionUrl || '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const toast = useToast()
@@ -35,12 +41,13 @@ export function ProductEditor({
     setBusy(true)
     setError('')
     try {
-      if (product) await api.editProduct(product._id, { name, description, fileId })
-      else await api.createProduct(name, description, fileId)
+      const page = { displayMode, mediaIds, actionLabel, actionUrl }
+      if (product) await api.editProduct(product._id, { name, description, fileId, ...page })
+      else await api.createProduct(name, description, fileId, page)
       await onSaved()
       toast(
         product
-          ? 'Product updated. Assigned QR codes follow its attached file.'
+          ? 'Product updated. Assigned QR codes follow its scan experience.'
           : 'Product created. You can now assign it to a QR code.',
       )
       onClose()
@@ -57,8 +64,8 @@ export function ProductEditor({
           <div className='workflow-note'>
             <Package size={20} />
             <p>
-              A product connects a file to your QR codes. Update its attached file whenever the
-              content changes.
+              Connect your files to QR codes. Share a file directly or create a product page with a
+              media gallery and action button.
             </p>
           </div>
           <label>
@@ -81,7 +88,7 @@ export function ProductEditor({
               onChange={(e) => setDescription(e.target.value)}
               maxLength={1000}
               rows={3}
-              placeholder='A little context for your workspace.'
+              placeholder='Describe your product. Shown publicly in product-page mode.'
             />
           </label>
           <label>
@@ -111,6 +118,71 @@ export function ProductEditor({
                 </span>
               </div>
             </div>
+          )}
+          <label>
+            Scan experience
+            <select
+              aria-label='Scan experience'
+              value={displayMode}
+              onChange={(e) => setDisplayMode(e.target.value as 'direct' | 'page')}
+            >
+              <option value='direct'>Open attached file directly</option>
+              <option value='page'>Product page with media and action</option>
+            </select>
+          </label>
+          {displayMode === 'page' && (
+            <>
+              <p className='form-hint'>
+                Visitors see your product name, description, attached file and additional media.
+                Select media in the order you want them shown.
+              </p>
+              <fieldset className='product-media-picker'>
+                <legend>Additional images and videos ({mediaIds.length}/12)</legend>
+                {assets.files
+                  .filter((file) => file.type !== 'web-url' && file._id !== fileId)
+                  .map((file) => (
+                    <label key={file._id}>
+                      <input
+                        type='checkbox'
+                        checked={mediaIds.includes(file._id)}
+                        disabled={!mediaIds.includes(file._id) && mediaIds.length >= 12}
+                        onChange={(e) =>
+                          setMediaIds(
+                            e.target.checked
+                              ? [...mediaIds, file._id]
+                              : mediaIds.filter((id) => id !== file._id),
+                          )
+                        }
+                      />
+                      {mediaIds.includes(file._id) ? `${mediaIds.indexOf(file._id) + 1}. ` : ''}
+                      {fileName(file)}
+                    </label>
+                  ))}
+              </fieldset>
+              <label>
+                Action button label <span className='optional-label'>optional</span>
+                <input
+                  aria-label='Action button label'
+                  value={actionLabel}
+                  maxLength={60}
+                  required={Boolean(actionUrl)}
+                  onChange={(e) => setActionLabel(e.target.value)}
+                  placeholder='e.g. Order now, Book a visit…'
+                />
+              </label>
+              <label>
+                Action button URL
+                <input
+                  aria-label='Action button URL'
+                  type='url'
+                  value={actionUrl}
+                  maxLength={2048}
+                  required={Boolean(actionLabel)}
+                  onChange={(e) => setActionUrl(e.target.value)}
+                  placeholder='https://example.com/order'
+                />
+              </label>
+            </>
           )}
           {!assets.loading && !assets.files.length && (
             <p className='form-hint'>
