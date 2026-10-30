@@ -1,3 +1,4 @@
+import { VisitorProductHits } from './visitor-product-hits'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -14,7 +15,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import type { QrCode, Scan } from '../../lib/types'
+import type { QrCode, Scan, Campaign, Product } from '../../lib/types'
 import { codeName, number } from '../../lib/format'
 import { VisitorProfile } from './visitor-profile'
 
@@ -49,12 +50,21 @@ export function VisitorTable({
   codes,
   loading,
   refresh,
+  products = [],
+  campaigns = [],
+  scoped = false,
+  scopeQuery = '',
 }: {
+  products?: Product[]
+  campaigns?: Campaign[]
+  scoped?: boolean
+  scopeQuery?: string
   scans: Scan[]
   codes: QrCode[]
   loading: boolean
   refresh: () => Promise<unknown>
 }) {
+  const [hits, setHits] = useState<Scan[] | null>(null)
   const [search, setSearch] = useState('')
   const [audience, setAudience] = useState('all')
   const [sort, setSort] = useState('recent')
@@ -122,7 +132,7 @@ export function VisitorTable({
           <div>
             <span>Recognized browsers</span>
             <strong>{loading ? '—' : number(groups.length)}</strong>
-            <small>Across all your QR codes</small>
+            <small>{scoped ? 'Within the selected filters' : 'Across all your QR codes'}</small>
           </div>
         </div>
         <div>
@@ -238,6 +248,7 @@ export function VisitorTable({
                 {[
                   'Visitor',
                   'Activity',
+                  'Products received',
                   'Last known location',
                   'Device',
                   'Last seen',
@@ -264,6 +275,7 @@ export function VisitorTable({
                 }
                 const location = [geo?.city, countryName].filter(Boolean).join(', ')
                 const mobile = ['mobile', 'tablet'].includes(data?.ua?.device?.type || '')
+                const productCount = new Set(visitor.scans.map(scan => scan.product).filter(Boolean)).size
                 return (
                   <tr key={visitor.id}>
                     <td data-label='Visitor'>
@@ -273,7 +285,8 @@ export function VisitorTable({
                         </span>
                         <div>
                           <button className='visitor-name' onClick={() => setProfile(visitor.id)}>
-                            {visitor.latest.data?.visitor?.name || `Visitor ${visitor.id.slice(0, 6).toUpperCase()}`}
+                            {visitor.latest.data?.visitor?.name ||
+                              `Visitor ${visitor.id.slice(0, 6).toUpperCase()}`}
                           </button>
                           <span
                             className={`visitor-badge ${visitor.scans.length > 1 ? 'is-returning' : ''}`}
@@ -291,6 +304,24 @@ export function VisitorTable({
                       <small>
                         {visitor.qrCount} QR {visitor.qrCount === 1 ? 'code' : 'codes'}
                       </small>
+                    </td>
+                    <td data-label='Products received'>
+                      {visitor.scans.some((scan) => scan.product) ? (
+                        <>
+                          <strong className='visitor-count'>
+                            {productCount} {productCount === 1 ? 'product' : 'products'}
+                          </strong>
+                          <button
+                            className='visitor-hits-link'
+                            aria-label={`View products for visitor ${visitor.id.slice(0, 6).toUpperCase()}`}
+                            onClick={() => setHits(visitor.scans)}
+                          >
+                            View product hits →
+                          </button>
+                        </>
+                      ) : (
+                        <span className='muted small'>No product recorded</span>
+                      )}
                     </td>
                     <td data-label='Last known location'>
                       <span className='visitor-with-icon'>
@@ -340,7 +371,7 @@ export function VisitorTable({
                           <ArrowUpRight size={14} />
                         </button>
                         <Link
-                          to={`/analytics?tab=scans&visitor=${visitor.id}`}
+                          to={`/analytics?tab=scans&visitor=${visitor.id}${scopeQuery ? `&${scopeQuery}` : ''}`}
                           aria-label={`View scans for visitor ${visitor.id.slice(0, 6).toUpperCase()}`}
                         >
                           Scan history
@@ -411,6 +442,15 @@ export function VisitorTable({
         <ShieldCheck size={15} />
         Visitors represent browsers, not verified people. Fingerprint matches remain estimates.
       </p>
+      {hits && (
+        <VisitorProductHits
+          scans={hits}
+          codes={codes}
+          campaigns={campaigns}
+          products={products}
+          onClose={() => setHits(null)}
+        />
+      )}
       {profile && <VisitorProfile id={profile} basis='visitor' onClose={() => setProfile(null)} />}
     </section>
   )

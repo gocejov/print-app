@@ -197,6 +197,7 @@ export function CodeLibrary({ overview = false }: { overview?: boolean }) {
               Edit QR target
             </button>
           )}
+          <Link to={`/analytics?tab=visitors&qrCode=${encodeURIComponent(code._id)}`}><BarChart3 size={15} />View visitors</Link>
           <Link to={`/analytics?tab=scans&qrCode=${encodeURIComponent(code._id)}`}>
             <BarChart3 size={15} />
             View scans

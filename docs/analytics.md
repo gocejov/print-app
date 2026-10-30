@@ -74,3 +74,15 @@ In Scan details, click the short visitor label to open its profile. The compact 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
 
 See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
+
+## Visitors by QR, campaign, and selected product
+
+In **Analytics → Visitors**, filter by QR code, campaign, and/or product. Counts, repeat activity, first/last activity, and product breakdowns use only the matching scans. Unrecognized scans remain separate; they are not invented visitor identities. QR action menus and campaign cards include **View visitors** shortcuts.
+
+Each recognized visitor row has **View product hits**. It groups recorded selections by QR + campaign + product, showing selection count and last selection time. The matching-scans link retains the visitor and exact selection scope. A full visitor profile still shows the browser's all-time activity across the owner's QR codes.
+
+Campaign membership and product selection come from each stored scan, not the QR's current target or the campaign's current product list. A later target change does not rewrite history. Direct and visitor-specific product selections without a campaign are labeled separately and are excluded when a campaign is selected. Game entries and legacy scans without a product are retained in scan/visitor counts but excluded from product selection breakdowns. Deleted products/campaigns fall back to shortened IDs.
+
+The QR, campaign, and product scope is stored in URL parameters (`qrCode`, `campaign`, `product`), preserved between Visitors and Scan details, and survives reload. **Clear scope** removes these filters. Scan details show readable product and campaign names where available; raw IDs remain in scan details. Overview continues to show all-time/all-QR statistics.
+
+Product hits mean a recorded QR product selection/delivery, not proof that a visitor viewed the content or clicked a link. Existing owner-scoped statistics are reused; this change does not introduce new tracking.

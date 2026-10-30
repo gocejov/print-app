@@ -12,8 +12,8 @@ import {
   History,
 } from 'lucide-react'
 import { Modal } from '../../components/modal'
-import type { QrCode, Scan } from '../../lib/types'
-import { codeName } from '../../lib/format'
+import type { QrCode, Scan, Campaign, Product } from '../../lib/types'
+import { codeName, productName } from '../../lib/format'
 
 function flatten(value: unknown, prefix = ''): [string, string][] {
   if (value === null || value === undefined) return [[prefix, 'Unavailable']]
@@ -28,6 +28,8 @@ const joined = (...values: (string | undefined)[]) =>
 export function ScanTable({
   scans,
   codes,
+  products = [],
+  campaigns = [],
   loading,
   refresh,
   codeId,
@@ -36,6 +38,8 @@ export function ScanTable({
   onVisitorChange: setVisitorId,
   onClearFilters,
 }: {
+  products?: Product[]
+  campaigns?: Campaign[]
   scans: Scan[]
   codes: QrCode[]
   loading: boolean
@@ -244,8 +248,18 @@ export function ScanTable({
                   </td>
                   <td>
                     <strong>{names.get(scan.qrCode) || scan.qrCode}</strong>
-                    <small>Product: {scan.product || 'Not recorded'}</small>
-                    <small>Campaign: {scan.campaign || 'None recorded'}</small>
+                    <small>
+                      Product:{' '}
+                      {products.find((product) => product._id === scan.product)
+                        ? productName(products.find((product) => product._id === scan.product)!)
+                        : scan.product || 'Not recorded'}
+                    </small>
+                    <small>
+                      Campaign:{' '}
+                      {campaigns.find((campaign) => campaign._id === scan.campaign)?.name ||
+                        scan.campaign ||
+                        'None recorded'}
+                    </small>
                   </td>
                   <td>{data?.ip || 'Unavailable'}</td>
                   <td>
@@ -286,7 +300,8 @@ export function ScanTable({
                                   setProfile({ id: scan.data!.visitor!.id!, basis: 'visitor' })
                                 }
                               >
-                                {scan.data.visitor.name || `Visitor ${scan.data.visitor.id.slice(0, 6).toUpperCase()}`}
+                                {scan.data.visitor.name ||
+                                  `Visitor ${scan.data.visitor.id.slice(0, 6).toUpperCase()}`}
                               </button>
                               <span
                                 className={`visitor-badge ${scan.data.visitor.audience === 'returning' ? 'is-returning' : ''}`}

@@ -201,6 +201,7 @@ function CollectionsPage({ kind }: { kind: 'category' | 'campaign' }) {
                         </button>
                       </div>
                     </div>
+                    {campaign && <button className='btn btn-secondary btn-sm' onClick={() => navigate(`/analytics?tab=visitors&campaign=${item._id}`)}>View visitors</button>}
                     {campaign && (
                       <button
                         className='btn btn-secondary full'

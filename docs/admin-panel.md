@@ -132,3 +132,7 @@ See [Visitor-specific QR products](visitor-targets.md) for assigning a different
 Confirmed visitor profiles also support a private display name. Save it from the profile to show it in visitor and scan lists and the QR assignment selector. Clear the field to restore the anonymous label. See [visitor names](visitor-profiles.md#visitor-names).
 
 See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
+
+Visitor analytics can be opened from each QR's **View visitors** action and each campaign's **View visitors** button. Filter by QR, historical campaign, or selected product, then use **View product hits** on a visitor row to inspect what was selected. See [visitor analytics](analytics.md#visitors-by-qr-campaign-and-selected-product).
+
+The public Message circle experience now has two tabs, Inbox and Send a message. Player search filters name cards while typing; the composer opens after selecting a recipient. Read messages remain stored but have no public history tab. See [game design](games.md#public-design).

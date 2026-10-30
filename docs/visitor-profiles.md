@@ -59,3 +59,5 @@ Confirmed visitor profiles have an optional **Visitor name** field. Enter a name
 Names are private metadata scoped to the signed-in owner, limited to 120 characters. They do not verify a person's identity, merge browsers, change recognition, or alter scan history and QR assignments. Estimated fingerprint groups cannot be named.
 
 `PATCH /api/statistics/visitor-profile/:visitorId` accepts `{"name":"Alex"}` or `{"name":""}` to clear. A confirmed visitor must exist within your owned QR scan history. The profile and statistics list return the current name; metadata is stored separately in `visitor-labels`, uniquely keyed by owner and visitor ID.
+
+The Visitors table supports QR/campaign/product scopes and a per-visitor **View product hits** breakdown. These counts describe the selected scope; opening the full profile continues to show all-time activity. See [scoped visitor analytics](analytics.md#visitors-by-qr-campaign-and-selected-product).

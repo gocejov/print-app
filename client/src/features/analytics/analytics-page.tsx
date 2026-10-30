@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
+import { api } from '../../lib/api'
 import { VisitorTable } from './visitor-table'
 import { visitorSummary } from './visitor-summary'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -5,15 +7,35 @@ import { useMemo, useState } from 'react'
 import { ArrowUpRight, BarChart3, Globe2, MousePointer2, QrCode, Users } from 'lucide-react'
 import { useWorkspace } from '../codes/use-workspace'
 import { ScanTable } from './scan-table'
-import { codeName, number } from '../../lib/format'
+import { codeName, number, productName } from '../../lib/format'
 
 export function AnalyticsPage() {
   const { codes, scans, loading, error, refresh } = useWorkspace()
   const [params, setParams] = useSearchParams()
+  const products = useQuery({
+    queryKey: ['products'],
+    queryFn: ({ signal }) => api.products(signal),
+  })
+  const campaigns = useQuery({
+    queryKey: ['campaigns'],
+    queryFn: ({ signal }) => api.campaigns(signal),
+  })
+  const campaignId = params.get('campaign') || ''
+  const productId = params.get('product') || ''
+  const setScope = (key: string, value: string) => {
+    const next = new URLSearchParams(params)
+    if (value) next.set(key, value)
+    else next.delete(key)
+    setParams(next)
+  }
   const tab =
     params.get('tab') === 'visitors'
       ? 'visitors'
-      : params.get('tab') === 'scans' || params.has('qrCode') || params.has('visitor')
+      : params.get('tab') === 'scans' ||
+          params.has('qrCode') ||
+          params.has('visitor') ||
+          params.has('campaign') ||
+          params.has('product')
         ? 'scans'
         : 'overview'
   const visitorId = params.get('visitor') || ''
@@ -32,6 +54,29 @@ export function AnalyticsPage() {
     else next.delete('qrCode')
     setParams(next)
   }
+  const scopedScans = useMemo(
+    () =>
+      scans.filter(
+        (scan) =>
+          (!codeId || scan.qrCode === codeId) &&
+          (!campaignId || scan.campaign === campaignId) &&
+          (!productId || scan.product === productId),
+      ),
+    [scans, codeId, campaignId, productId],
+  )
+  const scopeQuery = [
+    codeId ? `qrCode=${encodeURIComponent(codeId)}` : '',
+    campaignId ? `campaign=${encodeURIComponent(campaignId)}` : '',
+    productId ? `product=${encodeURIComponent(productId)}` : '',
+  ]
+    .filter(Boolean)
+    .join('&')
+  const historicalCampaigns = [
+    ...new Set(scans.map((scan) => scan.campaign).filter((id): id is string => Boolean(id))),
+  ].filter((id) => !campaigns.data?.some((c) => c._id === id))
+  const historicalProducts = [
+    ...new Set(scans.map((scan) => scan.product).filter((id): id is string => Boolean(id))),
+  ].filter((id) => !products.data?.some((p) => p._id === id))
   const [days, setDays] = useState(14)
   const buckets = useMemo(() => {
     const today = new Date()
@@ -50,7 +95,7 @@ export function AnalyticsPage() {
     })
     return result
   }, [scans, days])
-  const visitors = visitorSummary(scans)
+  const visitors = visitorSummary(tab === 'overview' ? scans : scopedScans)
   const total = buckets.reduce((sum, b) => sum + b.count, 0)
   const max = Math.max(...buckets.map((b) => b.count), 1)
   const counts = scans.reduce<Record<string, number>>((result, scan) => {
@@ -92,18 +137,96 @@ export function AnalyticsPage() {
           <BarChart3 size={17} />
           Overview
         </Link>
-        <Link to='/analytics?tab=visitors' aria-current={tab === 'visitors' ? 'page' : undefined}>
+        <Link
+          to={`/analytics?tab=visitors${scopeQuery ? `&${scopeQuery}` : ''}`}
+          aria-current={tab === 'visitors' ? 'page' : undefined}
+        >
           <Users size={17} />
           Visitors<span>{number(visitors.unique)}</span>
         </Link>
         <Link
-          to={`/analytics?tab=scans${codeId ? `&qrCode=${encodeURIComponent(codeId)}` : ''}`}
+          to={`/analytics?tab=scans${scopeQuery ? `&${scopeQuery}` : ''}`}
           aria-current={tab === 'scans' ? 'page' : undefined}
         >
           <MousePointer2 size={17} />
-          Scan details<span>{number(scans.length)}</span>
+          Scan details<span>{number(scopedScans.length)}</span>
         </Link>
       </nav>
+      {tab !== 'overview' && (
+        <section className='panel analytics-scope' aria-label='Analytics scope'>
+          {tab === 'visitors' && (
+            <label className='visitor-filter'>
+              <span>QR code</span>
+              <select
+                aria-label='Filter visitors by QR code'
+                value={codeId}
+                onChange={(e) => setScope('qrCode', e.target.value)}
+              >
+                <option value=''>All QR codes</option>
+                {codes.map((code) => (
+                  <option key={code._id} value={code._id}>
+                    {codeName(code)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label className='visitor-filter'>
+            <span>Campaign</span>
+            <select
+              aria-label='Filter analytics by campaign'
+              value={campaignId}
+              onChange={(e) => setScope('campaign', e.target.value)}
+            >
+              <option value=''>All campaigns and direct scans</option>
+              {campaigns.data?.map((campaign) => (
+                <option key={campaign._id} value={campaign._id}>
+                  {campaign.name}
+                </option>
+              ))}
+              {historicalCampaigns.map((id) => (
+                <option key={id} value={id}>
+                  Campaign · {id.slice(-6)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className='visitor-filter'>
+            <span>Product selected</span>
+            <select
+              aria-label='Filter analytics by product'
+              value={productId}
+              onChange={(e) => setScope('product', e.target.value)}
+            >
+              <option value=''>All products</option>
+              {products.data?.map((product) => (
+                <option key={product._id} value={product._id}>
+                  {productName(product)}
+                </option>
+              ))}
+              {historicalProducts.map((id) => (
+                <option key={id} value={id}>
+                  Product · {id.slice(-6)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {(codeId || campaignId || productId) && (
+            <button className='btn btn-secondary' onClick={() => setParams({ tab })}>
+              Clear scope
+            </button>
+          )}
+          <p className='form-hint'>
+            Filters match the QR, campaign, and product saved with each scan. Visitor counts and
+            product breakdowns use only matching scans.
+          </p>
+          {(products.error || campaigns.error) && (
+            <p role='alert'>
+              Some asset names could not be loaded. Recorded IDs and filtering remain available.
+            </p>
+          )}
+        </section>
+      )}
       {error ? (
         <div className='empty-state'>
           <h2>Insights couldn’t be loaded.</h2>
@@ -268,11 +391,23 @@ export function AnalyticsPage() {
               </div>
             </>
           ) : tab === 'visitors' ? (
-            <VisitorTable scans={scans} codes={codes} loading={loading} refresh={refresh} />
+            <VisitorTable
+              key={scopeQuery}
+              scans={scopedScans}
+              codes={codes}
+              campaigns={campaigns.data || []}
+              products={products.data || []}
+              scoped={Boolean(scopeQuery)}
+              scopeQuery={scopeQuery}
+              loading={loading}
+              refresh={refresh}
+            />
           ) : (
             <ScanTable
-              scans={scans}
+              scans={scopedScans}
               codes={codes}
+              products={products.data || []}
+              campaigns={campaigns.data || []}
               loading={loading}
               refresh={refresh}
               codeId={codeId}

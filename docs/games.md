@@ -12,9 +12,9 @@ Anyone holding the QR or its URL can join this game. “Closed” means room iso
 
 1. Scan the QR, read the host's welcome message, enter a display name, and join.
 2. The game opens the player's inbox. A returning scan opens the same inbox on the same browser.
-3. Choose **Send a message**, find another participant by name, and send a text message (up to 2,000 characters). Player discovery is searchable and paginated, including games with more than 100 players.
+3. Choose **Send a message** and type a name to filter the player cards automatically. Tap a player to open the composer and send a text message (up to 2,000 characters). **Change player** returns to search without discarding the draft. **Show more players** paginates large circles; clear search to browse again.
 4. Unread messages appear oldest first. **Next message** marks the current message read and opens the next one. The final message has a **Mark as read** button.
-5. Opening or leaving a message does not mark it read. **Read messages** retains acknowledged messages and allows reading through them again. **Refresh inbox** or another scan retrieves new messages; there are no push notifications in this version.
+5. Opening or leaving a message does not mark it read. The public interface has just **Inbox** and **Send a message**; the Read messages tab has been removed. Acknowledged messages remain stored, and the read-history API remains available, but finished notes are not shown in the public inbox. **Refresh inbox** or another scan retrieves new messages; there are no push notifications in this version.
 
 Display names are unique within a game (case insensitive and Unicode-normalized). Names are visible to enrolled participants in that game. Text is shown as plain text, including literal HTML-looking text. Names and messages are escaped or inserted using `textContent`; they do not become executable markup.
 
@@ -65,4 +65,8 @@ Every read/write checks the live reciprocal game/QR relationship and pause statu
 
 ## Verification
 
-`tests/games.integration.test.js` covers ownership, analytics continuation, cross-game isolation, unauthorized inbox and acknowledgment access, unique names, replay-safe and concurrent sends, durable unread order/history, and pause/resume. `client/tests/games.spec.ts` exercises creation, QR preview, two independent browsers, mobile display, sending multiple messages, rescanning without losing unread content, read history, and literal HTML rendering.
+`tests/games.integration.test.js` covers ownership, analytics continuation, cross-game isolation, unauthorized inbox and acknowledgment access, unique names, replay-safe and concurrent sends, durable unread order/history, and pause/resume. `client/tests/games.spec.ts` exercises creation, QR preview, two independent browsers, mobile display, live player search and clearing, stale search response protection, recipient selection and draft preservation, sending multiple messages, rescanning without losing unread content, retained read history via API, and literal HTML rendering.
+
+## Public design
+
+The public game has a compact header after joining, two primary tabs, a spacious message card, and a recipient-first composer. Search updates after a 250 ms typing pause, with cancellation and response-version checks so slower results cannot overwrite a newer query. Results are buttons with names and initials, loading/empty states are announced, and the selected recipient is shown above the draft. Name and message text continue to use safe text insertion. A character counter and send confirmation make message state clear. Styling uses the existing green palette with cream backgrounds, responsive player cards, and visible keyboard focus states.
