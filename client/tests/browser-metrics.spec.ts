@@ -162,7 +162,9 @@ test('returning browser counts, fingerprint separation, audience filters and pri
         ),
       ).size,
     ).toBe(1)
-    const repeatedId = ids.find((id: string) => ids.filter((value: string) => value === id).length === 2)!
+    const repeatedId = ids.find(
+      (id: string) => ids.filter((value: string) => value === id).length === 2,
+    )!
     const recognizedProfile = await request.get(`/api/statistics/visitor-profile/${repeatedId}`)
     expect(recognizedProfile.status()).toBe(200)
     const combined = await recognizedProfile.json()
@@ -207,6 +209,27 @@ test('returning browser counts, fingerprint separation, audience filters and pri
     await expect(page.getByRole('region', { name: 'Visitor metrics' })).toContainText(
       '1 repeat scans',
     )
+    await page
+      .getByRole('navigation', { name: 'Analytics views' })
+      .getByRole('link', { name: /^Visitors/ })
+      .click()
+    const visitorTable = page.getByRole('table', {
+      name: 'Recognized visitors and their scan activity',
+    })
+    await expect(visitorTable.locator('tbody tr')).toHaveCount(3)
+    await page.getByLabel('Visitor audience', { exact: true }).selectOption('returning')
+    await expect(visitorTable.locator('tbody tr')).toHaveCount(1)
+    await page.getByRole('link', { name: /^View scans for visitor/ }).click()
+    await expect(page).toHaveURL(/visitor=/)
+    await expect(
+      page.getByRole('table', { name: /All recorded scans/ }).locator('tbody tr'),
+    ).toHaveCount(2)
+    await page.reload()
+    await expect(
+      page.getByRole('table', { name: /All recorded scans/ }).locator('tbody tr'),
+    ).toHaveCount(2)
+    await page.getByRole('button', { name: 'Clear filters', exact: true }).click()
+    await expect(page).not.toHaveURL(/visitor=/)
     await page.goto('/admin/analytics?tab=scans')
     await page.getByLabel('Filter visitor audience').selectOption('returning')
     await expect(
@@ -215,10 +238,26 @@ test('returning browser counts, fingerprint separation, audience filters and pri
     await page.getByLabel('Filter visitor audience').selectOption('all')
     await page.getByRole('button', { name: 'View browser scans' }).first().click()
     await expect(page.getByRole('button', { name: 'Clear visitor filter' })).toBeVisible()
+    const visitorCell = page.locator('.scan-visitor-cell').first()
+    await expect(visitorCell.locator('.scan-visitor-name')).toContainText('Visitor ')
+    await expect(visitorCell).not.toContainText('Estimated fingerprint:')
+    await visitorCell.scrollIntoViewIfNeeded()
+    await visitorCell.screenshot({ path: '/tmp/qr2share-scan-visitor-cell.png' })
     await page.getByRole('button', { name: 'View visitor profile', exact: true }).first().click()
     await expect(page.getByRole('dialog', { name: 'Visitor profile' })).toContainText(
       'Product activity',
     )
+    await expect(page.getByRole('dialog', { name: 'Visitor profile' })).toContainText(
+      'Visitor product',
+    )
+    await page.screenshot({ path: '/tmp/qr2share-visitor-profile-desktop.png', fullPage: true })
+    await page.setViewportSize({ width: 390, height: 844 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({
+      path: '/tmp/qr2share-visitor-profile-mobile.png',
+      fullPage: false,
+      animations: 'disabled',
+    })
     await page.keyboard.press('Escape')
     await page.getByRole('button', { name: 'View fingerprint group', exact: true }).first().click()
     await expect(page.getByRole('dialog', { name: 'Estimated fingerprint group' })).toContainText(

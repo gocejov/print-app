@@ -14,7 +14,7 @@ The main interface is **http://127.0.0.1:3000/admin/**. It uses the existing Red
 - Pause/resume, PNG download, scan-link copy, detail preview and confirmed deletion.
 - CSV export of the currently filtered library, with spreadsheet formula-prefix protection.
 - Daily scan charts for 7, 14 or 30 local-calendar days; all-time top codes and country counts.
-- Separate analytics Overview and Scan details tabs, with metadata/parameter search, QR filters, 25-row pages, manual refresh and full field/value details.
+- Separate analytics Overview, Visitors and Scan details tabs, with metadata/parameter search, QR filters, 25-row pages, manual refresh and full field/value details.
 - Browser-enriched scan details, including timezone/viewport/network hints and location only with previously granted browser permission.
 - View scans links in each QR action menu, preview and list scan count, opening the prefiltered details tab.
 - Per-product campaign weights (default 1), probability previews and equal-weight reset.
@@ -124,3 +124,5 @@ Visitor analytics includes recognized browser/repeat/unrecognized counts, new/re
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
 
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
+
+The **Analytics → Visitors** workspace groups scans by recognized browser, with account-wide audience metrics, search, returning/single-scan filters, sorting, pagination and mobile cards. Visitor profiles emphasize readable activity and browser information; advanced evidence remains available. Scan-history links preserve the visitor filter in the URL. See [visitor analytics](analytics.md#visitors-workspace).

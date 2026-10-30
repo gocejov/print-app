@@ -40,3 +40,5 @@ Browser tests cover repeated scans, separate browsers with matching fingerprints
 The intended next use is [loyalty rewards](loyalty-rewards.md): qualifying repeat visits unlock a prize or voucher. That proposal separates raw scan counts from reward credits and requires one-time redemption. Rewards are not implemented yet.
 
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
+
+For a readable per-browser table, use **Analytics → Visitors**. Its **Scan history** links persist the visitor ID in the URL; see [visitor workspace](analytics.md#visitors-workspace).

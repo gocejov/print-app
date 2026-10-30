@@ -45,3 +45,7 @@ Information such as private browsing history, other sites' cookies, contact deta
 ## Verification and scale
 
 Tests cover summary windows, activity/source counters, explicitly estimated fingerprint groups, authenticated ownership boundaries and profile dialogs. The implementation currently summarizes the matching scan history in server memory; large histories will need MongoDB aggregation/materialized views and retention controls before high-volume deployments. Deleted QR codes remain outside the existing current-code scope.
+
+## Admin presentation
+
+The Visitors tab provides one row per confirmed browser, readable summary metrics, search/audience/sort controls and responsive mobile cards. Profile dialogs present activity with current resource names and readable browser facts; raw evidence is collapsed under **Technical data & identity evidence**. Activity references fall back to abbreviated IDs when the resource is unavailable. Profiles still use the same owner-scoped endpoint and do not alter recognition or counter semantics. See [Visitors workspace](analytics.md#visitors-workspace).

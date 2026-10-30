@@ -1,7 +1,16 @@
 import { VisitorProfile } from './visitor-profile'
 import { visitorSummary } from './visitor-summary'
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, RefreshCw, Search, X, ListFilter } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Search,
+  X,
+  ListFilter,
+  Fingerprint,
+  History,
+} from 'lucide-react'
 import { Modal } from '../../components/modal'
 import type { QrCode, Scan } from '../../lib/types'
 import { codeName } from '../../lib/format'
@@ -23,6 +32,9 @@ export function ScanTable({
   refresh,
   codeId,
   onCodeChange,
+  visitorId,
+  onVisitorChange: setVisitorId,
+  onClearFilters,
 }: {
   scans: Scan[]
   codes: QrCode[]
@@ -30,12 +42,14 @@ export function ScanTable({
   refresh: () => Promise<unknown>
   codeId: string
   onCodeChange: (id: string) => void
+  visitorId: string
+  onVisitorChange: (id: string) => void
+  onClearFilters: () => void
 }) {
   const [profile, setProfile] = useState<{ id: string; basis: 'visitor' | 'fingerprint' } | null>(
     null,
   )
   const [audience, setAudience] = useState('all')
-  const [visitorId, setVisitorId] = useState('')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
   const [selected, setSelected] = useState<Scan | null>(null)
@@ -137,7 +151,7 @@ export function ScanTable({
           </select>
         </label>
       </div>
-      <div className='scan-toolbar'>
+      <div className='scan-toolbar scan-audience-toolbar'>
         <label>
           Audience
           <select
@@ -173,9 +187,8 @@ export function ScanTable({
             className='scan-reset'
             onClick={() => {
               setSearch('')
-              setVisitorId('')
               setAudience('all')
-              onCodeChange('')
+              onClearFilters()
               setPage(0)
             }}
           >
@@ -253,49 +266,74 @@ export function ScanTable({
                     {joined(ua?.device?.type, ua?.device?.vendor, ua?.device?.model)}
                     <small>{browser?.language || data?.language || 'Unavailable'}</small>
                   </td>
-                  <td>
-                    {scan.data?.visitor?.confirmed && scan.data.visitor.id ? (
-                      <>
-                        <button
-                          className='btn btn-secondary btn-sm'
-                          onClick={() => {
-                            setVisitorId(scan.data!.visitor!.id!)
-                            setPage(0)
-                          }}
-                        >
-                          View browser scans
-                        </button>
-                        <small>
+                  <td className='scan-visitor-cell'>
+                    <div className='scan-visitor-card'>
+                      <div className='scan-visitor-identity'>
+                        <span className='visitor-avatar' aria-hidden='true'>
+                          {scan.data?.visitor?.confirmed && scan.data.visitor.id ? (
+                            scan.data.visitor.id.slice(0, 2).toUpperCase()
+                          ) : (
+                            <Fingerprint size={17} />
+                          )}
+                        </span>
+                        <div>
+                          {scan.data?.visitor?.confirmed && scan.data.visitor.id ? (
+                            <>
+                              <button
+                                className='scan-visitor-name'
+                                aria-label='View visitor profile'
+                                onClick={() =>
+                                  setProfile({ id: scan.data!.visitor!.id!, basis: 'visitor' })
+                                }
+                              >
+                                Visitor {scan.data.visitor.id.slice(0, 6).toUpperCase()}
+                              </button>
+                              <span
+                                className={`visitor-badge ${scan.data.visitor.audience === 'returning' ? 'is-returning' : ''}`}
+                              >
+                                {scan.data.visitor.audience === 'returning'
+                                  ? 'Returning browser'
+                                  : 'First recorded visit'}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className='scan-visitor-name'>Unrecognized browser</span>
+                              <span className='scan-visitor-muted'>No confirmed visitor ID</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className='scan-visitor-links'>
+                        {scan.data?.visitor?.confirmed && scan.data.visitor.id && (
                           <button
-                            className='btn btn-secondary btn-sm'
+                            aria-label='View browser scans'
+                            onClick={() => {
+                              setVisitorId(scan.data!.visitor!.id!)
+                              setPage(0)
+                            }}
+                          >
+                            <History size={13} />
+                            Scan history
+                          </button>
+                        )}
+                        {scan.data?.browserFingerprint && (
+                          <button
+                            aria-label='View fingerprint group'
+                            title='Similar fingerprint signals are estimates, not proof of the same person'
                             onClick={() =>
-                              setProfile({ id: scan.data!.visitor!.id!, basis: 'visitor' })
+                              setProfile({
+                                id: scan.data!.browserFingerprint!.hash,
+                                basis: 'fingerprint',
+                              })
                             }
                           >
-                            View visitor profile
+                            <Fingerprint size={13} />
+                            Similar browsers
                           </button>
-                          {scan.data.visitor.audience} · {scan.data.visitor.id.slice(0, 12)}
-                        </small>
-                      </>
-                    ) : (
-                      'Unrecognized'
-                    )}
-                    {scan.data?.browserFingerprint && (
-                      <small>
-                        Estimated fingerprint: {scan.data.browserFingerprint.hash.slice(0, 12)}
-                        <button
-                          className='btn btn-secondary btn-sm'
-                          onClick={() =>
-                            setProfile({
-                              id: scan.data!.browserFingerprint!.hash,
-                              basis: 'fingerprint',
-                            })
-                          }
-                        >
-                          View fingerprint group
-                        </button>
-                      </small>
-                    )}
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td>
                     {browser ? (

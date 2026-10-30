@@ -1,7 +1,8 @@
+import { VisitorTable } from './visitor-table'
 import { visitorSummary } from './visitor-summary'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useMemo, useState } from 'react'
-import { ArrowUpRight, BarChart3, Globe2, MousePointer2, QrCode } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Globe2, MousePointer2, QrCode, Users } from 'lucide-react'
 import { useWorkspace } from '../codes/use-workspace'
 import { ScanTable } from './scan-table'
 import { codeName, number } from '../../lib/format'
@@ -9,7 +10,20 @@ import { codeName, number } from '../../lib/format'
 export function AnalyticsPage() {
   const { codes, scans, loading, error, refresh } = useWorkspace()
   const [params, setParams] = useSearchParams()
-  const tab = params.get('tab') === 'scans' || params.has('qrCode') ? 'scans' : 'overview'
+  const tab =
+    params.get('tab') === 'visitors'
+      ? 'visitors'
+      : params.get('tab') === 'scans' || params.has('qrCode') || params.has('visitor')
+        ? 'scans'
+        : 'overview'
+  const visitorId = params.get('visitor') || ''
+  const setVisitorId = (id: string) => {
+    const next = new URLSearchParams(params)
+    next.set('tab', 'scans')
+    if (id) next.set('visitor', id)
+    else next.delete('visitor')
+    setParams(next)
+  }
   const codeId = params.get('qrCode') || ''
   const setCodeId = (id: string) => {
     const next = new URLSearchParams(params)
@@ -77,6 +91,10 @@ export function AnalyticsPage() {
         <Link to='/analytics' aria-current={tab === 'overview' ? 'page' : undefined}>
           <BarChart3 size={17} />
           Overview
+        </Link>
+        <Link to='/analytics?tab=visitors' aria-current={tab === 'visitors' ? 'page' : undefined}>
+          <Users size={17} />
+          Visitors<span>{number(visitors.unique)}</span>
         </Link>
         <Link
           to={`/analytics?tab=scans${codeId ? `&qrCode=${encodeURIComponent(codeId)}` : ''}`}
@@ -249,6 +267,8 @@ export function AnalyticsPage() {
                 </section>
               </div>
             </>
+          ) : tab === 'visitors' ? (
+            <VisitorTable scans={scans} codes={codes} loading={loading} refresh={refresh} />
           ) : (
             <ScanTable
               scans={scans}
@@ -257,6 +277,9 @@ export function AnalyticsPage() {
               refresh={refresh}
               codeId={codeId}
               onCodeChange={setCodeId}
+              visitorId={visitorId}
+              onVisitorChange={setVisitorId}
+              onClearFilters={() => setParams({ tab: 'scans' })}
             />
           )}
           <p className='muted small analytics-note'>

@@ -35,3 +35,13 @@ Campaign editors show one weight per distinct expanded product, defaulting to 1,
 ## Analytics navigation and search
 
 Overview charts and the scan record table occupy separate tab-style navigation views. A roomier search field, independent QR selector, result count and clear controls make scan filtering more visible on desktop and stack on mobile. Per-QR menus, previews and linked scan counts lead directly to the filtered Scan details view. The URL preserves the chosen view and QR filter.
+
+## Visitor table and profile refresh
+
+Visitors now has a dedicated audience workspace rather than requiring owners to interpret repeated scan rows. The layout applies [Material data-table guidance](https://m2.material.io/develop/web/components/data-tables): one entity per row, clear column hierarchy, nearby search/filter/sort controls, numeric activity summaries and pagination beneath the table. It uses QR2Share's existing colors, fonts, icons and native controls; Material/MUI is not installed as an additional framework.
+
+Readable pseudonyms, explicit recognition badges, compact device/location summaries and one primary profile action establish hierarchy. Raw identifiers and JSON move into Advanced profile details, while scan history retains the complete evidence. Missing locations remain unavailable; no personal name or verified identity is fabricated. Profiles resolve current asset names when available and retain reference fallbacks for missing records.
+
+Mobile visitor rows become labeled cards with profile and history actions. Desktop/mobile browser checks cover grouping, shared fingerprint separation, sorting, search, empty results, paging, profile readability and browser-history links. Screenshots are visual inspection artifacts, not proof of a full accessibility audit.
+
+The Scan details Visitor column also uses a compact identity block, a recognition badge and lightweight history/similar-browser links. Raw fingerprint hashes remain in full details rather than crowding each row; profile access is the visitor label itself. The audience selector follows the table filter styling.

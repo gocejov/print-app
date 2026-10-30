@@ -11,7 +11,7 @@ This documentation describes the current TypeScript source, a local runtime chec
 | [Combined visitor profiles](visitor-profiles.md) | Browser evidence, cross-QR activity counters and future targeting/game rules |
 | [Visitor recognition](visitor-recognition.md) | Returning browsers, unique/repeat scan counts, estimated fingerprints and audience filters |
 | [Browser metrics](browser-metrics.md) | Automatic pre-redirect browser signals, permitted location and targeting opportunities |
-| [Scan analytics](analytics.md) | Searchable scan table, all saved details, request parameters and pagination |
+| [Scan analytics](analytics.md) | Visitor workspace, readable profiles, searchable scan table and pagination |
 | [Campaign product weights](campaign-weights.md) | Equal defaults, per-product weight controls and probability preview |
 | [Categories and campaigns](campaigns.md) | Ordered reusable product lists, mixed campaign entries and random QR playback |
 | [React admin panel](admin-panel.md) | Features, React structure, dynamic QR API, build and browser tests |

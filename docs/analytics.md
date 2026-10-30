@@ -1,6 +1,6 @@
 # Scan analytics and details
 
-Open **Analytics** at `/admin/analytics`. The **Overview** tab contains the daily chart, top QR codes and country summaries. The separate **Scan details** tab contains the scan table for the signed-in account's existing QR codes. Overview opens by default; `/admin/analytics?tab=scans` opens the scan list directly.
+Open **Analytics** at `/admin/analytics`. The **Overview** tab contains the daily chart, top QR codes and country summaries. **Visitors** groups recognized browsers into a readable audience table. The separate **Scan details** tab contains the scan table for the signed-in account's existing QR codes. Overview opens by default; `/admin/analytics?tab=scans` opens the scan list directly.
 
 ## Scan table
 
@@ -58,3 +58,15 @@ Search uses a full-width, responsive field with a search icon, a clear-search bu
 Analytics now counts recognized browsers using owner-scoped first-party visitor IDs, with repeat and unrecognized scan counts. Audience filters separate new, returning and unrecognized scans; each recognized scan can open that browser history. Estimated fingerprints are shown separately and never silently merge visitors. See [visitor recognition](visitor-recognition.md) for count definitions, cookie lifetime, privacy preferences and limits.
 
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
+
+## Visitors workspace
+
+Open **Analytics → Visitors** (`/admin/analytics?tab=visitors`) for one row per confirmed first-party browser ID across the account's current QR codes. It separates recognized browsers, returning browsers (more than one recorded scan in that scope) and unrecognized scans. Unrecognized scans remain in Scan details and are not merged into a fabricated visitor. Fingerprint-only matches are not counted as recognized browsers.
+
+Rows show a short pseudonymous visitor label, single-scan/returning status, scan and distinct-QR counts, the latest available IP location, browser/OS/language, last-seen time, and profile/history actions. Search includes stored observations, IDs and current QR names. Audience filters distinguish all, returning and single-scan browsers. Sorting supports last seen, most scans and newest first-seen browsers; 25 rows appear per page. On mobile, the same rows become labeled cards without horizontal page overflow.
+
+**View profile** opens activity summaries and readable browser facts. Current QR/product/campaign names replace raw IDs when those records are still available. Raw signals and identity evidence remain in a collapsed Advanced disclosure. **Scan history** opens `/admin/analytics?tab=scans&visitor=VISITOR_ID`; its visitor filter survives reloads, can be combined with the QR filter, and is removed by Clear filters. Summary counts in Visitors are account-wide; search/audience filters change the table's result count. Profiles remain account-wide rather than restricted to a scan table filter.
+
+Counts are derived from the same fetched account scan collection. This adds no new tracking, fingerprint matching or game/reward decisions. Pagination/grouping is client-side and retains the existing large-history scaling limits.
+
+In Scan details, click the short visitor label to open its profile. The compact Visitor cell provides **Scan history** and **Similar browsers** links; full hashes stay in the scan details and Advanced profile evidence. Similar-browser groups remain estimates.
