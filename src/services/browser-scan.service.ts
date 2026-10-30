@@ -13,6 +13,7 @@ import { HttpError } from '../utils/http.utils'
 
 const key = (token: string) => `${process.env.SESSION_KEY_PREFIX || 'sess:'}browser-scan:${token}`
 export interface ScanContinuation {
+  gameId?: string
   ownerId: string
   qrId: string
   productId: string

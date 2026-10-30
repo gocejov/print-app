@@ -91,7 +91,7 @@ export function managementAccess(resource: Resource) {
       ![
         'by-codes',
         'total-by-codes',
-        ...(resource === 'statistics' && req.method === 'GET' ? ['visitor-profile'] : []),
+        ...(resource === 'statistics' && ['GET', 'PATCH'].includes(req.method) ? ['visitor-profile'] : []),
       ].includes(segments[0])
     if (recordRoute) {
       const recordId = id(resource === 'files' && last === 'content' ? segments[0] : last, 'ID')

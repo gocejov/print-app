@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initApp = void 0;
+const game_routes_1 = require("./features/games/game.routes");
 require("dotenv/config");
 const browser_scan_service_1 = require("./services/browser-scan.service");
 const http_utils_1 = require("./utils/http.utils");
@@ -39,7 +40,7 @@ const userIdentification_middleware_1 = require("./middlewares/userIdentificatio
 const path_1 = __importDefault(require("path"));
 // import { DeviceFingerprint } from 'device-fingerprint';
 const app = (0, express_1.default)();
-const reservedAliases = new Set(['api', 'api-docs', 'l', 'admin', 'crud']);
+const reservedAliases = new Set(['api', 'api-docs', 'l', 'admin', 'crud', 'games']);
 const initApp = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield (0, db_config_1.default)();
@@ -78,6 +79,8 @@ const initApp = () => __awaiter(void 0, void 0, void 0, function* () {
         //Main Routes
         app.use('/api', auth_middleware_1.protectWrites);
         app.use('/api/users', user_routes_1.default);
+        app.use('/api/games', auth_middleware_1.requireAuth, game_routes_1.gameManagementRoutes);
+        app.use('/games', game_routes_1.gamePublicRoutes);
         app.use('/api/categories', auth_middleware_1.requireAuth, (0, collection_routes_1.collectionRoutes)('category'));
         app.use('/api/campaigns', auth_middleware_1.requireAuth, (0, collection_routes_1.collectionRoutes)('campaign'));
         app.use('/api/products', auth_middleware_1.requireAuth, (0, management_middleware_1.managementAccess)('products'), product_routes_1.default);

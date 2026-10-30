@@ -1,3 +1,4 @@
+import { gameManagementRoutes, gamePublicRoutes } from './features/games/game.routes';
 import 'dotenv/config';
 import { BrowserScanService } from './services/browser-scan.service';
 import { HttpError } from './utils/http.utils';
@@ -27,7 +28,7 @@ import path from 'path';
 
 
 const app: Application = express();
-const reservedAliases = new Set(['api', 'api-docs', 'l', 'admin', 'crud']);
+const reservedAliases = new Set(['api', 'api-docs', 'l', 'admin', 'crud', 'games']);
 
 export const initApp = async (): Promise<Application> => {
     try {
@@ -75,6 +76,8 @@ export const initApp = async (): Promise<Application> => {
         //Main Routes
         app.use('/api', protectWrites);
         app.use('/api/users', userRoutes);
+        app.use('/api/games', requireAuth, gameManagementRoutes);
+        app.use('/games', gamePublicRoutes);
         app.use('/api/categories', requireAuth, collectionRoutes('category'));
         app.use('/api/campaigns', requireAuth, collectionRoutes('campaign'));
         app.use('/api/products', requireAuth, managementAccess('products'), productsRoutes);

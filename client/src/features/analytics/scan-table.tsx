@@ -286,7 +286,7 @@ export function ScanTable({
                                   setProfile({ id: scan.data!.visitor!.id!, basis: 'visitor' })
                                 }
                               >
-                                Visitor {scan.data.visitor.id.slice(0, 6).toUpperCase()}
+                                {scan.data.visitor.name || `Visitor ${scan.data.visitor.id.slice(0, 6).toUpperCase()}`}
                               </button>
                               <span
                                 className={`visitor-badge ${scan.data.visitor.audience === 'returning' ? 'is-returning' : ''}`}

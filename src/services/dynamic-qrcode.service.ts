@@ -156,6 +156,8 @@ export class DynamicQrCodeService {
   ) {
     const code = await QrCodeModel.findOne({ _id: codeId, createdBy: userId })
     if (!code) throw new HttpError(404, 'QR code not found')
+    if (code.game && Object.keys(changes).some(key => !['name', 'status'].includes(key)))
+      throw new HttpError(400, 'Game QR codes keep their game target; manage them from Games')
     if (
       [changes.productId, changes.campaignId, changes.destinationUrl].filter(
         (value) => value !== undefined,

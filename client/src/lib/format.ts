@@ -10,16 +10,19 @@ export const fileName = (file: AssetFile) => file.name || file.originalname || h
 export const productName = (product: Product) => product.name || `Product ${product._id.slice(-6)}`
 export const productFile = (product?: Product | string | null) =>
   typeof product === 'object' && product && typeof product.file === 'object' ? product.file : null
-export const codeType = (code: QrCode): FileType | 'campaign' =>
-  code.campaign
-    ? 'campaign'
-    : productFile(code.product)?.type ||
-      (/^https?:\/\//.test((typeof code.product === 'object' && code.product?.url) || '')
-        ? 'web-url'
-        : 'video')
-export const typeLabel = (type: FileType | 'campaign') =>
-  ({ image: 'Image', video: 'Video', 'web-url': 'URL', campaign: 'Campaign' })[type]
+export const codeType = (code: QrCode): FileType | 'campaign' | 'game' =>
+  code.game
+    ? 'game'
+    : code.campaign
+      ? 'campaign'
+      : productFile(code.product)?.type ||
+        (/^https?:\/\//.test((typeof code.product === 'object' && code.product?.url) || '')
+          ? 'web-url'
+          : 'video')
+export const typeLabel = (type: FileType | 'campaign' | 'game') =>
+  ({ image: 'Image', video: 'Video', 'web-url': 'URL', campaign: 'Campaign', game: 'Game' })[type]
 export const destination = (code: QrCode) => {
+  if (code.game) return 'Message circle game'
   if (code.campaign) return typeof code.campaign === 'object' ? code.campaign.name : 'Campaign'
   const file = productFile(code.product)
   return (

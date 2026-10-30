@@ -191,12 +191,12 @@ export function CodeLibrary({ overview = false }: { overview?: boolean }) {
             <QrIcon size={15} />
             View QR code
           </button>
-          {
+          {code.game ? <Link to='/games'><Pencil size={15} />Manage game</Link> : (
             <button onClick={() => setEditor(code)}>
               <Pencil size={15} />
               Edit QR target
             </button>
-          }
+          )}
           <Link to={`/analytics?tab=scans&qrCode=${encodeURIComponent(code._id)}`}>
             <BarChart3 size={15} />
             View scans
@@ -329,6 +329,7 @@ export function CodeLibrary({ overview = false }: { overview?: boolean }) {
               ['web-url', 'URLs'],
               ['image', 'Images'],
               ['campaign', 'Campaigns'],
+              ['game', 'Games'],
               ['video', 'Video'],
             ].map(([value, label]) => (
               <button

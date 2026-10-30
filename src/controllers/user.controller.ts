@@ -54,7 +54,7 @@ export class UserController extends BaseController<IUserDocument> {
     if (body.email !== undefined) user.email = emailInput(body.email);
     if (body.alias !== undefined) {
       const alias = text(body.alias, 'alias', 1, 40);
-      if (!/^[a-zA-Z0-9_-]+$/.test(alias) || ['api', 'api-docs', 'l', 'crud', 'admin'].includes(alias)) throw new HttpError(400, 'Invalid alias');
+      if (!/^[a-zA-Z0-9_-]+$/.test(alias) || ['api', 'api-docs', 'l', 'crud', 'admin', 'games'].includes(alias)) throw new HttpError(400, 'Invalid alias');
       user.alias = alias;
     }
     if (body.useAlias !== undefined) {

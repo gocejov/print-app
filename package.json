@@ -15,7 +15,7 @@
     "build:server": "tsc",
     "build:client": "npm --prefix client run build",
     "test:ui": "npm --prefix client test",
-    "lint": "eslint src client/src client/tests client/*.ts tests public/scan/*.js eslint.config.mjs --max-warnings=0",
+    "lint": "eslint src client/src client/tests client/*.ts tests public/scan/*.js public/games/*.js eslint.config.mjs --max-warnings=0",
     "lint:fix": "npm run lint -- --fix"
   },
   "author": "Goce Jovancevski",

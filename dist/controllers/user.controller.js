@@ -73,7 +73,7 @@ class UserController extends base_controller_1.BaseController {
                 user.email = (0, http_utils_1.emailInput)(body.email);
             if (body.alias !== undefined) {
                 const alias = (0, http_utils_1.text)(body.alias, 'alias', 1, 40);
-                if (!/^[a-zA-Z0-9_-]+$/.test(alias) || ['api', 'api-docs', 'l', 'crud', 'admin'].includes(alias))
+                if (!/^[a-zA-Z0-9_-]+$/.test(alias) || ['api', 'api-docs', 'l', 'crud', 'admin', 'games'].includes(alias))
                     throw new http_utils_1.HttpError(400, 'Invalid alias');
                 user.alias = alias;
             }

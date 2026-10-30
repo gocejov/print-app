@@ -64,7 +64,7 @@ Authentication middleware loads the account from the session and checks its `aut
 | `products` | Optional name/description, one current file reference, compatibility URL/path copy, owner and creator; default alias `c` |
 | `categories` | Named ordered product references, description and creator |
 | `campaigns` | Named mixed product/category entries, random rule, optional per-product integer weight overrides (default 1), active/paused status and creator |
-| `qrcodes` | Exactly one product or campaign target, owner and creator references; optional product file snapshot stored as a string; generated image data URL and scan URL, optional name/destination override and active/paused status; default alias `c` |
+| `qrcodes` | Exactly one product, campaign, or game target, owner and creator references; optional product file snapshot stored as a string; generated image data URL and scan URL, optional name/destination override and active/paused status; default alias `c` |
 | `statistics` | QR code, selected product and optional campaign references, plus mixed visitor data including fingerprint information and bounded request context |
 
 References are stored by ID; selected read paths populate them. Files can be shared across products, and products across QR codes, categories and campaigns. File deletion is blocked while referenced by products; product deletion is blocked while assigned to QR codes, categories or direct campaign entries. Referenced categories/campaigns also have deletion guards. Unused uploaded file deletion removes its bytes. QR deletion preserves its product/file. Save hooks set timestamps. Generic updates use scoped `findOneAndUpdate` with `$set`, `runValidators: true` and an explicit updated timestamp. Account updates use `save()` so password hashing runs.
@@ -114,3 +114,7 @@ HTML QR navigation records one server scan, then uses a 10-minute Redis capabili
 Combined evidence and activity counters are available in the [visitor profile views and API](visitor-profiles.md), including expanded browser capability/network hints. These are observed signals for future game/targeting rules, not verified personal interests or an implemented restriction engine.
 
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
+
+See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
+
+The game module adds `games` (experience and reciprocal QR reference), `game-participants` (room-scoped cookie digest and display name), and `game-messages` (sender, recipient, text, retry key, and read timestamp). Participant-generated text is stored separately from owner-managed products. See [games](games.md) for delivery, authorization, and extension boundaries.

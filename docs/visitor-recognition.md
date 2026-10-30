@@ -44,3 +44,5 @@ Combined evidence and activity counters are available in the [visitor profile vi
 For a readable per-browser table, use **Analytics → Visitors**. Its **Scan history** links persist the visitor ID in the URL; see [visitor workspace](analytics.md#visitors-workspace).
 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
+
+Owners can attach a display name to a confirmed visitor ID through the profile. This is owner-managed metadata, not identity verification, and does not change cookie recognition or fingerprint matching. Names are never accepted from public scan metrics. See [visitor names](visitor-profiles.md#visitor-names).

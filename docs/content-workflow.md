@@ -106,3 +106,5 @@ Campaign product weights default to equal chances (1 each); increasing a product
 HTML browser scans now pass through a brief [browser metrics collection step](browser-metrics.md) before direct playback, URL redirect or product-page delivery. It retains the original scan and campaign selection; media and continuation requests add no scan events.
 
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
+
+See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.

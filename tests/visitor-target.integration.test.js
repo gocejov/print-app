@@ -49,6 +49,19 @@ test('visitor-specific products use signed browser identity and protect selected
       return { cookie: landing.cookie, id: stats[stats.length - 1].data.visitor.id }
     }
     const first = await recognize(), second = await recognize()
+    // Labels are owner metadata; they do not rewrite identities or scan counts.
+    const labelPath = `/api/statistics/visitor-profile/${first.id}`
+    check(await request('PATCH', labelPath, { name: 'Alex — VIP guest' }, a.cookie), 200)
+    assert.equal(check(await request('GET', labelPath, null, a.cookie), 200).data.name, 'Alex — VIP guest')
+    const labeled = check(await request('GET', '/api/statistics', null, a.cookie), 200).data
+    assert.equal(labeled.find(scan => scan.data.visitor.id === first.id).data.visitor.name, 'Alex — VIP guest')
+    check(await request('PATCH', labelPath, { name: 'Foreign edit' }, b.cookie), 404)
+    check(await request('GET', labelPath, null, b.cookie), 404)
+    check(await request('PATCH', labelPath, { name: 'x'.repeat(121) }, a.cookie), 400)
+    check(await request('PATCH', labelPath, { name: { $set: 'invalid' } }, a.cookie), 400)
+    check(await request('PATCH', labelPath, { name: 'Valid', owner: b.data._id }, a.cookie), 400)
+    check(await request('PATCH', labelPath, { name: '' }, a.cookie), 200)
+    assert.equal(check(await request('GET', labelPath, null, a.cookie), 200).data.name, '')
     const assignment = { visitorId: first.id, productId: personal._id }
     check(await request('PATCH', `/api/qrcodes/${qr._id}`, { visitorTarget: { visitorId: 'f'.repeat(64), productId: personal._id } }, a.cookie), 404)
     check(await request('PATCH', `/api/qrcodes/${qr._id}`, { visitorTarget: { visitorId: 'bad', productId: personal._id } }, a.cookie), 400)

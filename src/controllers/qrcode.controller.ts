@@ -1,3 +1,4 @@
+import { loadGame } from '../features/games/game.service'
 import { canEmbed, embeddedPage } from '../services/embed.service'
 import { identifyVisitor } from '../services/visitor.service'
 import { BrowserScanService, browserScanPage } from '../services/browser-scan.service'
@@ -139,6 +140,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     res.set('Cache-Control', 'no-store').vary('Cookie')
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
+    if (code.game) throw new HttpError(404, 'Game media is unavailable')
     const target = await playback.mediaTarget(code, req.query.selection, req)
     let file = target.file
     if (req.query.media !== undefined) {
@@ -178,6 +180,20 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     res.set('Cache-Control', 'no-store').vary('Cookie')
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
+    if (code.game) {
+      await loadGame(String(code.game))
+      const visitor = await identifyVisitor(req, res, String(code.createdBy))
+      const saved = await this.statisticService.add({ qrCode: code._id, data: { visitor, fingerprintData: res.locals.fingerprintData, fingerprint: res.locals.fingerprint, request: { method: req.method, path: req.path.slice(0, 2048), query: [...new URLSearchParams((req.originalUrl.split('?')[1] || '').slice(0, 8192))], referrer: req.get('referer')?.slice(0, 2048) } } })
+      if (req.get('accept')?.includes('text/html')) {
+        try {
+          const token = await new BrowserScanService().create({ ownerId: String(code.createdBy), qrId: String(code._id), gameId: String(code.game), productId: '', fileId: '', statisticId: String(saved._id) })
+          res.set('Referrer-Policy', 'no-referrer').type('html').send(browserScanPage(token))
+          return
+        } catch (error) { console.error('Game scan collection unavailable:', error) }
+      }
+      res.redirect(`/games/${code.game}`)
+      return
+    }
     const target = await playback.draw(code, req)
     const file = target.file
     const { fingerprint, fingerprintData } = res.locals
@@ -238,6 +254,13 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const context = await new BrowserScanService().load(req.params.token)
     const playback = new QrPlaybackService()
     const code = await playback.load(context.qrId)
+    if (context.gameId) {
+      if (String(code.game) !== context.gameId) throw new HttpError(410, 'Game changed; scan again')
+      await loadGame(context.gameId)
+      await new BrowserScanService().confirm(context, req)
+      res.redirect(`/games/${context.gameId}`)
+      return
+    }
     const target = await playback.mediaTarget(code, context.selection, req)
     if (
       String(target.product._id) !== context.productId ||

@@ -20,6 +20,7 @@ export interface IQrCode {
   url?: string
   owner: IUserDocument['_id']
   product?: IProductDocument['_id']
+  game?: mongoose.Types.ObjectId
   campaign?: mongoose.Types.ObjectId
   createdBy: IUserDocument['_id']
   created_at?: Date
@@ -50,6 +51,7 @@ const QrCodeSchema: Schema<IQrCodeDocument> = new Schema({
   url: { type: String, required: false },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'products' },
+  game: { type: mongoose.Schema.Types.ObjectId, ref: 'games' },
   campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'campaigns' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true },
   created_at: { type: Date, required: true, default: Date.now },
@@ -57,8 +59,8 @@ const QrCodeSchema: Schema<IQrCodeDocument> = new Schema({
 })
 
 QrCodeSchema.pre('validate', function () {
-  if (!!this.product === !!this.campaign)
-    this.invalidate('product', 'Choose exactly one product or campaign')
+  if ([this.product, this.campaign, this.game].filter(Boolean).length !== 1)
+    this.invalidate('product', 'Choose exactly one product, campaign or game')
   if (this.product && !this.file) this.invalidate('file', 'A product QR requires a file')
 })
 

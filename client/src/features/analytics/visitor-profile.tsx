@@ -26,6 +26,29 @@ export function VisitorProfile({
   onClose: () => void
 }) {
   const client = useQueryClient()
+  const [nameDraft, setNameDraft] = useState<string | null>(null)
+  const [nameBusy, setNameBusy] = useState(false)
+  const [nameError, setNameError] = useState('')
+  const [nameSaved, setNameSaved] = useState(false)
+  async function saveName(event: FormEvent) {
+    event.preventDefault()
+    setNameBusy(true)
+    setNameError('')
+    setNameSaved(false)
+    try {
+      await api.renameVisitor(id, nameDraft ?? profile.data?.name ?? '')
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ['visitor-profile', 'visitor', id] }),
+        client.invalidateQueries({ queryKey: ['scans'] }),
+      ])
+      setNameDraft(null)
+      setNameSaved(true)
+    } catch (error) {
+      setNameError((error as Error).message)
+    } finally {
+      setNameBusy(false)
+    }
+  }
   const [assignCodeId, setAssignCodeId] = useState('')
   const [assignProductId, setAssignProductId] = useState('')
   const [assignmentBusy, setAssignmentBusy] = useState(false)
@@ -94,7 +117,7 @@ export function VisitorProfile({
           <div>
             <h3>
               {basis === 'visitor'
-                ? `Visitor ${id.slice(0, 6).toUpperCase()}`
+                ? data?.name || `Visitor ${id.slice(0, 6).toUpperCase()}`
                 : 'Similar browser signals'}
             </h3>
             <p>
@@ -126,6 +149,32 @@ export function VisitorProfile({
         )}
         {data && (
           <>
+            {basis === 'visitor' && (
+              <form className='visitor-name-editor' onSubmit={saveName}>
+                <label className='field'>
+                  <span>Visitor name</span>
+                  <input
+                    aria-label='Visitor name'
+                    maxLength={120}
+                    value={nameDraft ?? data.name ?? ''}
+                    placeholder='e.g. Alex — event guest'
+                    onChange={(event) => {
+                      setNameDraft(event.target.value)
+                      setNameSaved(false)
+                    }}
+                  />
+                </label>
+                <button className='btn btn-secondary' disabled={nameBusy}>
+                  {nameBusy ? 'Saving…' : 'Save visitor name'}
+                </button>
+                <p className='form-hint'>
+                  A private label for your account. Leave blank to remove it. This does not verify
+                  the visitor’s identity.
+                </p>
+                {nameError && <p role='alert'>{nameError}</p>}
+                {nameSaved && <p role='status'>Visitor name saved.</p>}
+              </form>
+            )}
             <div className='visitor-profile-metrics'>
               {[
                 {
@@ -194,7 +243,7 @@ export function VisitorProfile({
                       }}
                     >
                       <option value=''>Choose one of your QR codes</option>
-                      {codes.data?.map((code) => (
+                      {codes.data?.filter(code => !code.game).map((code) => (
                         <option key={code._id} value={code._id}>
                           {codeName(code)}
                         </option>

@@ -51,3 +51,11 @@ Tests cover summary windows, activity/source counters, explicitly estimated fing
 The Visitors tab provides one row per confirmed browser, readable summary metrics, search/audience/sort controls and responsive mobile cards. Profile dialogs present activity with current resource names and readable browser facts; raw evidence is collapsed under **Technical data & identity evidence**. Activity references fall back to abbreviated IDs when the resource is unavailable. Profiles still use the same owner-scoped endpoint and do not alter recognition or counter semantics. See [Visitors workspace](analytics.md#visitors-workspace).
 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
+
+## Visitor names
+
+Confirmed visitor profiles have an optional **Visitor name** field. Enter a name and save it to replace the anonymous label in the visitor table, scan table, profile heading, and visitor assignment selector. Names are searchable in the visitor table. Clear the field and save to restore the generated visitor label.
+
+Names are private metadata scoped to the signed-in owner, limited to 120 characters. They do not verify a person's identity, merge browsers, change recognition, or alter scan history and QR assignments. Estimated fingerprint groups cannot be named.
+
+`PATCH /api/statistics/visitor-profile/:visitorId` accepts `{"name":"Alex"}` or `{"name":""}` to clear. A confirmed visitor must exist within your owned QR scan history. The profile and statistics list return the current name; metadata is stored separately in `visitor-labels`, uniquely keyed by owner and visitor ID.

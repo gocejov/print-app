@@ -128,3 +128,7 @@ HTML scans of direct URL products now attempt [automatic iframe delivery](embedd
 The **Analytics → Visitors** workspace groups scans by recognized browser, with account-wide audience metrics, search, returning/single-scan filters, sorting, pagination and mobile cards. Visitor profiles emphasize readable activity and browser information; advanced evidence remains available. Scan-history links preserve the visitor filter in the URL. See [visitor analytics](analytics.md#visitors-workspace).
 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
+
+Confirmed visitor profiles also support a private display name. Save it from the profile to show it in visitor and scan lists and the QR assignment selector. Clear the field to restore the anonymous label. See [visitor names](visitor-profiles.md#visitor-names).
+
+See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.

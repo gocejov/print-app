@@ -52,14 +52,15 @@ const QrCodeSchema = new mongoose_1.Schema({
     url: { type: String, required: false },
     owner: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
     product: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'products' },
+    game: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'games' },
     campaign: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'campaigns' },
     createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: 'users', required: true },
     created_at: { type: Date, required: true, default: Date.now },
     updated_at: { type: Date, required: true, default: Date.now },
 });
 QrCodeSchema.pre('validate', function () {
-    if (!!this.product === !!this.campaign)
-        this.invalidate('product', 'Choose exactly one product or campaign');
+    if ([this.product, this.campaign, this.game].filter(Boolean).length !== 1)
+        this.invalidate('product', 'Choose exactly one product, campaign or game');
     if (this.product && !this.file)
         this.invalidate('file', 'A product QR requires a file');
 });

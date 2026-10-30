@@ -38,3 +38,5 @@ The repository still uses `print-prank` in package metadata and Swagger. The imp
 When behavior, routes, configuration or architecture changes, update the relevant documents in the same change. Keep historical observations distinct from current behavior.
 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
+
+See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.

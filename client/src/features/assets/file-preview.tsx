@@ -1,8 +1,9 @@
-import { Globe2, Image, Video, Shuffle } from 'lucide-react'
+import { Globe2, Image, Video, Shuffle, Gamepad2 } from 'lucide-react'
 import type { AssetFile, FileType } from '../../lib/types'
 import { fileName } from '../../lib/format'
 
-export function FileIcon({ type, size = 20 }: { type: FileType | 'campaign'; size?: number }) {
+export function FileIcon({ type, size = 20 }: { type: FileType | 'campaign' | 'game'; size?: number }) {
+  if (type === 'game') return <Gamepad2 size={size} />
   if (type === 'campaign') return <Shuffle size={size} />
   return type === 'image' ? (
     <Image size={size} />

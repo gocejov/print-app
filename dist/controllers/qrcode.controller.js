@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QrCodeController = void 0;
+const game_service_1 = require("../features/games/game.service");
 const embed_service_1 = require("../services/embed.service");
 const visitor_service_1 = require("../services/visitor.service");
 const browser_scan_service_1 = require("../services/browser-scan.service");
@@ -128,6 +129,8 @@ class QrCodeController extends base_controller_1.BaseController {
             res.set('Cache-Control', 'no-store').vary('Cookie');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
+            if (code.game)
+                throw new http_utils_1.HttpError(404, 'Game media is unavailable');
             const target = yield playback.mediaTarget(code, req.query.selection, req);
             let file = target.file;
             if (req.query.media !== undefined) {
@@ -163,14 +166,31 @@ class QrCodeController extends base_controller_1.BaseController {
     }
     playVideo(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
+            var _a, _b, _c, _d, _e;
             res.set('Cache-Control', 'no-store').vary('Cookie');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
+            if (code.game) {
+                yield (0, game_service_1.loadGame)(String(code.game));
+                const visitor = yield (0, visitor_service_1.identifyVisitor)(req, res, String(code.createdBy));
+                const saved = yield this.statisticService.add({ qrCode: code._id, data: { visitor, fingerprintData: res.locals.fingerprintData, fingerprint: res.locals.fingerprint, request: { method: req.method, path: req.path.slice(0, 2048), query: [...new URLSearchParams((req.originalUrl.split('?')[1] || '').slice(0, 8192))], referrer: (_a = req.get('referer')) === null || _a === void 0 ? void 0 : _a.slice(0, 2048) } } });
+                if ((_b = req.get('accept')) === null || _b === void 0 ? void 0 : _b.includes('text/html')) {
+                    try {
+                        const token = yield new browser_scan_service_1.BrowserScanService().create({ ownerId: String(code.createdBy), qrId: String(code._id), gameId: String(code.game), productId: '', fileId: '', statisticId: String(saved._id) });
+                        res.set('Referrer-Policy', 'no-referrer').type('html').send((0, browser_scan_service_1.browserScanPage)(token));
+                        return;
+                    }
+                    catch (error) {
+                        console.error('Game scan collection unavailable:', error);
+                    }
+                }
+                res.redirect(`/games/${code.game}`);
+                return;
+            }
             const target = yield playback.draw(code, req);
             const file = target.file;
             const { fingerprint, fingerprintData } = res.locals;
-            const visitor = ((_a = req.get('accept')) === null || _a === void 0 ? void 0 : _a.includes('text/html'))
+            const visitor = ((_c = req.get('accept')) === null || _c === void 0 ? void 0 : _c.includes('text/html'))
                 ? yield (0, visitor_service_1.identifyVisitor)(req, res, String(code.createdBy))
                 : undefined;
             const statistic = Object.assign(Object.assign({ qrCode: code._id, product: target.product._id }, (target.campaignId ? { campaign: new mongoose_1.default.Types.ObjectId(target.campaignId) } : {})), { data: Object.assign(Object.assign({ targeting: { kind: target.visitorId ? 'visitor' : 'default' } }, (visitor ? { visitor } : {})), { fingerprintData,
@@ -182,13 +202,13 @@ class QrCodeController extends base_controller_1.BaseController {
                                 ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1)
                                 : '').slice(0, 8192)),
                         ],
-                        referrer: (_b = req.get('referer')) === null || _b === void 0 ? void 0 : _b.slice(0, 2048),
+                        referrer: (_d = req.get('referer')) === null || _d === void 0 ? void 0 : _d.slice(0, 2048),
                     } }) });
             const saved = yield this.statisticService.add(statistic).catch((error) => {
                 console.error('Error saving statistic:', error);
                 return undefined;
             });
-            if (saved && ((_c = req.get('accept')) === null || _c === void 0 ? void 0 : _c.includes('text/html'))) {
+            if (saved && ((_e = req.get('accept')) === null || _e === void 0 ? void 0 : _e.includes('text/html'))) {
                 try {
                     const token = yield new browser_scan_service_1.BrowserScanService().create(Object.assign({ ownerId: String(code.createdBy), qrId: String(code._id), productId: String(target.product._id), fileId: String(file._id), statisticId: String(saved._id) }, (code.campaign || target.visitorId
                         ? { selection: yield playback.ticket(code, target) }
@@ -209,6 +229,14 @@ class QrCodeController extends base_controller_1.BaseController {
             const context = yield new browser_scan_service_1.BrowserScanService().load(req.params.token);
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(context.qrId);
+            if (context.gameId) {
+                if (String(code.game) !== context.gameId)
+                    throw new http_utils_1.HttpError(410, 'Game changed; scan again');
+                yield (0, game_service_1.loadGame)(context.gameId);
+                yield new browser_scan_service_1.BrowserScanService().confirm(context, req);
+                res.redirect(`/games/${context.gameId}`);
+                return;
+            }
             const target = yield playback.mediaTarget(code, context.selection, req);
             if (String(target.product._id) !== context.productId ||
                 String(target.file._id) !== context.fileId)

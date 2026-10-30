@@ -1,3 +1,4 @@
+import type { Game } from './types'
 import type { VisitorTarget } from './types'
 import type { VisitorProfileData } from './types'
 import type { ProductPageOptions } from './types'
@@ -36,6 +37,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  games: (signal?: AbortSignal) => request<Game[]>('/games', { signal }),
+  createGame: (name: string, welcome: string) => request<Game>('/games', { method: 'POST', body: JSON.stringify({ name, welcome }) }),
+  renameVisitor: (id: string, name: string) =>
+    request<{ id: string; name: string }>(`/statistics/visitor-profile/${id}`, {
+      method: 'PATCH', body: JSON.stringify({ name }),
+    }),
   visitorProfile: (id: string, basis: 'visitor' | 'fingerprint') =>
     request<VisitorProfileData>(`/statistics/visitor-profile/${id}?basis=${basis}`),
   me: async (signal?: AbortSignal) => {

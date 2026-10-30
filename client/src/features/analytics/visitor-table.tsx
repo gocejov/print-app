@@ -273,7 +273,7 @@ export function VisitorTable({
                         </span>
                         <div>
                           <button className='visitor-name' onClick={() => setProfile(visitor.id)}>
-                            Visitor {visitor.id.slice(0, 6).toUpperCase()}
+                            {visitor.latest.data?.visitor?.name || `Visitor ${visitor.id.slice(0, 6).toUpperCase()}`}
                           </button>
                           <span
                             className={`visitor-badge ${visitor.scans.length > 1 ? 'is-returning' : ''}`}

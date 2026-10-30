@@ -39,13 +39,14 @@ export function CodeEditor({
   const [visitorId, setVisitorId] = useState(code?.visitorTarget?.visitorId || '')
   const [visitorProductId, setVisitorProductId] = useState(code?.visitorTarget?.productId || '')
   const knownVisitors = useMemo(() => {
-    const visitors = new Map<string, { id: string; count: number; lastSeen: string }>()
+    const visitors = new Map<string, { id: string; name?: string; count: number; lastSeen: string }>()
     for (const scan of workspace.scans) {
       const visitor = scan.data?.visitor
       if (!visitor?.confirmed || !visitor.id) continue
       const previous = visitors.get(visitor.id)
       visitors.set(visitor.id, {
         id: visitor.id,
+        name: visitor.name,
         count: (previous?.count || 0) + 1,
         lastSeen:
           previous && previous.lastSeen > scan.created_at ? previous.lastSeen : scan.created_at,
@@ -324,7 +325,7 @@ export function CodeEditor({
                         )}
                       {knownVisitors.map((visitor) => (
                         <option key={visitor.id} value={visitor.id}>
-                          Visitor {visitor.id.slice(0, 6).toUpperCase()} · {visitor.count} scans
+                          {visitor.name || `Visitor ${visitor.id.slice(0, 6).toUpperCase()}`} · {visitor.count} scans
                         </option>
                       ))}
                     </select>

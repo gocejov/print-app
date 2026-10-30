@@ -61,6 +61,7 @@ export interface VisitorTarget {
   productId: string
 }
 export interface QrCode {
+  game?: string
   visitorTarget?: VisitorTarget
   _id: string
   name?: string
@@ -104,6 +105,7 @@ export interface Scan {
   created_at: string
   data?: {
     visitor?: {
+      name?: string
       id?: string
       method: string
       confirmed?: boolean
@@ -144,6 +146,7 @@ export interface Scan {
 }
 
 export interface VisitorProfileData {
+  name?: string
   id: string
   basis: 'visitor' | 'fingerprint'
   confidence: string
@@ -171,4 +174,13 @@ export interface VisitorProfileData {
   latestSignals: Record<string, unknown>
   limitations: string
   generatedAt: string
+}
+
+export interface Game {
+  _id: string
+  kind: 'message-circle'
+  name: string
+  welcome: string
+  participants?: number
+  code?: QrCode
 }

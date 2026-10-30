@@ -72,3 +72,5 @@ Counts are derived from the same fetched account scan collection. This adds no n
 In Scan details, click the short visitor label to open its profile. The compact Visitor cell provides **Scan history** and **Similar browsers** links; full hashes stay in the scan details and Advanced profile evidence. Similar-browser groups remain estimates.
 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
+
+See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.

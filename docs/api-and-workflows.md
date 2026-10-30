@@ -115,3 +115,7 @@ Combined evidence and activity counters are available in the [visitor profile vi
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
 
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
+
+Visitor labels: `PATCH /api/statistics/visitor-profile/:visitorId` with `{"name":"Alex"}` sets an owner-private display name; an empty string clears it. See [visitor profiles](visitor-profiles.md#visitor-names).
+
+See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
