@@ -1,3 +1,4 @@
+import { rematchingEvidence } from './visitor-rematching.service'
 import { StatisticModel } from '../models/statistic.model'
 import { HttpError } from '../utils/http.utils'
 
@@ -105,5 +106,32 @@ export async function getVisitorProfile(
     .select('qrCode product campaign created_at data')
     .lean()
   if (!scans.length) throw new HttpError(404, 'Visitor profile not found')
-  return summarizeVisitorProfile(scans, basis, id)
+  const profile = summarizeVisitorProfile(scans, basis, id)
+  if (basis !== 'visitor') return profile
+  const initial = rematchingEvidence(scans, [])
+  if (!initial.fingerprint) return { ...profile, rematching: initial }
+  const firstSeen = new Date(profile.firstSeen!)
+  const related = await StatisticModel.find({
+    $and: [
+      scope,
+      {
+        'data.browserFingerprint.hash': initial.fingerprint,
+        'data.browserFingerprint.version': 1,
+        'data.visitor.confirmed': true,
+        'data.visitor.id': { $ne: id },
+        created_at: {
+          $gte: new Date(+firstSeen - 7 * 86400000),
+          $lte: new Date(+firstSeen + 7 * 86400000),
+        },
+      },
+    ],
+  })
+    .select('created_at data')
+    .sort({ created_at: -1, _id: -1 })
+    .limit(2001)
+    .lean()
+  return {
+    ...profile,
+    rematching: rematchingEvidence(scans, related.slice(0, 2000), related.length > 2000),
+  }
 }

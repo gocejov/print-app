@@ -34,6 +34,8 @@ const statisticSchema: Schema<IStatisticDocument> = new Schema({
   updated_at: { type: Date, required: true, default: Date.now },
 })
 
+statisticSchema.index({ qrCode: 1, 'data.browserFingerprint.hash': 1, created_at: 1 })
+
 statisticSchema.index({ qrCode: 1, 'data.visitor.id': 1, 'data.visitor.confirmed': 1 })
 
 statisticSchema.pre('save', async function (next) {

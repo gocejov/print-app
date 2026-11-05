@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowRight, UploadCloud } from 'lucide-react'
-import { Modal } from '../../components/modal'
+import { AdminDialog } from '../../components/admin-dialog'
+import { Alert, Box, Button, DialogActions, DialogContent, TextField } from '@mui/material'
+import { TextPosterEditor } from './text-poster-editor'
+import type { TextPage } from '../../lib/types'
 import { useAuth } from '../auth/use-auth'
 import type { AssetFile, FileType } from '../../lib/types'
 import { api } from '../../lib/api'
@@ -17,6 +20,9 @@ export function FileEditor({
   onClose: () => void
   onSaved: () => Promise<unknown>
 }) {
+  const [textPage, setTextPage] = useState<TextPage>(
+    file?.textPage || { text: '', font: 'handwritten', background: 'black', logo: '' },
+  )
   const [type, setType] = useState<FileType>(file?.type || 'image')
   const [name, setName] = useState(file ? fileName(file) : '')
   const [url, setUrl] = useState(file?.url || '')
@@ -31,7 +37,13 @@ export function FileEditor({
     setBusy(true)
     setError('')
     try {
-      if (file) await api.editFile(file._id, { name, ...(type === 'web-url' ? { url } : {}) })
+      if (file)
+        await api.editFile(file._id, {
+          name,
+          ...(type === 'text' ? { textPage } : {}),
+          ...(type === 'web-url' ? { url } : {}),
+        })
+      else if (type === 'text') await api.createTextFile(name, textPage)
       else if (type === 'web-url') await api.createUrlFile(name, url)
       else {
         if (!upload) throw new Error('Choose a file to upload.')
@@ -51,109 +63,117 @@ export function FileEditor({
     }
   }
   return (
-    <Modal title={file ? 'Edit file' : 'Add a file'} onClose={onClose} busy={busy}>
-      <form onSubmit={submit}>
-        <div className='asset-editor-body'>
-          <p className='muted'>
-            Your library holds the images, videos and URLs you’ll attach to products.
-          </p>
-          {!file && (
-            <div className='asset-type-picker' aria-label='File type'>
-              {(['image', 'video', 'web-url'] as const).map((value) => (
-                <button
-                  key={value}
-                  type='button'
-                  aria-pressed={type === value}
-                  className={type === value ? 'selected' : ''}
-                  onClick={() => {
-                    setType(value)
-                    setUpload(undefined)
-                    setError('')
-                  }}
-                >
-                  <FileIcon type={value} size={18} />
-                  {typeLabel(value)}
-                </button>
-              ))}
-            </div>
-          )}
-          <label>
-            File name
-            <input
-              aria-label='File name'
+    <AdminDialog title={file ? 'Edit file' : 'Add a file'} onClose={onClose} busy={busy}>
+      <Box
+        component='form'
+        onSubmit={submit}
+        sx={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}
+      >
+        <DialogContent dividers>
+          <Box sx={{ display: 'grid', gap: 2.5 }}>
+            {!file && (
+              <Box
+                role='group'
+                aria-label='File type'
+                sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}
+              >
+                {(['image', 'video', 'web-url', 'text'] as const).map((value) => (
+                  <Button
+                    key={value}
+                    type='button'
+                    variant={type === value ? 'contained' : 'outlined'}
+                    aria-pressed={type === value}
+                    disabled={busy}
+                    startIcon={<FileIcon type={value} size={18} />}
+                    onClick={() => {
+                      setType(value)
+                      setUpload(undefined)
+                      setError('')
+                    }}
+                  >
+                    {typeLabel(value)}
+                  </Button>
+                ))}
+              </Box>
+            )}
+            <TextField
+              label='File name'
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              maxLength={120}
-              placeholder='e.g. Product photo, Demo video…'
+              disabled={busy}
+              slotProps={{ htmlInput: { 'aria-label': 'File name', maxLength: 120 } }}
             />
-          </label>
-          {type === 'web-url' ? (
-            <label>
-              Website URL
-              <input
-                aria-label='Website URL'
+            {type === 'text' ? (
+              <TextPosterEditor value={textPage} onChange={setTextPage} disabled={busy} />
+            ) : type === 'web-url' ? (
+              <TextField
+                label='Website URL'
                 type='url'
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
-                maxLength={2048}
-                placeholder='https://example.com'
-                pattern='https?://.*'
-              />
-              <small>Editing this URL updates products that use this file.</small>
-            </label>
-          ) : !file ? (
-            <label className='upload-field'>
-              <UploadCloud size={28} />
-              <strong>
-                {upload
-                  ? upload.name
-                  : `Choose an ${type === 'image' ? 'image' : 'uploaded video'}`}
-              </strong>
-              <span>
-                {type === 'image'
-                  ? 'JPEG, PNG, WebP or GIF · up to 10 MB'
-                  : 'MP4, MOV, AVI or MKV · up to 50 MB'}
-              </span>
-              <input
-                key={type}
-                aria-label={type === 'image' ? 'Image file' : 'Video file'}
-                type='file'
-                required
-                accept={
-                  type === 'image'
-                    ? 'image/jpeg,image/png,image/webp,image/gif'
-                    : 'video/mp4,video/quicktime,video/x-msvideo,video/avi,video/mkv,video/x-matroska,video/mov'
-                }
-                onChange={(e) => {
-                  const selected = e.target.files?.[0]
-                  setUpload(selected)
-                  if (!name && selected) setName(selected.name.slice(0, 120))
+                disabled={busy}
+                slotProps={{
+                  htmlInput: {
+                    'aria-label': 'Website URL',
+                    maxLength: 2048,
+                    pattern: 'https?://.*',
+                  },
                 }}
+                helperText='Editing this URL updates products that use this file.'
               />
-            </label>
-          ) : (
-            <p className='muted small'>
-              To replace the media, add another file and select it when editing your product.
-            </p>
-          )}
-          {error && (
-            <div className='form-error' role='alert'>
-              {error}
-            </div>
-          )}
-        </div>
-        <div className='modal-actions'>
-          <button type='button' className='btn btn-secondary' disabled={busy} onClick={onClose}>
+            ) : !file ? (
+              <Box>
+                <Button
+                  component='label'
+                  variant='outlined'
+                  startIcon={<UploadCloud size={20} />}
+                  disabled={busy}
+                >
+                  {upload ? upload.name : `Choose ${type}`}
+                  <input
+                    aria-label={type === 'image' ? 'Image file' : 'Video file'}
+                    type='file'
+                    hidden
+                    accept={
+                      type === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' : 'video/*'
+                    }
+                    onChange={(e) => {
+                      const selected = e.target.files?.[0]
+                      setUpload(selected)
+                      if (!name && selected) setName(selected.name.slice(0, 120))
+                    }}
+                  />
+                </Button>
+                <p className='muted small'>
+                  {type === 'image'
+                    ? 'JPEG, PNG, WebP or GIF · up to 10 MB'
+                    : 'MP4, MOV, AVI or MKV · up to 50 MB'}
+                </p>
+              </Box>
+            ) : (
+              <p className='muted small'>
+                To replace the media, add another file and select it in your product.
+              </p>
+            )}
+            {error && <Alert severity='error'>{error}</Alert>}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button disabled={busy} onClick={onClose}>
             Cancel
-          </button>
-          <button className='btn btn-primary' disabled={busy}>
+          </Button>
+          <Button
+            type='submit'
+            variant='contained'
+            disabled={busy}
+            endIcon={<ArrowRight size={16} />}
+          >
             {busy ? 'Saving file…' : file ? 'Save file' : 'Add file'}
-            <ArrowRight size={16} />
-          </button>
-        </div>
-      </form>
-    </Modal>
+          </Button>
+        </DialogActions>
+      </Box>
+    </AdminDialog>
   )
 }

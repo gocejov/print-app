@@ -79,3 +79,5 @@ before changing that server. Deployment unit/override templates are in `deploy/`
 GitHub Actions runs lint, build and integration/browser checks on every branch push
 and pull request. Successful `main` pushes automatically deploy production
 with backups, health checks and application rollback. See [CI/CD setup and operations](docs/ci-cd.md).
+
+Reusable plugin definitions power independent named spaces, each with one QR. See [Plugins and spaces](docs/plugins-and-spaces.md) for setup, APIs, and compatibility with existing Message Circle games.

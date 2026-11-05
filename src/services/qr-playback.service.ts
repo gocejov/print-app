@@ -53,7 +53,7 @@ export class QrPlaybackService {
       createdBy: code.createdBy,
     }).populate({
       path: 'file',
-      match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url'] } },
+      match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url', 'text'] } },
     })
     if (!product?.file) throw new HttpError(410, 'Assigned product is unavailable')
     return { ...this.target(product), visitorId: visitor.visitorId }
@@ -79,7 +79,7 @@ export class QrPlaybackService {
       createdBy: code.createdBy,
     }).populate({
       path: 'file',
-      match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url'] } },
+      match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url', 'text'] } },
     })
     if (!product?.file) throw new HttpError(406, 'Product or attached file not found')
     return this.target(product)

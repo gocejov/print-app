@@ -13,12 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QrCodeController = void 0;
-const game_service_1 = require("../features/games/game.service");
+const space_service_1 = require("../features/spaces/space.service");
 const embed_service_1 = require("../services/embed.service");
 const visitor_service_1 = require("../services/visitor.service");
 const browser_scan_service_1 = require("../services/browser-scan.service");
 const file_model_1 = require("../models/file.model");
 const http_utils_1 = require("../utils/http.utils");
+const text_page_service_1 = require("../services/text-page.service");
 const product_page_service_1 = require("../services/product-page.service");
 const qr_playback_service_1 = require("../services/qr-playback.service");
 const base_controller_1 = require("./base.controller");
@@ -129,8 +130,8 @@ class QrCodeController extends base_controller_1.BaseController {
             res.set('Cache-Control', 'no-store').vary('Cookie');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
-            if (code.game)
-                throw new http_utils_1.HttpError(404, 'Game media is unavailable');
+            if (code.space || code.game)
+                throw new http_utils_1.HttpError(404, 'Space media is unavailable');
             const target = yield playback.mediaTarget(code, req.query.selection, req);
             let file = target.file;
             if (req.query.media !== undefined) {
@@ -149,6 +150,10 @@ class QrCodeController extends base_controller_1.BaseController {
             }
             if (req.params.type !== alias_constant_1.TypeAlias[String(file.type)]) {
                 res.status(406).json({ error: 'Incorrect URL' });
+                return;
+            }
+            if (file.type === 'text') {
+                res.type('html').send((0, text_page_service_1.textPage)(file));
                 return;
             }
             if (file.type === 'web-url') {
@@ -170,13 +175,13 @@ class QrCodeController extends base_controller_1.BaseController {
             res.set('Cache-Control', 'no-store').vary('Cookie');
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(req.params.qid);
-            if (code.game) {
-                yield (0, game_service_1.loadGame)(String(code.game));
+            if (code.space || code.game) {
+                const { space, plugin } = yield (0, space_service_1.loadSpace)(String(code.space || code.game));
                 const visitor = yield (0, visitor_service_1.identifyVisitor)(req, res, String(code.createdBy));
                 const saved = yield this.statisticService.add({ qrCode: code._id, data: { visitor, fingerprintData: res.locals.fingerprintData, fingerprint: res.locals.fingerprint, request: { method: req.method, path: req.path.slice(0, 2048), query: [...new URLSearchParams((req.originalUrl.split('?')[1] || '').slice(0, 8192))], referrer: (_a = req.get('referer')) === null || _a === void 0 ? void 0 : _a.slice(0, 2048) } } });
                 if ((_b = req.get('accept')) === null || _b === void 0 ? void 0 : _b.includes('text/html')) {
                     try {
-                        const token = yield new browser_scan_service_1.BrowserScanService().create({ ownerId: String(code.createdBy), qrId: String(code._id), gameId: String(code.game), productId: '', fileId: '', statisticId: String(saved._id) });
+                        const token = yield new browser_scan_service_1.BrowserScanService().create({ ownerId: String(code.createdBy), qrId: String(code._id), spaceId: String(space._id), productId: '', fileId: '', statisticId: String(saved._id) });
                         res.set('Referrer-Policy', 'no-referrer').type('html').send((0, browser_scan_service_1.browserScanPage)(token));
                         return;
                     }
@@ -184,7 +189,7 @@ class QrCodeController extends base_controller_1.BaseController {
                         console.error('Game scan collection unavailable:', error);
                     }
                 }
-                res.redirect(`/games/${code.game}`);
+                res.redirect(plugin.entryPath(String(space._id)));
                 return;
             }
             const target = yield playback.draw(code, req);
@@ -229,12 +234,13 @@ class QrCodeController extends base_controller_1.BaseController {
             const context = yield new browser_scan_service_1.BrowserScanService().load(req.params.token);
             const playback = new qr_playback_service_1.QrPlaybackService();
             const code = yield playback.load(context.qrId);
-            if (context.gameId) {
-                if (String(code.game) !== context.gameId)
-                    throw new http_utils_1.HttpError(410, 'Game changed; scan again');
-                yield (0, game_service_1.loadGame)(context.gameId);
+            const entrySpaceId = context.spaceId || context.gameId;
+            if (entrySpaceId) {
+                if (String(code.space || code.game) !== entrySpaceId)
+                    throw new http_utils_1.HttpError(410, 'Space changed; scan again');
+                const { space, plugin } = yield (0, space_service_1.loadSpace)(entrySpaceId);
                 yield new browser_scan_service_1.BrowserScanService().confirm(context, req);
-                res.redirect(`/games/${context.gameId}`);
+                res.redirect(plugin.entryPath(String(space._id)));
                 return;
             }
             const target = yield playback.mediaTarget(code, context.selection, req);
@@ -258,6 +264,10 @@ class QrCodeController extends base_controller_1.BaseController {
                     type: { $in: ['image', 'video'] },
                 });
                 res.type('html').send((0, product_page_service_1.productPage)(target.product, file, media, String(code._id), token));
+                return;
+            }
+            if (file.type === 'text') {
+                res.type('html').send((0, text_page_service_1.textPage)(file));
                 return;
             }
             if (file.type === 'web-url') {

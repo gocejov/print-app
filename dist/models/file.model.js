@@ -39,10 +39,11 @@ const isWebUrlType = function () {
     return this.type === 'web-url';
 };
 const requiredForUploadType = function () {
-    return !isWebUrlType.call(this);
+    return !isWebUrlType.call(this) && this.type !== 'text';
 };
 // Create the File schema
 const FileSchema = new mongoose_1.Schema({
+    textPage: { text: String, font: String, background: String, logo: String },
     name: { type: String, maxlength: 120, trim: true },
     type: { type: String, required: true },
     fieldname: { type: String, required: requiredForUploadType },

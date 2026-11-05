@@ -13,6 +13,7 @@ export default defineConfig({
     proxy: {
       '/api': { target, changeOrigin: true, headers: { origin: target } },
       '/q/': { target, changeOrigin: true },
+      '/fonts/': { target, changeOrigin: true },
       '/l/': { target, changeOrigin: true },
     },
   },

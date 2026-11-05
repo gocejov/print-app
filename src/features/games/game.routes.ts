@@ -1,3 +1,4 @@
+import { listSpaces } from '../spaces/space.service'
 import { Router } from 'express'
 import { createHash } from 'crypto'
 import { asyncHandler, HttpError, objectBody } from '../../utils/http.utils'
@@ -12,22 +13,7 @@ export const gameManagementRoutes = Router()
 gameManagementRoutes.get(
   '/',
   asyncHandler(async (_req, res) => {
-    const games = await GameModel.find({ createdBy: res.locals.user._id }).sort({ _id: -1 }).lean()
-    const codes = await QrCodeModel.find({
-      createdBy: res.locals.user._id,
-      game: { $in: games.map((g) => g._id) },
-    }).lean()
-    const totals = await ParticipantModel.aggregate([
-      { $match: { game: { $in: games.map((g) => g._id) } } },
-      { $group: { _id: '$game', count: { $sum: 1 } } },
-    ])
-    res.set('Cache-Control', 'no-store').json(
-      games.map((g) => ({
-        ...g,
-        code: codes.find((c) => String(c._id) === String(g.qrCode)),
-        participants: totals.find((t) => String(t._id) === String(g._id))?.count || 0,
-      })),
-    )
+    res.set('Cache-Control', 'no-store').json(await listSpaces(String(res.locals.user._id), 'message-circle'))
   }),
 )
 gameManagementRoutes.post(
@@ -90,7 +76,7 @@ gamePublicRoutes.get(
   asyncHandler(async (req, res) => {
     const { game } = await loadGame(req.params.gameId)
     gameSession(req, res, String(game._id), true)
-    res.type('html').send(gamePage(String(game._id), game.name, game.welcome))
+    res.type('html').send(gamePage(String(game._id), game.name, game.welcome || ''))
   }),
 )
 gamePublicRoutes.get(

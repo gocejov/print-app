@@ -187,7 +187,7 @@ export class CampaignService {
     )
     const found = await ProductModel.find({ _id: { $in: ids }, createdBy: userId }).populate({
       path: 'file',
-      match: { createdBy: userId, type: { $in: ['image', 'video', 'web-url'] } },
+      match: { createdBy: userId, type: { $in: ['image', 'video', 'web-url', 'text'] } },
     })
     const byId = new Map<string, IProductDocument>()
     for (const product of found) if (product.file) byId.set(String(product._id), product)

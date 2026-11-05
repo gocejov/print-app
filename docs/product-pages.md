@@ -45,3 +45,11 @@ Backend integration checks cover direct/page switching, unchanged QR links, esca
 HTML QR navigations collect [browser metrics](browser-metrics.md) before this page is shown. JavaScript-disabled visitors continue to the server-rendered page through the fallback.
 
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
+
+## Text posters
+
+In **Files → Add file**, choose **Text** to create a reusable text poster. Enter a name and up to 5,000 characters; line breaks are preserved. Choose Handwritten (locally bundled Pangolin, including Cyrillic), Classic serif, Modern, or Typewriter, and a Black, Warm paper, Forest, Soft rose, or White background. Text colors are paired with each background for contrast. The live preview updates as you write.
+
+Optionally upload a PNG, JPEG, or WebP logo up to 1 MB (16 megapixels maximum). Logos are normalized and bounded beneath the text. **Without a logo, only text and background appear: no placeholder or reserved logo space.** Remove logo clears an existing logo. Save and attach the text file to a product, then create a QR code as usual. Editing the file updates its products on subsequent scans. Text posters also work in campaigns and as the primary content in product-page mode; additional gallery attachments remain images/videos.
+
+`POST /api/files` accepts `{ "name": "Poster", "type": "text", "textPage": { "text": "Your message", "font": "handwritten", "background": "black", "logo": "" } }`. Fonts: `handwritten`, `classic`, `modern`, `typewriter`. Backgrounds: `black`, `cream`, `forest`, `rose`, `white`. Logo is empty or an image data URL. `PUT /api/files/:id` accepts a complete `textPage` object to edit a text file. Authenticated previews use `/api/files/:id/content`; public QR delivery retains ownership, status, and campaign selection checks. Text is escaped and never treated as HTML.

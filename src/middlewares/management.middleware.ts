@@ -1,3 +1,4 @@
+import { validateTextPage } from '../services/text-page.service'
 import { CampaignModel } from '../models/campaign.model'
 import mongoose from 'mongoose'
 import { UserModel } from '../models/user.model'
@@ -103,9 +104,13 @@ export function managementAccess(resource: Resource) {
     }
     if (req.method === 'POST' && !dynamicCreate) {
       if (resource === 'files') {
-        const body = objectBody(req.body, ['name', 'type', 'url', 'createdBy'])
+        const body = objectBody(req.body, ['name', 'type', 'url', 'createdBy', 'textPage'])
         if (body.createdBy !== undefined && body.createdBy !== userId)
           throw new HttpError(403, 'Cannot create for another user')
+        if (body.type === 'text') {
+          req.body = { type: 'text', name: text(body.name, 'name', 1, 120), url: 'text', textPage: await validateTextPage(body.textPage), createdBy: userId }
+          next(); return
+        }
         if (body.type !== 'web-url')
           throw new HttpError(400, 'Use an upload endpoint for images or videos')
         req.body = {
@@ -156,8 +161,12 @@ export function managementAccess(resource: Resource) {
     }
     if (req.method === 'PUT' && resource !== 'users') {
       if (resource === 'files') {
-        const body = objectBody(req.body, ['name', 'url'])
-        const changes: Record<string, string> = {}
+        const body = objectBody(req.body, ['name', 'url', 'textPage'])
+        const changes: Record<string, any> = {}
+        if (body.textPage !== undefined) {
+          if (res.locals.record.type !== 'text') throw new HttpError(400, 'Only text files accept text settings')
+          changes.textPage = await validateTextPage(body.textPage)
+        }
         if (body.name !== undefined) changes.name = text(body.name, 'name', 1, 120)
         if (body.url !== undefined) {
           if (res.locals.record.type !== 'web-url')

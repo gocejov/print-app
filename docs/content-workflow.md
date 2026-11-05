@@ -108,3 +108,9 @@ HTML browser scans now pass through a brief [browser metrics collection step](br
 HTML scans of direct URL products now attempt [automatic iframe delivery](embedded-content.md) after browser collection, with automatic redirect fallback. Explicit product-page mode retains its existing gallery and link/action behavior.
 
 See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
+
+[Plugins and spaces](plugins-and-spaces.md) replace Games as the admin structure: choose a plugin, create independent named spaces, and share each space’s one QR. Existing Message Circle links, participants, and messages are preserved.
+
+### Text files
+
+The file library also supports **Text** posters: write multiline text, choose a font and background, and optionally upload a logo. Handwritten typography supports Cyrillic. With no logo, the poster displays only text and background, without a logo placeholder. Text files can be edited and reused by products, campaigns, and QR codes. See [Text posters](product-pages.md#text-posters) for configuration and API details.

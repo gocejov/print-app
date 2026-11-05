@@ -191,7 +191,7 @@ export function CodeLibrary({ overview = false }: { overview?: boolean }) {
             <QrIcon size={15} />
             View QR code
           </button>
-          {code.game ? <Link to='/games'><Pencil size={15} />Manage game</Link> : (
+          {(code.space || code.game) ? <Link to='/spaces'><Pencil size={15} />Manage space</Link> : (
             <button onClick={() => setEditor(code)}>
               <Pencil size={15} />
               Edit QR target
@@ -330,7 +330,7 @@ export function CodeLibrary({ overview = false }: { overview?: boolean }) {
               ['web-url', 'URLs'],
               ['image', 'Images'],
               ['campaign', 'Campaigns'],
-              ['game', 'Games'],
+              ['space', 'Spaces'],
               ['video', 'Video'],
             ].map(([value, label]) => (
               <button

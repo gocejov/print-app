@@ -8,9 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.gameId = gameId;
 exports.plainText = plainText;
@@ -18,11 +15,9 @@ exports.loadGame = loadGame;
 exports.gameSession = gameSession;
 exports.participant = participant;
 exports.createGame = createGame;
-const mongoose_1 = __importDefault(require("mongoose"));
+const space_service_1 = require("../spaces/space.service");
+const plugin_registry_1 = require("../plugins/plugin.registry");
 const crypto_1 = require("crypto");
-const qrcode_model_1 = require("../../models/qrcode.model");
-const qrcode_service_1 = require("../../services/qrcode.service");
-const user_model_1 = require("../../models/user.model");
 const http_utils_1 = require("../../utils/http.utils");
 const game_models_1 = require("./game.models");
 function gameId(value) {
@@ -38,19 +33,11 @@ function plainText(value, field, max) {
 }
 function loadGame(id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const game = yield game_models_1.GameModel.findById(gameId(id));
-        if (!game)
-            throw new http_utils_1.HttpError(404, 'Game not found');
-        const code = yield qrcode_model_1.QrCodeModel.findOne({
-            _id: game.qrCode,
-            game: game._id,
-            createdBy: game.createdBy,
-        });
-        if (!code)
-            throw new http_utils_1.HttpError(410, 'This game is no longer available');
-        if (code.status === 'paused')
-            throw new http_utils_1.HttpError(410, 'This game is paused');
-        return { game, code };
+        const { space, code, plugin } = yield (0, space_service_1.loadSpace)(id);
+        if (plugin.id !== 'message-circle')
+            throw new http_utils_1.HttpError(404, 'This space does not use Message Circle');
+        space.welcome = (0, plugin_registry_1.spaceConfiguration)(space).welcome;
+        return { game: space, code };
     });
 }
 function gameSession(req, res, id, issue = false) {
@@ -82,33 +69,6 @@ function participant(req, res, id) {
 }
 function createGame(owner, name, welcome, origin) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = yield user_model_1.UserModel.findById(owner);
-        if (!user)
-            throw new http_utils_1.HttpError(401, 'Login required');
-        const id = new mongoose_1.default.Types.ObjectId(), qrId = new mongoose_1.default.Types.ObjectId();
-        const base = (process.env.PUBLIC_URL || origin).replace(/\/$/, '');
-        const url = `${base}/${user.useAlias ? user.alias : 'q'}/${qrId}`;
-        const image = yield new qrcode_service_1.QrCodeService().generateQrCodeBase64Url(url);
-        try {
-            const game = yield game_models_1.GameModel.create({ _id: id, name, welcome, createdBy: owner, qrCode: qrId });
-            const code = yield qrcode_model_1.QrCodeModel.create({
-                _id: qrId,
-                name,
-                game: id,
-                createdBy: owner,
-                owner,
-                url,
-                qrCode: image,
-                status: 'active',
-            });
-            return Object.assign(Object.assign({}, game.toObject()), { code });
-        }
-        catch (error) {
-            yield Promise.allSettled([
-                game_models_1.GameModel.deleteOne({ _id: id }),
-                qrcode_model_1.QrCodeModel.deleteOne({ _id: qrId }),
-            ]);
-            throw error;
-        }
+        return (0, space_service_1.createSpace)(owner, { pluginId: 'message-circle', name, configuration: { welcome } }, origin, true);
     });
 }

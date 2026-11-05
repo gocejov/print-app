@@ -123,6 +123,17 @@ test('visitor-specific products use signed browser identity and protect selected
     check(await request('DELETE', `/api/products/${personal._id}`, {}, a.cookie), 409)
     const foreignQr = check(await request('POST', '/api/qrcodes', { productId: foreignProduct._id }, b.cookie), 201).data
     check(await request('PATCH', `/api/qrcodes/${foreignQr._id}`, { visitorTarget: { visitorId: first.id, productId: foreignProduct._id } }, b.cookie), 404)
+    const { StatisticModel } = require('../src/models/statistic.model')
+    const originalScans = await StatisticModel.find({ qrCode: qr._id, 'data.visitor.id': first.id }).sort({ created_at: 1 })
+    const firstScan = originalScans[0]
+    const olderData = id => ({ visitor: { id, confirmed: true, method: 'first-party-cookie' }, browserFingerprint: firstScan.data.browserFingerprint })
+    await StatisticModel.create([
+      { qrCode: qr._id, created_at: new Date(+firstScan.created_at - 60000), data: olderData('e'.repeat(64)) },
+      { qrCode: foreignQr._id, created_at: new Date(+firstScan.created_at - 60000), data: olderData('d'.repeat(64)) },
+    ])
+    const evidence = check(await request('GET', `/api/statistics/visitor-profile/${first.id}`, null, a.cookie), 200).data.rematching
+    assert.ok(evidence.candidates.some(candidate => candidate.visitorId === 'e'.repeat(64)))
+    assert.ok(!evidence.candidates.some(candidate => candidate.visitorId === 'd'.repeat(64)))
     const stats = check(await request('GET', '/api/statistics', null, a.cookie), 200).data
     assert.ok(stats.some(scan => scan.product === pageProduct._id && scan.data.targeting.kind === 'visitor' && !scan.campaign))
     assert.ok(stats.some(scan => scan.product === defaultProduct._id && scan.data.targeting.kind === 'default'))

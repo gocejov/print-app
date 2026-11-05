@@ -1,10 +1,12 @@
-# QR games: Message circle
+# Message Circle plugin
+
+Message Circle now runs inside a named space. See [Plugins, spaces, and QR codes](plugins-and-spaces.md) for the reusable hierarchy and compatibility details.
 
 Message circle is a self-contained game for one QR code. Its participants, names, and messages are separate from every other game, campaign, and product assignment. The first version supports text messages only.
 
 ## Host flow
 
-Open **Games → Create game**, enter a name and welcome message, and create the game QR. Download or print that QR. The same permanent scan URL handles both joining and returning to the game. The Games page shows participant counts, links to the game's scan details, and Pause / Resume controls. Pausing blocks the public page, enrollment, participant discovery, sending, and inbox access without deleting messages. Generic QR target editing cannot replace a game's target.
+Open **Plugins → Message Circle → Create space**, enter a space name and welcome message, and create its QR. Download or print that QR. The same permanent scan URL handles both joining and returning to the game. The Spaces page shows participant counts, links to the game's scan details, and Pause / Resume controls. Pausing blocks the public page, enrollment, participant discovery, sending, and inbox access without deleting messages. Generic QR target editing cannot replace a game's target.
 
 Anyone holding the QR or its URL can join this game. “Closed” means room isolation, rather than invitation approval or an admission password. No participant account or app login is required.
 
@@ -28,15 +30,17 @@ Standard scan analytics and the browser collection flow still run on the game's 
 
 ## Module structure
 
-- `src/features/games/game.models.ts`: experience configuration (`kind: message-circle`), participants, immutable text messages, and read acknowledgments.
-- `game.service.ts`: QR creation, live status checks, game session identity, and participant authorization.
+- `src/features/plugins/plugin.registry.ts`: Message Circle definition and configuration validation.
+- `src/features/spaces/`: shared space configuration, QR creation, and host management.
+- `src/features/games/game.models.ts`: participants, immutable text messages, and read acknowledgments.
+- `game.service.ts`: game session identity, participant authorization, and compatibility delegation to shared space services.
 - `game.routes.ts`: authenticated host APIs and room-scoped participant APIs.
 - `game.page.ts` and `public/games/`: mobile public experience, isolated from the authenticated React admin.
-- `client/src/features/games/`: React host UI using the shared query cache, modal, QR preview, and navigation.
+- `client/src/features/spaces/`: React plugin catalog and space host UI using the shared query cache, modal, QR preview, and navigation.
 
-A QR now has exactly one product, campaign, or game target. Every game allocates one QR and stores the reciprocal reference. Creation renders before inserts and compensates allocated IDs if an insert fails, supporting standalone MongoDB without requiring transactions. Existing files and product APIs are unchanged; participant-authored text is game content rather than an owner-owned file or product.
+A QR now has exactly one product, campaign, or space target; legacy game targets remain supported. Every space allocates one QR and stores the reciprocal reference. Creation renders before inserts and compensates allocated IDs if an insert fails, supporting standalone MongoDB without requiring transactions. Existing files and product APIs are unchanged; participant-authored text is game content rather than an owner-owned file or product.
 
-The game `kind` and message `kind` provide extension points. Future game types can reuse QR entry, participant sessions, scoped delivery, and durable inboxes while adding their own rules. Future image or product rewards should extend typed game content with explicit ownership and delivery checks rather than granting participants access to the admin product APIs.
+Plugin definitions now provide the extension layer above each game space. Future plugins reuse shared space configuration and QR entry while implementing their own scoped data and public behavior. Future image or product rewards should extend typed game content with explicit ownership and delivery checks rather than granting participants access to the admin product APIs.
 
 ## API
 
@@ -70,3 +74,5 @@ Every read/write checks the live reciprocal game/QR relationship and pause statu
 ## Public design
 
 The public game has a compact header after joining, two primary tabs, a spacious message card, and a recipient-first composer. Search updates after a 250 ms typing pause, with cancellation and response-version checks so slower results cannot overwrite a newer query. Results are buttons with names and initials, loading/empty states are announced, and the selected recipient is shown above the draft. Name and message text continue to use safe text insertion. A character counter and send confirmation make message state clear. Styling uses the existing green palette with cream backgrounds, responsive player cards, and visible keyboard focus states.
+
+The host endpoints documented here are retained for compatibility; new management flows use `/api/plugins` and `/api/spaces`. See the [space API](plugins-and-spaces.md#api).

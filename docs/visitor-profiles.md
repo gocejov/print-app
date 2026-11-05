@@ -61,3 +61,7 @@ Names are private metadata scoped to the signed-in owner, limited to 120 charact
 `PATCH /api/statistics/visitor-profile/:visitorId` accepts `{"name":"Alex"}` or `{"name":""}` to clear. A confirmed visitor must exist within your owned QR scan history. The profile and statistics list return the current name; metadata is stored separately in `visitor-labels`, uniquely keyed by owner and visitor ID.
 
 The Visitors table supports QR/campaign/product scopes and a per-visitor **View product hits** breakdown. These counts describe the selected scope; opening the full profile continues to show all-time activity. See [scoped visitor analytics](analytics.md#visitors-by-qr-campaign-and-selected-product).
+
+## Possible previous browser
+
+A confirmed profile includes a `rematching` evidence object: `status`, `windowDays`, optional `fingerprint`, `truncated`, and up to 10 `candidates`. Each candidate includes `visitorId`, `matchingScans`, `lastSeen`, `matchingSignals`, `conflictingSignals`, and `overlappingActivity`. The UI explains ambiguous matches and opens a separate estimated group when requested. No visitor record is merged or restored. See [estimated browser rematching](visitor-recognition.md#estimated-browser-rematching-analytics-only).

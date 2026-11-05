@@ -1,11 +1,9 @@
-import mongoose from 'mongoose'
+import { createSpace, loadSpace } from '../spaces/space.service'
+import { spaceConfiguration } from '../plugins/plugin.registry'
 import { createHash, randomBytes } from 'crypto'
 import { Request, Response } from 'express'
-import { QrCodeModel } from '../../models/qrcode.model'
-import { QrCodeService } from '../../services/qrcode.service'
-import { UserModel } from '../../models/user.model'
 import { HttpError, text } from '../../utils/http.utils'
-import { GameModel, ParticipantModel } from './game.models'
+import { ParticipantModel } from './game.models'
 
 export function gameId(value: unknown) {
   if (typeof value !== 'string' || !/^[a-f0-9]{24}$/i.test(value))
@@ -19,16 +17,11 @@ export function plainText(value: unknown, field: string, max: number) {
   return result
 }
 export async function loadGame(id: string) {
-  const game = await GameModel.findById(gameId(id))
-  if (!game) throw new HttpError(404, 'Game not found')
-  const code = await QrCodeModel.findOne({
-    _id: game.qrCode,
-    game: game._id,
-    createdBy: game.createdBy,
-  })
-  if (!code) throw new HttpError(410, 'This game is no longer available')
-  if (code.status === 'paused') throw new HttpError(410, 'This game is paused')
-  return { game, code }
+  const { space, code, plugin } = await loadSpace(id)
+  if (plugin.id !== 'message-circle')
+    throw new HttpError(404, 'This space does not use Message Circle')
+  space.welcome = spaceConfiguration(space).welcome
+  return { game: space, code }
 }
 export function gameSession(req: Request, res: Response, id: string, issue = false) {
   const key = `qr2share_play_${id}`
@@ -57,31 +50,10 @@ export async function participant(req: Request, res: Response, id: string) {
   return player
 }
 export async function createGame(owner: string, name: string, welcome: string, origin: string) {
-  const user = await UserModel.findById(owner)
-  if (!user) throw new HttpError(401, 'Login required')
-  const id = new mongoose.Types.ObjectId(),
-    qrId = new mongoose.Types.ObjectId()
-  const base = (process.env.PUBLIC_URL || origin).replace(/\/$/, '')
-  const url = `${base}/${user.useAlias ? user.alias : 'q'}/${qrId}`
-  const image = await new QrCodeService().generateQrCodeBase64Url(url)
-  try {
-    const game = await GameModel.create({ _id: id, name, welcome, createdBy: owner, qrCode: qrId })
-    const code = await QrCodeModel.create({
-      _id: qrId,
-      name,
-      game: id,
-      createdBy: owner,
-      owner,
-      url,
-      qrCode: image,
-      status: 'active',
-    })
-    return { ...game.toObject(), code }
-  } catch (error) {
-    await Promise.allSettled([
-      GameModel.deleteOne({ _id: id }),
-      QrCodeModel.deleteOne({ _id: qrId }),
-    ])
-    throw error
-  }
+  return createSpace(
+    owner,
+    { pluginId: 'message-circle', name, configuration: { welcome } },
+    origin,
+    true,
+  )
 }

@@ -136,3 +136,9 @@ See [QR games: Message circle](games.md) for a game with one QR, named participa
 Visitor analytics can be opened from each QR's **View visitors** action and each campaign's **View visitors** button. Filter by QR, historical campaign, or selected product, then use **View product hits** on a visitor row to inspect what was selected. See [visitor analytics](analytics.md#visitors-by-qr-campaign-and-selected-product).
 
 The public Message circle experience now has two tabs, Inbox and Send a message. Player search filters name cards while typing; the composer opens after selecting a recipient. Read messages remain stored but have no public history tab. See [game design](games.md#public-design).
+
+[Plugins and spaces](plugins-and-spaces.md) replace Games as the admin structure: choose a plugin, create independent named spaces, and share each space’s one QR. Existing Message Circle links, participants, and messages are preserved.
+
+Spaces now uses aligned card actions, a full-width search/filter toolbar, explicit active/paused/unavailable styling, and bounded QR previews. Create/settings dialogs have styled fields and persistent save/cancel controls. Empty, loading, and error views are reviewed separately. The [UI completion rule](design-notes.md#standing-ui-completion-requirement) is mandatory for all future UI features, not only Spaces.
+
+Material UI now provides Spaces inputs, selects, textareas, buttons, and dialogs under a shared QR2Share theme. This is an incremental admin migration; other screens and public QR/game pages have not all been converted. See [admin UI foundation](admin-ui-foundation.md).

@@ -55,7 +55,7 @@ export function FilesPage() {
           <h1>
             Files<span className='heading-dot'>.</span>
           </h1>
-          <p>Upload images and videos, or save URLs. Reuse them in your products.</p>
+          <p>Upload images and videos, save URLs, or design text posters. Reuse them in your products.</p>
         </div>
         <button className='btn btn-primary' onClick={() => setEditor('new')}>
           <Plus size={18} />
@@ -96,6 +96,7 @@ export function FilesPage() {
               ['image', 'Images'],
               ['video', 'Videos'],
               ['web-url', 'URLs'],
+              ['text', 'Text'],
             ].map(([value, label]) => (
               <button
                 key={value}

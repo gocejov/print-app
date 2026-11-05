@@ -31,7 +31,7 @@ export class ProductController extends BaseController<IProductDocument> {
       name: req.body.name || file.name || file.originalname || 'Untitled product',
       description: req.body.description || '',
       file: file._id,
-      url: file.type === 'web-url' ? file.url : file.path,
+      url: ['web-url', 'text'].includes(file.type) ? file.url : file.path,
       owner: res.locals.user._id,
       createdBy: res.locals.user._id,
     })
@@ -45,7 +45,7 @@ export class ProductController extends BaseController<IProductDocument> {
       const file = await FileModel.findOne({ _id: req.body.fileId, createdBy: res.locals.user._id })
       if (!file) throw new HttpError(404, 'File not found')
       changes.file = file._id
-      changes.url = file.type === 'web-url' ? file.url : file.path
+      changes.url = ['web-url', 'text'].includes(file.type) ? file.url : file.path
     }
     const product = await ProductModel.findOneAndUpdate(
       { _id: req.params.id, createdBy: res.locals.user._id },

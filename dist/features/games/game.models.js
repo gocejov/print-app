@@ -25,14 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameMessageModel = exports.ParticipantModel = exports.GameModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-// The kind selects an experience; participant identity and messages remain scoped to one game.
-const gameSchema = new mongoose_1.Schema({
-    kind: { type: String, enum: ['message-circle'], default: 'message-circle', required: true },
-    name: { type: String, required: true, maxlength: 120 },
-    welcome: { type: String, required: true, maxlength: 1000 },
-    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'users', required: true, index: true },
-    qrCode: { type: mongoose_1.Schema.Types.ObjectId, ref: 'qrcodes', required: true, unique: true },
-}, { timestamps: true });
+const space_model_1 = require("../spaces/space.model");
 const participantSchema = new mongoose_1.Schema({
     game: { type: mongoose_1.Schema.Types.ObjectId, ref: 'games', required: true },
     tokenHash: { type: String, required: true, select: false },
@@ -53,6 +46,6 @@ const messageSchema = new mongoose_1.Schema({
 }, { timestamps: true });
 messageSchema.index({ game: 1, recipient: 1, readAt: 1, _id: 1 });
 messageSchema.index({ game: 1, sender: 1, requestId: 1 }, { unique: true });
-exports.GameModel = mongoose_1.default.model('games', gameSchema);
+exports.GameModel = space_model_1.SpaceModel; // Compatibility for existing game APIs and tests.
 exports.ParticipantModel = mongoose_1.default.model('game-participants', participantSchema);
 exports.GameMessageModel = mongoose_1.default.model('game-messages', messageSchema);

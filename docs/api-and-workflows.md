@@ -119,3 +119,5 @@ See [Visitor-specific QR products](visitor-targets.md) for assigning a different
 Visitor labels: `PATCH /api/statistics/visitor-profile/:visitorId` with `{"name":"Alex"}` sets an owner-private display name; an empty string clears it. See [visitor profiles](visitor-profiles.md#visitor-names).
 
 See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
+
+[Plugins and spaces](plugins-and-spaces.md) replace Games as the admin structure: choose a plugin, create independent named spaces, and share each space’s one QR. Existing Message Circle links, participants, and messages are preserved.

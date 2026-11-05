@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.managementAccess = managementAccess;
+const text_page_service_1 = require("../services/text-page.service");
 const campaign_model_1 = require("../models/campaign.model");
 const user_model_1 = require("../models/user.model");
 const file_model_1 = require("../models/file.model");
@@ -112,9 +113,14 @@ function managementAccess(resource) {
         }
         if (req.method === 'POST' && !dynamicCreate) {
             if (resource === 'files') {
-                const body = (0, http_utils_1.objectBody)(req.body, ['name', 'type', 'url', 'createdBy']);
+                const body = (0, http_utils_1.objectBody)(req.body, ['name', 'type', 'url', 'createdBy', 'textPage']);
                 if (body.createdBy !== undefined && body.createdBy !== userId)
                     throw new http_utils_1.HttpError(403, 'Cannot create for another user');
+                if (body.type === 'text') {
+                    req.body = { type: 'text', name: (0, http_utils_1.text)(body.name, 'name', 1, 120), url: 'text', textPage: yield (0, text_page_service_1.validateTextPage)(body.textPage), createdBy: userId };
+                    next();
+                    return;
+                }
                 if (body.type !== 'web-url')
                     throw new http_utils_1.HttpError(400, 'Use an upload endpoint for images or videos');
                 req.body = Object.assign({ type: 'web-url', url: (0, dynamic_qrcode_service_1.destinationUrl)(body.url), createdBy: userId }, (body.name !== undefined ? { name: (0, http_utils_1.text)(body.name, 'name', 1, 120) } : {}));
@@ -150,8 +156,13 @@ function managementAccess(resource) {
         }
         if (req.method === 'PUT' && resource !== 'users') {
             if (resource === 'files') {
-                const body = (0, http_utils_1.objectBody)(req.body, ['name', 'url']);
+                const body = (0, http_utils_1.objectBody)(req.body, ['name', 'url', 'textPage']);
                 const changes = {};
+                if (body.textPage !== undefined) {
+                    if (res.locals.record.type !== 'text')
+                        throw new http_utils_1.HttpError(400, 'Only text files accept text settings');
+                    changes.textPage = yield (0, text_page_service_1.validateTextPage)(body.textPage);
+                }
                 if (body.name !== undefined)
                     changes.name = (0, http_utils_1.text)(body.name, 'name', 1, 120);
                 if (body.url !== undefined) {

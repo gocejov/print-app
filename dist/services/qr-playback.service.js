@@ -56,7 +56,7 @@ class QrPlaybackService {
                 createdBy: code.createdBy,
             }).populate({
                 path: 'file',
-                match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url'] } },
+                match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url', 'text'] } },
             });
             if (!(product === null || product === void 0 ? void 0 : product.file))
                 throw new http_utils_1.HttpError(410, 'Assigned product is unavailable');
@@ -79,7 +79,7 @@ class QrPlaybackService {
                 createdBy: code.createdBy,
             }).populate({
                 path: 'file',
-                match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url'] } },
+                match: { createdBy: code.createdBy, type: { $in: ['image', 'video', 'web-url', 'text'] } },
             });
             if (!(product === null || product === void 0 ? void 0 : product.file))
                 throw new http_utils_1.HttpError(406, 'Product or attached file not found');

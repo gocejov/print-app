@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FileController = void 0;
 const promises_1 = __importDefault(require("fs/promises"));
+const text_page_service_1 = require("../services/text-page.service");
 const base_controller_1 = require("./base.controller");
 const file_model_1 = require("../models/file.model");
 const file_service_1 = require("../services/file.service");
@@ -28,6 +29,10 @@ class FileController extends base_controller_1.BaseController {
     content(_req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const file = res.locals.record;
+            if (file.type === 'text') {
+                res.type('html').send((0, text_page_service_1.textPage)(file));
+                return;
+            }
             if (!['image', 'video'].includes(String(file.type)))
                 throw new http_utils_1.HttpError(400, 'URL files do not contain uploaded media');
             res.set('X-Content-Type-Options', 'nosniff').type(String(file.mimetype));

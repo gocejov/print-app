@@ -89,7 +89,7 @@ export class DynamicQrCodeService {
       'file',
     )
     const file = product?.file as any
-    if (!product || !file || !['image', 'video', 'web-url'].includes(file.type))
+    if (!product || !file || !['image', 'video', 'web-url', 'text'].includes(file.type))
       throw new HttpError(404, 'Product or attached file not found')
     if (String(file.createdBy) !== userId) throw new HttpError(404, 'File not found')
     const user = await UserModel.findById(userId)
@@ -156,8 +156,8 @@ export class DynamicQrCodeService {
   ) {
     const code = await QrCodeModel.findOne({ _id: codeId, createdBy: userId })
     if (!code) throw new HttpError(404, 'QR code not found')
-    if (code.game && Object.keys(changes).some(key => !['name', 'status'].includes(key)))
-      throw new HttpError(400, 'Game QR codes keep their game target; manage them from Games')
+    if ((code.space || code.game) && Object.keys(changes).some(key => !['name', 'status'].includes(key)))
+      throw new HttpError(400, 'Space QR codes keep their plugin target; manage them from Spaces')
     if (
       [changes.productId, changes.campaignId, changes.destinationUrl].filter(
         (value) => value !== undefined,

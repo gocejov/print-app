@@ -197,7 +197,7 @@ class CampaignService {
                 .map((entry) => String(entry.target)), categories.map((category) => category.products.map(String)));
             const found = yield product_model_1.ProductModel.find({ _id: { $in: ids }, createdBy: userId }).populate({
                 path: 'file',
-                match: { createdBy: userId, type: { $in: ['image', 'video', 'web-url'] } },
+                match: { createdBy: userId, type: { $in: ['image', 'video', 'web-url', 'text'] } },
             });
             const byId = new Map();
             for (const product of found)

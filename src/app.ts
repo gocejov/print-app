@@ -1,3 +1,4 @@
+import { pluginRoutes, spaceRoutes, spaceEntryRoutes } from './features/spaces/space.routes';
 import { gameManagementRoutes, gamePublicRoutes } from './features/games/game.routes';
 import 'dotenv/config';
 import { BrowserScanService } from './services/browser-scan.service';
@@ -41,7 +42,7 @@ export const initApp = async (): Promise<Application> => {
         app.use(sesionConfig);
 
         // Middleware for user identification
-        app.use(express.json());
+        app.use(express.json({ limit: '2mb' }));
         app.use(userIdentificationMiddleware);
 
         // swagger configuration
@@ -76,6 +77,9 @@ export const initApp = async (): Promise<Application> => {
         //Main Routes
         app.use('/api', protectWrites);
         app.use('/api/users', userRoutes);
+        app.use('/api/plugins', requireAuth, pluginRoutes);
+        app.use('/api/spaces', requireAuth, spaceRoutes);
+        app.use('/spaces', spaceEntryRoutes);
         app.use('/api/games', requireAuth, gameManagementRoutes);
         app.use('/games', gamePublicRoutes);
         app.use('/api/categories', requireAuth, collectionRoutes('category'));

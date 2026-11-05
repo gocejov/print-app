@@ -86,3 +86,5 @@ Campaign membership and product selection come from each stored scan, not the QR
 The QR, campaign, and product scope is stored in URL parameters (`qrCode`, `campaign`, `product`), preserved between Visitors and Scan details, and survives reload. **Clear scope** removes these filters. Scan details show readable product and campaign names where available; raw IDs remain in scan details. Overview continues to show all-time/all-QR statistics.
 
 Product hits mean a recorded QR product selection/delivery, not proof that a visitor viewed the content or clicked a link. Existing owner-scoped statistics are reused; this change does not introduce new tracking.
+
+Confirmed visitor profiles now surface [possible earlier browser histories](visitor-recognition.md#estimated-browser-rematching-analytics-only). Matching fingerprints are analytics evidence only; confirmed counts, visitor labels, assignments, and private game inbox access remain separate. The evidence group is explicitly estimated and does not report a measured identity probability.

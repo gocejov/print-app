@@ -44,7 +44,8 @@ const AnalyticsPage = lazy(() =>
     default: module.AnalyticsPage,
   })),
 )
-const GamesPage = lazy(() => import('../features/games/games-page').then(module => ({ default: module.GamesPage })))
+const SpacesPage = lazy(() => import('../features/spaces/spaces-page').then(module => ({ default: module.SpacesPage })))
+const PluginsPage = lazy(() => import('../features/spaces/plugins-page').then(module => ({ default: module.PluginsPage })))
 const SettingsPage = lazy(() =>
   import('../features/settings/settings-page').then((module) => ({ default: module.SettingsPage })),
 )
@@ -56,7 +57,8 @@ const links = [
   { to: '/products', name: 'Products', icon: Package },
   { to: '/categories', name: 'Categories', icon: Layers3 },
   { to: '/campaigns', name: 'Campaigns', icon: Shuffle },
-  { to: '/games', name: 'Games', icon: Gamepad2 },
+  { to: '/plugins', name: 'Plugins', icon: Gamepad2 },
+  { to: '/spaces', name: 'Spaces', icon: Layers3 },
   { to: '/qr-codes', name: 'My QR codes', icon: QrCode },
   { to: '/analytics', name: 'Analytics', icon: BarChart3 },
   { to: '/settings', name: 'Settings', icon: Settings2 },
@@ -219,7 +221,9 @@ export function App() {
               <Route path='/products' element={<ProductsPage />} />
               <Route path='/categories' element={<CategoriesPage />} />
               <Route path='/campaigns' element={<CampaignsPage />} />
-              <Route path='/games' element={<GamesPage />} />
+              <Route path='/plugins' element={<PluginsPage />} />
+              <Route path='/spaces' element={<SpacesPage />} />
+              <Route path='/games' element={<Navigate to='/spaces' replace />} />
               <Route path='/qr-codes' element={<CodeLibrary />} />
               <Route path='/analytics' element={<AnalyticsPage />} />
               <Route path='/settings' element={<SettingsPage />} />

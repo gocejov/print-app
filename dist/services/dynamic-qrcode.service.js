@@ -94,7 +94,7 @@ class DynamicQrCodeService {
             yield (0, visitor_target_service_1.validateVisitorFallback)(userId, productId, undefined, personalized);
             const product = yield product_model_1.ProductModel.findOne({ _id: productId, createdBy: userId }).populate('file');
             const file = product === null || product === void 0 ? void 0 : product.file;
-            if (!product || !file || !['image', 'video', 'web-url'].includes(file.type))
+            if (!product || !file || !['image', 'video', 'web-url', 'text'].includes(file.type))
                 throw new http_utils_1.HttpError(404, 'Product or attached file not found');
             if (String(file.createdBy) !== userId)
                 throw new http_utils_1.HttpError(404, 'File not found');
@@ -152,8 +152,8 @@ class DynamicQrCodeService {
             const code = yield qrcode_model_1.QrCodeModel.findOne({ _id: codeId, createdBy: userId });
             if (!code)
                 throw new http_utils_1.HttpError(404, 'QR code not found');
-            if (code.game && Object.keys(changes).some(key => !['name', 'status'].includes(key)))
-                throw new http_utils_1.HttpError(400, 'Game QR codes keep their game target; manage them from Games');
+            if ((code.space || code.game) && Object.keys(changes).some(key => !['name', 'status'].includes(key)))
+                throw new http_utils_1.HttpError(400, 'Space QR codes keep their plugin target; manage them from Spaces');
             if ([changes.productId, changes.campaignId, changes.destinationUrl].filter((value) => value !== undefined).length > 1)
                 throw new http_utils_1.HttpError(400, 'Choose one product, campaign or destination override');
             if (changes.destinationUrl !== undefined) {

@@ -1,3 +1,5 @@
+import { ThemeProvider } from '@mui/material/styles'
+import { adminTheme } from './theme'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
@@ -25,24 +27,26 @@ export function Providers({ children }: { children: ReactNode }) {
     window.setTimeout(() => setToast((current) => (current?.id === id ? undefined : current)), 5000)
   }
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename='/admin'>
-        <ToastContext.Provider value={notify}>
-          {children}
-          {toast && (
-            <div
-              className={`toast ${toast.error ? 'toast-error' : ''}`}
-              role={toast.error ? 'alert' : 'status'}
-            >
-              {toast.error ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}
-              <span>{toast.message}</span>
-              <button aria-label='Dismiss notification' onClick={() => setToast(undefined)}>
-                <X size={17} />
-              </button>
-            </div>
-          )}
-        </ToastContext.Provider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ThemeProvider theme={adminTheme}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter basename='/admin'>
+          <ToastContext.Provider value={notify}>
+            {children}
+            {toast && (
+              <div
+                className={`toast ${toast.error ? 'toast-error' : ''}`}
+                role={toast.error ? 'alert' : 'status'}
+              >
+                {toast.error ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}
+                <span>{toast.message}</span>
+                <button aria-label='Dismiss notification' onClick={() => setToast(undefined)}>
+                  <X size={17} />
+                </button>
+              </div>
+            )}
+          </ToastContext.Provider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }

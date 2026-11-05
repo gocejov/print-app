@@ -40,7 +40,7 @@ class ProductController extends base_controller_1.BaseController {
                 name: req.body.name || file.name || file.originalname || 'Untitled product',
                 description: req.body.description || '',
                 file: file._id,
-                url: file.type === 'web-url' ? file.url : file.path,
+                url: ['web-url', 'text'].includes(file.type) ? file.url : file.path,
                 owner: res.locals.user._id,
                 createdBy: res.locals.user._id,
             });
@@ -56,7 +56,7 @@ class ProductController extends base_controller_1.BaseController {
                 if (!file)
                     throw new http_utils_1.HttpError(404, 'File not found');
                 changes.file = file._id;
-                changes.url = file.type === 'web-url' ? file.url : file.path;
+                changes.url = ['web-url', 'text'].includes(file.type) ? file.url : file.path;
             }
             const product = yield product_model_1.ProductModel.findOneAndUpdate({ _id: req.params.id, createdBy: res.locals.user._id }, { $set: changes }, { new: true, runValidators: true });
             if (!product)

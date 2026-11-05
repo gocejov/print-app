@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import fs from 'fs/promises'
+import { textPage } from '../services/text-page.service'
 import { BaseController } from './base.controller'
 import { IFileDocument, FileModel } from '../models/file.model'
 import { FileService } from '../services/file.service'
@@ -16,6 +17,7 @@ export class FileController extends BaseController<IFileDocument> {
 
   async content(_req: Request, res: Response, next: NextFunction) {
     const file = res.locals.record as IFileDocument
+    if (file.type === 'text') { res.type('html').send(textPage(file)); return }
     if (!['image', 'video'].includes(String(file.type)))
       throw new HttpError(400, 'URL files do not contain uploaded media')
     res.set('X-Content-Type-Options', 'nosniff').type(String(file.mimetype))

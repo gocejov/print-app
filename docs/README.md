@@ -40,3 +40,9 @@ When behavior, routes, configuration or architecture changes, update the relevan
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
 
 See [QR games: Message circle](games.md) for a game with one QR, named participants, targeted text messages, and a durable inbox. Game targets are separate from product and campaign targets.
+
+[Plugins and spaces](plugins-and-spaces.md) replace Games as the admin structure: choose a plugin, create independent named spaces, and share each space’s one QR. Existing Message Circle links, participants, and messages are preserved.
+
+UI work must follow the [standing visual completion requirement](design-notes.md#standing-ui-completion-requirement) and repository [working rules](../AGENTS.md). Rendered desktop/mobile review and improvement are part of completion.
+
+[Admin UI foundation](admin-ui-foundation.md) documents the shared MUI theme, migrated Spaces controls, and rules for future admin form work.

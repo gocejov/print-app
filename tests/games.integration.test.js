@@ -92,6 +92,55 @@ test('QR games isolate players and durable inboxes, authorize recipients and kee
     const scans = check(await request('GET', '/api/statistics', null, owner.cookie), 200).data
     assert.equal(scans.length, 1); assert.equal(scans[0].data.visitor.confirmed, true)
     assert.equal(check(await request('GET', '/api/games', null, owner.cookie), 200).data[0].participants, 3)
+    // Plugin definitions are shared, while each space owns configuration, membership and one QR.
+    check(await request('GET', '/api/plugins'), 401)
+    const catalog = check(await request('GET', '/api/plugins', null, owner.cookie), 200).data
+    assert.equal(catalog[0].id, 'message-circle')
+    assert.equal(catalog[0].version, 1)
+    assert.ok(catalog[0].configurationFields.some(field => field.key === 'welcome'))
+    assert.ok(!('entryPath' in catalog[0])); assert.ok(!('validateConfiguration' in catalog[0]))
+    const spaceBody = name => ({ pluginId: 'message-circle', name, configuration: { welcome: `Welcome <script>test</script> to ${name}!` } })
+    check(await request('POST', '/api/spaces', { ...spaceBody('Bad'), pluginId: 'missing-plugin' }, owner.cookie), 400)
+    check(await request('POST', '/api/spaces', { ...spaceBody('Bad'), configuration: { welcome: 'ok', extra: true } }, owner.cookie), 400)
+    check(await request('POST', '/api/spaces', { ...spaceBody('Bad'), createdBy: otherOwner.data._id }, owner.cookie), 400)
+    const spaceA = check(await request('POST', '/api/spaces', spaceBody('Space A'), owner.cookie), 201).data
+    const spaceB = check(await request('POST', '/api/spaces', spaceBody('Space B'), owner.cookie), 201).data
+    assert.equal(spaceA.pluginId, spaceB.pluginId); assert.equal(spaceA.pluginVersion, 1)
+    assert.equal(spaceA.code.space, spaceA._id); assert.ok(!spaceA.code.game)
+    assert.notEqual(spaceA.code._id, spaceB.code._id)
+    assert.notEqual(spaceA.configuration.welcome, spaceB.configuration.welcome)
+    assert.equal(check(await request('GET', new URL(spaceA.code.url).pathname), 302).location, `/games/${spaceA._id}`)
+    assert.equal(check(await request('GET', `/spaces/${spaceA._id}/open`), 302).location, `/games/${spaceA._id}`)
+    const playerA = await join(`/games/${spaceA._id}`, 'Same name'), playerB = await join(`/games/${spaceB._id}`, 'Same name')
+    assert.notEqual(playerA.id, playerB.id)
+    check(await request('GET', `/games/${spaceB._id}/messages`, null, playerA.cookie), 401)
+    check(await request('PATCH', `/api/spaces/${spaceA._id}`, { name: 'Foreign edit' }, otherOwner.cookie), 404)
+    check(await request('PATCH', `/api/spaces/${spaceA._id}`, { pluginId: 'other' }, owner.cookie), 400)
+    check(await request('PATCH', `/api/spaces/${spaceA._id}`, { configuration: { welcome: '' } }, owner.cookie), 400)
+    const edited = check(await request('PATCH', `/api/spaces/${spaceA._id}`, { name: 'Renamed space A', configuration: { welcome: 'A different welcome.' } }, owner.cookie), 200).data
+    assert.equal(edited.pluginId, 'message-circle')
+    const allSpaces = check(await request('GET', '/api/spaces?pluginId=message-circle', null, owner.cookie), 200).data
+    assert.equal(allSpaces.length, 3)
+    const updatedA = allSpaces.find(space => space._id === spaceA._id)
+    assert.equal(updatedA.code.url, spaceA.code.url); assert.equal(updatedA.code.qrCode, spaceA.code.qrCode)
+    assert.equal(updatedA.participants, 1)
+    assert.equal(allSpaces.find(space => space._id === spaceB._id).configuration.welcome, spaceB.configuration.welcome)
+    check(await request('GET', '/api/spaces?pluginId=unknown', null, owner.cookie), 400)
+    // A pre-plugin game record needs no bulk migration and retains its participant cookie and QR.
+    await models.GameModel.collection.updateOne({ _id: new mongoose.Types.ObjectId(game._id) }, { $unset: { pluginId: '', pluginVersion: '', configuration: '' } })
+    const oldContinuation = await new (require('../src/services/browser-scan.service').BrowserScanService)().create({ ownerId: owner.data._id, qrId: game.code._id, gameId: game._id, productId: '', fileId: '', statisticId: scans[0]._id })
+    assert.equal(check(await request('GET', `/scan/${oldContinuation}/continue`, null, b.cookie), 302).location, root)
+    const legacy = check(await request('GET', '/api/spaces', null, owner.cookie), 200).data.find(space => space._id === game._id)
+    assert.equal(legacy.pluginId, 'message-circle'); assert.equal(legacy.pluginVersion, 1)
+    assert.equal(legacy.code.url, game.code.url); assert.equal(legacy.code.qrCode, game.code.qrCode)
+    assert.equal(check(await inbox(), 200).data.message.id, second)
+    check(await request('PATCH', `/api/spaces/${game._id}`, { name: 'Legacy space renamed', configuration: { welcome: 'Updated legacy welcome.' } }, owner.cookie), 200)
+    assert.equal(check(await inbox(), 200).data.message.id, second)
+
+    await require('../src/models/user.model').UserModel.updateOne({ _id: owner.data._id }, { $set: { useAlias: true, alias: 'spaces' } })
+    const aliased = check(await request('POST', '/api/spaces', spaceBody('Alias compatibility'), owner.cookie), 201).data
+    assert.ok(new URL(aliased.code.url).pathname.startsWith('/spaces/'))
+    assert.equal(check(await request('GET', new URL(aliased.code.url).pathname), 302).location, `/games/${aliased._id}`)
   } finally {
     if (server) await new Promise(resolve => server.close(resolve))
     if (mongoose.connection.name === database) await mongoose.connection.dropDatabase()

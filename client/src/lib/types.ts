@@ -7,8 +7,10 @@ export interface User {
   useAlias: boolean
 }
 
-export type FileType = 'image' | 'video' | 'web-url'
+export type FileType = 'image' | 'video' | 'web-url' | 'text'
+export interface TextPage { text: string; font: string; background: string; logo: string }
 export interface AssetFile {
+  textPage?: TextPage
   _id: string
   name?: string
   type: FileType
@@ -61,6 +63,7 @@ export interface VisitorTarget {
   productId: string
 }
 export interface QrCode {
+  space?: string
   game?: string
   visitorTarget?: VisitorTarget
   _id: string
@@ -146,6 +149,13 @@ export interface Scan {
 }
 
 export interface VisitorProfileData {
+  rematching?: {
+    status: string
+    windowDays: number
+    fingerprint?: string
+    truncated: boolean
+    candidates: { visitorId: string; matchingScans: number; lastSeen: string; matchingSignals: string[]; conflictingSignals: string[]; overlappingActivity: boolean }[]
+  }
   name?: string
   id: string
   basis: 'visitor' | 'fingerprint'
@@ -182,5 +192,24 @@ export interface Game {
   name: string
   welcome: string
   participants?: number
+  code?: QrCode
+}
+
+export interface PluginDefinition {
+  id: string
+  version: number
+  name: string
+  description: string
+  category: string
+  participantLabel: string
+  configurationFields: { key: string; label: string; type: 'text' | 'textarea'; required: boolean; maxLength: number; defaultValue: string }[]
+}
+export interface Space {
+  _id: string
+  pluginId: string
+  pluginVersion: number
+  configuration: Record<string, string>
+  name: string
+  participants: number
   code?: QrCode
 }

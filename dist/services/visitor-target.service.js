@@ -35,7 +35,7 @@ function validateVisitorTarget(owner, input) {
             throw new http_utils_1.HttpError(404, 'Recognized visitor not found');
         const product = yield product_model_1.ProductModel.findOne({ _id: body.productId, createdBy: owner }).populate({
             path: 'file',
-            match: { createdBy: owner, type: { $in: ['image', 'video', 'web-url'] } },
+            match: { createdBy: owner, type: { $in: ['image', 'video', 'web-url', 'text'] } },
         });
         if (!(product === null || product === void 0 ? void 0 : product.file))
             throw new http_utils_1.HttpError(404, 'Product or attached file not found');

@@ -28,7 +28,7 @@ export async function validateVisitorTarget(
     throw new HttpError(404, 'Recognized visitor not found')
   const product = await ProductModel.findOne({ _id: body.productId, createdBy: owner }).populate({
     path: 'file',
-    match: { createdBy: owner, type: { $in: ['image', 'video', 'web-url'] } },
+    match: { createdBy: owner, type: { $in: ['image', 'video', 'web-url', 'text'] } },
   })
   if (!product?.file) throw new HttpError(404, 'Product or attached file not found')
   return { visitorId: body.visitorId, productId: String(product._id) }

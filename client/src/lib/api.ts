@@ -1,3 +1,5 @@
+import type { TextPage } from './types'
+import type { PluginDefinition, Space } from './types'
 import type { Game } from './types'
 import type { VisitorTarget } from './types'
 import type { VisitorProfileData } from './types'
@@ -37,6 +39,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  plugins: (signal?: AbortSignal) => request<PluginDefinition[]>('/plugins', { signal }),
+  spaces: (signal?: AbortSignal) => request<Space[]>('/spaces', { signal }),
+  createSpace: (pluginId: string, name: string, configuration: Record<string, string>) => request<Space>('/spaces', { method: 'POST', body: JSON.stringify({ pluginId, name, configuration }) }),
+  editSpace: (id: string, name: string, configuration: Record<string, string>) => request<Space>(`/spaces/${id}`, { method: 'PATCH', body: JSON.stringify({ name, configuration }) }),
   games: (signal?: AbortSignal) => request<Game[]>('/games', { signal }),
   createGame: (name: string, welcome: string) => request<Game>('/games', { method: 'POST', body: JSON.stringify({ name, welcome }) }),
   renameVisitor: (id: string, name: string) =>
@@ -93,6 +99,7 @@ export const api = {
     }),
   files: (signal?: AbortSignal) => request<AssetFile[]>('/files', { signal }),
   products: (signal?: AbortSignal) => request<Product[]>('/products/with-options', { signal }),
+  createTextFile: (name: string, textPage: TextPage) => request<AssetFile>('/files', { method: 'POST', body: JSON.stringify({ name, type: 'text', textPage }) }),
   createUrlFile: (name: string, url: string) =>
     request<AssetFile>('/files', {
       method: 'POST',
@@ -106,7 +113,7 @@ export const api = {
       await request<{ file: AssetFile }>(`/upload/${type}/${userId}`, { method: 'POST', body })
     ).file
   },
-  editFile: (id: string, changes: { name: string; url?: string }) =>
+  editFile: (id: string, changes: { name: string; url?: string; textPage?: TextPage }) =>
     request<AssetFile>(`/files/${id}`, { method: 'PUT', body: JSON.stringify(changes) }),
   deleteFile: (id: string) => request<AssetFile>(`/files/${id}`, { method: 'DELETE', body: '{}' }),
   createProduct: async (

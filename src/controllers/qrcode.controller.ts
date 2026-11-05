@@ -1,9 +1,10 @@
-import { loadGame } from '../features/games/game.service'
+import { loadSpace } from '../features/spaces/space.service'
 import { canEmbed, embeddedPage } from '../services/embed.service'
 import { identifyVisitor } from '../services/visitor.service'
 import { BrowserScanService, browserScanPage } from '../services/browser-scan.service'
 import { FileModel } from '../models/file.model'
 import { HttpError } from '../utils/http.utils'
+import { textPage } from '../services/text-page.service'
 import { productPage } from '../services/product-page.service'
 import { PlaybackTarget, QrPlaybackService } from '../services/qr-playback.service'
 import { BaseController } from './base.controller'
@@ -140,7 +141,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     res.set('Cache-Control', 'no-store').vary('Cookie')
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
-    if (code.game) throw new HttpError(404, 'Game media is unavailable')
+    if (code.space || code.game) throw new HttpError(404, 'Space media is unavailable')
     const target = await playback.mediaTarget(code, req.query.selection, req)
     let file = target.file
     if (req.query.media !== undefined) {
@@ -162,6 +163,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       res.status(406).json({ error: 'Incorrect URL' })
       return
     }
+    if (file.type === 'text') { res.type('html').send(textPage(file)); return }
     if (file.type === 'web-url') {
       res.redirect(
         target.visitorId || code.campaign
@@ -180,18 +182,18 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     res.set('Cache-Control', 'no-store').vary('Cookie')
     const playback = new QrPlaybackService()
     const code = await playback.load(req.params.qid)
-    if (code.game) {
-      await loadGame(String(code.game))
+    if (code.space || code.game) {
+      const { space, plugin } = await loadSpace(String(code.space || code.game))
       const visitor = await identifyVisitor(req, res, String(code.createdBy))
       const saved = await this.statisticService.add({ qrCode: code._id, data: { visitor, fingerprintData: res.locals.fingerprintData, fingerprint: res.locals.fingerprint, request: { method: req.method, path: req.path.slice(0, 2048), query: [...new URLSearchParams((req.originalUrl.split('?')[1] || '').slice(0, 8192))], referrer: req.get('referer')?.slice(0, 2048) } } })
       if (req.get('accept')?.includes('text/html')) {
         try {
-          const token = await new BrowserScanService().create({ ownerId: String(code.createdBy), qrId: String(code._id), gameId: String(code.game), productId: '', fileId: '', statisticId: String(saved._id) })
+          const token = await new BrowserScanService().create({ ownerId: String(code.createdBy), qrId: String(code._id), spaceId: String(space._id), productId: '', fileId: '', statisticId: String(saved._id) })
           res.set('Referrer-Policy', 'no-referrer').type('html').send(browserScanPage(token))
           return
         } catch (error) { console.error('Game scan collection unavailable:', error) }
       }
-      res.redirect(`/games/${code.game}`)
+      res.redirect(plugin.entryPath(String(space._id)))
       return
     }
     const target = await playback.draw(code, req)
@@ -254,11 +256,12 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
     const context = await new BrowserScanService().load(req.params.token)
     const playback = new QrPlaybackService()
     const code = await playback.load(context.qrId)
-    if (context.gameId) {
-      if (String(code.game) !== context.gameId) throw new HttpError(410, 'Game changed; scan again')
-      await loadGame(context.gameId)
+    const entrySpaceId = context.spaceId || context.gameId
+    if (entrySpaceId) {
+      if (String(code.space || code.game) !== entrySpaceId) throw new HttpError(410, 'Space changed; scan again')
+      const { space, plugin } = await loadSpace(entrySpaceId)
       await new BrowserScanService().confirm(context, req)
-      res.redirect(`/games/${context.gameId}`)
+      res.redirect(plugin.entryPath(String(space._id)))
       return
     }
     const target = await playback.mediaTarget(code, context.selection, req)
@@ -290,6 +293,7 @@ export class QrCodeController extends BaseController<IQrCodeDocument> implements
       res.type('html').send(productPage(target.product, file, media, String(code._id), token))
       return
     }
+    if (file.type === 'text') { res.type('html').send(textPage(file)); return }
     if (file.type === 'web-url') {
       const destination =
         target.visitorId || code.campaign

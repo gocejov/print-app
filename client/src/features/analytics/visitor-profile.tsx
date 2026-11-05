@@ -25,6 +25,7 @@ export function VisitorProfile({
   basis: 'visitor' | 'fingerprint'
   onClose: () => void
 }) {
+  const [relatedFingerprint, setRelatedFingerprint] = useState<string | null>(null)
   const client = useQueryClient()
   const [nameDraft, setNameDraft] = useState<string | null>(null)
   const [nameBusy, setNameBusy] = useState(false)
@@ -103,6 +104,14 @@ export function VisitorProfile({
       campaigns.data?.find((item) => item._id === value)?.name || `Campaign · ${value.slice(-6)}`
     )
   }
+  if (relatedFingerprint)
+    return (
+      <VisitorProfile
+        id={relatedFingerprint}
+        basis='fingerprint'
+        onClose={() => setRelatedFingerprint(null)}
+      />
+    )
   return (
     <Modal
       title={basis === 'visitor' ? 'Visitor profile' : 'Estimated fingerprint group'}
@@ -175,6 +184,73 @@ export function VisitorProfile({
                 {nameSaved && <p role='status'>Visitor name saved.</p>}
               </form>
             )}
+            {basis === 'visitor' && data.rematching && (
+              <section
+                className='visitor-profile-section visitor-rematching'
+                aria-label='Estimated browser connections'
+              >
+                <h3>Possible previous browser</h3>
+                <p className='form-hint'>
+                  Analytics evidence only. Browser IDs, counts, names, and private inbox access
+                  remain separate.
+                </p>
+                {data.rematching.candidates.length > 0 ? (
+                  <>
+                    <p className='visitor-match-status'>
+                      {data.rematching.status === 'ambiguous'
+                        ? 'Ambiguous — shared or conflicting browser signals'
+                        : 'One possible earlier browser — unverified'}
+                    </p>
+                    {data.rematching.truncated && (
+                      <p className='form-hint'>
+                        Evidence limit reached. This list may be incomplete.
+                      </p>
+                    )}
+                    <ul>
+                      {data.rematching.candidates.map((candidate) => (
+                        <li key={candidate.visitorId}>
+                          <strong>Visitor {candidate.visitorId.slice(0, 6).toUpperCase()}</strong>
+                          <span>
+                            {candidate.matchingScans} matching scans · last seen{' '}
+                            {new Date(candidate.lastSeen).toLocaleString()}
+                          </span>
+                          <small>
+                            Same browser fingerprint
+                            {candidate.matchingSignals.length
+                              ? ` · Also matches: ${candidate.matchingSignals.join(', ')}`
+                              : ' · No additional matching signals available'}
+                          </small>
+                          {!!candidate.conflictingSignals.length && (
+                            <small>Conflicts: {candidate.conflictingSignals.join(', ')}</small>
+                          )}
+                          {candidate.overlappingActivity && (
+                            <small>
+                              Both browser IDs have activity after this browser first appeared.
+                            </small>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      className='btn btn-secondary'
+                      onClick={() => setRelatedFingerprint(data.rematching!.fingerprint!)}
+                    >
+                      Explore estimated history
+                    </button>
+                  </>
+                ) : (
+                  <p className='form-hint'>
+                    {data.rematching.status === 'insufficient-evidence'
+                      ? 'Not enough early browser evidence to suggest a connection.'
+                      : 'No earlier matching browser found in the 7-day window.'}
+                  </p>
+                )}
+                <p className='form-hint'>
+                  Similarity is not a measured probability of identity. Identical devices can match;
+                  no automatic merge or access recovery takes place.
+                </p>
+              </section>
+            )}
             <div className='visitor-profile-metrics'>
               {[
                 {
@@ -243,11 +319,13 @@ export function VisitorProfile({
                       }}
                     >
                       <option value=''>Choose one of your QR codes</option>
-                      {codes.data?.filter(code => !code.game).map((code) => (
-                        <option key={code._id} value={code._id}>
-                          {codeName(code)}
-                        </option>
-                      ))}
+                      {codes.data
+                        ?.filter((code) => !code.game && !code.space)
+                        .map((code) => (
+                          <option key={code._id} value={code._id}>
+                            {codeName(code)}
+                          </option>
+                        ))}
                     </select>
                   </label>
                   <label>

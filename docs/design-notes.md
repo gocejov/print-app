@@ -38,10 +38,24 @@ Overview charts and the scan record table occupy separate tab-style navigation v
 
 ## Visitor table and profile refresh
 
-Visitors now has a dedicated audience workspace rather than requiring owners to interpret repeated scan rows. The layout applies [Material data-table guidance](https://m2.material.io/develop/web/components/data-tables): one entity per row, clear column hierarchy, nearby search/filter/sort controls, numeric activity summaries and pagination beneath the table. It uses QR2Share's existing colors, fonts, icons and native controls; Material/MUI is not installed as an additional framework.
+Visitors now has a dedicated audience workspace rather than requiring owners to interpret repeated scan rows. The layout applies [Material data-table guidance](https://m2.material.io/develop/web/components/data-tables): one entity per row, clear column hierarchy, nearby search/filter/sort controls, numeric activity summaries and pagination beneath the table. This visitor view uses QR2Share's existing colors, fonts, icons and native controls. The later MUI migration starts with Spaces controls, as described below.
 
 Readable pseudonyms, explicit recognition badges, compact device/location summaries and one primary profile action establish hierarchy. Raw identifiers and JSON move into Advanced profile details, while scan history retains the complete evidence. Missing locations remain unavailable; no personal name or verified identity is fabricated. Profiles resolve current asset names when available and retain reference fallbacks for missing records.
 
 Mobile visitor rows become labeled cards with profile and history actions. Desktop/mobile browser checks cover grouping, shared fingerprint separation, sorting, search, empty results, paging, profile readability and browser-history links. Screenshots are visual inspection artifacts, not proof of a full accessibility audit.
 
 The Scan details Visitor column also uses a compact identity block, a recognition badge and lightweight history/similar-browser links. Raw fingerprint hashes remain in full details rather than crowding each row; profile access is the visitor label itself. The audience selector follows the table filter styling.
+
+## Standing UI completion requirement
+
+This applies to **every future feature affecting the UI**, not only the Spaces refresh. A feature is not finished simply because its logic works or its tests pass. Open it in a real browser, inspect desktop and mobile rendering, and improve anything that looks broken, awkward, or unfinished before reporting completion. Review layout, spacing, hierarchy, readability, focus, control sizing, and the relevant populated/loading/empty/error states. Include long content and narrow screens where appropriate. Screenshots support review; they do not replace looking at the rendered UI. Disclose any material unresolved limitation.
+
+The repository's [AGENTS.md](../AGENTS.md) records this as a persistent working rule for future changes.
+
+## Spaces visual review
+
+Spaces uses bounded QR previews, aligned card actions, explicit status styling, grouped search/filter controls, and dedicated editor/QR-dialog layouts. Welcome text is a clamped preview; full text remains editable in Settings. Cards expose only the Message Circle welcome preview rather than arbitrary configuration values. Error and empty states are mutually exclusive. Desktop/mobile browser scenarios exercise QR image bounds, dialog overflow, long content, filter reset, and loading/error/empty states. Keep the existing Plugins/Spaces names during this layout work; naming changes are a separate decision.
+
+## Material UI adoption
+
+The admin's first MUI migration covers Spaces controls and dialogs. A shared QR2Share theme supplies form, button, menu, and dialog styling; legacy native control rules exclude MUI inputs and labels. Layout remains feature-owned. This replaces native-control styling patches in the migrated forms while retaining the palette and typography. See [admin UI foundation](admin-ui-foundation.md). MUI does not replace the standing rendered visual-review requirement.

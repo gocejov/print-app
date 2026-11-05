@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.gamePublicRoutes = exports.gameManagementRoutes = void 0;
+const space_service_1 = require("../spaces/space.service");
 const express_1 = require("express");
 const crypto_1 = require("crypto");
 const http_utils_1 = require("../../utils/http.utils");
-const qrcode_model_1 = require("../../models/qrcode.model");
 const redis_config_1 = require("../../config/redis.config");
 const visitor_service_1 = require("../../services/visitor.service");
 const game_models_1 = require("./game.models");
@@ -21,19 +21,7 @@ const game_service_1 = require("./game.service");
 const game_page_1 = require("./game.page");
 exports.gameManagementRoutes = (0, express_1.Router)();
 exports.gameManagementRoutes.get('/', (0, http_utils_1.asyncHandler)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const games = yield game_models_1.GameModel.find({ createdBy: res.locals.user._id }).sort({ _id: -1 }).lean();
-    const codes = yield qrcode_model_1.QrCodeModel.find({
-        createdBy: res.locals.user._id,
-        game: { $in: games.map((g) => g._id) },
-    }).lean();
-    const totals = yield game_models_1.ParticipantModel.aggregate([
-        { $match: { game: { $in: games.map((g) => g._id) } } },
-        { $group: { _id: '$game', count: { $sum: 1 } } },
-    ]);
-    res.set('Cache-Control', 'no-store').json(games.map((g) => {
-        var _a;
-        return (Object.assign(Object.assign({}, g), { code: codes.find((c) => String(c._id) === String(g.qrCode)), participants: ((_a = totals.find((t) => String(t._id) === String(g._id))) === null || _a === void 0 ? void 0 : _a.count) || 0 }));
-    }));
+    res.set('Cache-Control', 'no-store').json(yield (0, space_service_1.listSpaces)(String(res.locals.user._id), 'message-circle'));
 })));
 exports.gameManagementRoutes.post('/', (0, http_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const body = (0, http_utils_1.objectBody)(req.body, ['name', 'welcome']);
@@ -74,7 +62,7 @@ exports.gamePublicRoutes.use((0, http_utils_1.asyncHandler)((req, res, next) => 
 exports.gamePublicRoutes.get('/:gameId', (0, http_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { game } = yield (0, game_service_1.loadGame)(req.params.gameId);
     (0, game_service_1.gameSession)(req, res, String(game._id), true);
-    res.type('html').send((0, game_page_1.gamePage)(String(game._id), game.name, game.welcome));
+    res.type('html').send((0, game_page_1.gamePage)(String(game._id), game.name, game.welcome || ''));
 })));
 exports.gamePublicRoutes.get('/:gameId/state', (0, http_utils_1.asyncHandler)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { game } = yield (0, game_service_1.loadGame)(req.params.gameId);

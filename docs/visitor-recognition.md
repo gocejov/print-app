@@ -46,3 +46,15 @@ For a readable per-browser table, use **Analytics → Visitors**. Its **Scan his
 See [Visitor-specific QR products](visitor-targets.md) for assigning a different product to a recognized browser while keeping default content for other visitors.
 
 Owners can attach a display name to a confirmed visitor ID through the profile. This is owner-managed metadata, not identity verification, and does not change cookie recognition or fingerprint matching. Names are never accepted from public scan metrics. See [visitor names](visitor-profiles.md#visitor-names).
+
+## Estimated browser rematching (analytics only)
+
+Confirmed visitor profiles now show **Possible previous browser** evidence. This creates a visible connection between histories without restoring a cookie or merging browser IDs, names, counts, targeting assignments, game participants, or inbox permissions.
+
+The matcher uses the earliest supported, complete version-1 fingerprint observed within 24 hours of the browser's first recorded scan. It looks for another confirmed browser with the exact same owner-scoped fingerprint and an earlier matching scan in the preceding seven days. It also checks matching scans up to seven days afterward to flag overlapping activity. Results are restricted to the owner's current QR statistics. No new browser data is collected and no raw IP address is used as an identity key.
+
+Optional CPU thread count, device memory, color depth, browser major version, and OS version are displayed as corroborating or conflicting evidence when available. They are not assigned a fabricated confidence percentage. Multiple earlier candidates, conflicting signals, overlapping activity, or a truncated evidence query are labeled **Ambiguous**. Missing early fingerprints produce no suggestion. One candidate is still **unverified**, not a confirmed person or browser recovery.
+
+The evidence query is limited to 2,000 scans and the display to 10 candidates. **Explore estimated history** opens the existing fingerprint-group view, where records may belong to different people. Its counters describe that evidence group, not deduplicated people. Confirmed visitor counts remain cookie-based. The game still requires its own participant cookie; private access is never granted by a fingerprint match. Global Privacy Control scans do not generate a new fingerprint for this matcher.
+
+A small error rate cannot be claimed without validation on representative, independently verified return visits and different-device visits. Browser configurations can be shared and can change; see [W3C fingerprinting guidance](https://www.w3.org/TR/fingerprinting-guidance/). Future evaluation should measure false links and missed matches separately before introducing automatic analytics reconciliation.

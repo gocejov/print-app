@@ -3,6 +3,7 @@ import { IUserDocument } from './user.model';
 
 // Define the interface for a File document
 export interface IFile {
+  textPage?: { text: string; font: string; background: string; logo: string };
   name?: string,
   type: string,
   file?: string;
@@ -30,11 +31,12 @@ const isWebUrlType = function (this: IFileDocument): boolean {
 };
 
 const requiredForUploadType = function (this: IFileDocument): boolean {
-  return !isWebUrlType.call(this);
+  return !isWebUrlType.call(this) && this.type !== 'text';
 };
 
 // Create the File schema
 const FileSchema: Schema<IFileDocument> = new Schema({
+  textPage: { text: String, font: String, background: String, logo: String },
   name: { type: String, maxlength: 120, trim: true },
   type: { type: String, required: true },
   fieldname: { type: String, required: requiredForUploadType },

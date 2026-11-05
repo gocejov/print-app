@@ -16,18 +16,18 @@ test('create a game QR, join independently and keep every targeted message acros
       })
     ).status(),
   ).toBe(201)
-  await page.goto('/admin/games')
-  await page.getByRole('button', { name: 'Create game', exact: true }).click()
-  const dialog = page.getByRole('dialog', { name: 'Create a game' })
-  await dialog.getByLabel('Game name', { exact: true }).fill('The Friday circle')
+  await page.goto('/admin/spaces')
+  await page.getByRole('button', { name: 'Create space', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Create a space' })
+  await dialog.getByLabel('Space name', { exact: true }).fill('The Friday circle')
   await dialog
     .getByLabel('Welcome message')
     .fill('Welcome, friends. Leave a little surprise for someone!')
-  await dialog.getByRole('button', { name: 'Create game QR' }).click()
-  await expect(page.getByRole('dialog', { name: 'Your game QR' })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'The Friday circle game QR code' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'Create space and QR' }).click()
+  await expect(page.getByRole('dialog', { name: 'Your space QR' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'The Friday circle space QR code' })).toBeVisible()
   await page.keyboard.press('Escape')
-  const game = (await (await page.request.get('/api/games')).json())[0]
+  const game = (await (await page.request.get('/api/spaces')).json())[0]
   const first = await browser.newContext(),
     second = await browser.newContext()
   try {
@@ -134,7 +134,7 @@ test('create a game QR, join independently and keep every targeted message acros
     await expect(b.getByRole('heading', { name: 'Hi, Blair.' })).toBeVisible()
     await expect(b.locator('#unread-count')).toHaveText('0')
     await page.goto('/admin/qr-codes')
-    await expect(page.getByText('Game', { exact: true })).toBeVisible()
+    await expect(page.getByText('Space', { exact: true })).toBeVisible()
     const stats = await (await page.request.get('/api/statistics')).json()
     expect(
       stats.filter((scan: { qrCode: string }) => scan.qrCode === game.code._id).length,
