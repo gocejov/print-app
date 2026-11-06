@@ -222,5 +222,7 @@ export function validateBrowserMetrics(body: unknown): Record<string, unknown> {
 
 export function browserScanPage(token: string) {
   const url = `/scan/${token}/continue`
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="refresh" content="3;url=${url}"><noscript><meta http-equiv="refresh" content="0;url=${url}"></noscript><title></title><script src="/scan/collect.js" defer data-token="${token}"></script><style>html,body{margin:0;background:#fff}</style></head><body></body></html>`
+  // Set the visit URL before the collector loads, so even an early reload cannot
+  // reopen the printed entry, count another scan, or redraw a campaign selection.
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="refresh" content="3;url=${url}"><noscript><meta http-equiv="refresh" content="0;url=${url}"></noscript><title></title><script>try{history.replaceState(null,'',${JSON.stringify(url)})}catch{/* Continue through the redirect fallback. */}</script><script src="/scan/collect.js" defer data-token="${token}"></script><style>html,body{margin:0;background:#fff}</style></head><body></body></html>`
 }

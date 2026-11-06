@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { verifyScanRefresh } from './scan-refresh'
 
 for (const mode of [
   'automatic',
@@ -102,6 +103,7 @@ for (const mode of [
       expect(cookies).toHaveLength(1)
       expect(cookies[0].name).toBe('qr2share_visitor')
       expect(cookies[0].httpOnly).toBe(true)
+      if (mode === 'campaign') await verifyScanRefresh(browser, request)
     } finally {
       await visitor.close()
     }
